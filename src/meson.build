@@ -1,6 +1,4 @@
 
-subdir('gresources')
-
 glew_dep = dependency('glew', required : true)
 glut_dep = dependency('glut', required : true)
 glu_dep = dependency('glu', required : true)

@@ -16,7 +16,6 @@ add_project_arguments(['-D_POSIX_C_SOURCE=200809L'], language : 'c')
 
 
 subdir('src')
-subdir('resources')
 
 if get_option('tests')
     subdir('tests')
