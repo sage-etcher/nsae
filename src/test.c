@@ -25,7 +25,38 @@ reshape (int width, int height)
 void
 update (void)
 {
-    s_vram[s_i++] = 0xF0;
+    unsigned adv_cpu_speed = 4000000;
+    unsigned adv_cycles = adv_cpu_speed / s_screen_fps;
+
+    /*         MVI     A,0F0h  ;7
+     *         LXI     H,0     ;10
+     * loop:   INX     H       ;5
+     *         MOV     M,A     ;7
+     *         JMP     loop    ;10
+     * ;loop takes 22 cycles
+     */
+
+    for (int i = 0; i < adv_cycles; i += 22)
+    {
+        s_vram[s_i++] ^= 0b10000000;
+        if (s_i >= sizeof (s_vram))
+        {
+            s_i = 0;
+        }
+    }
+
+
+
+    s_vram[0x0104] = 0b00000000; s_vram[0x0204] = 0b11000000; s_vram[0x0304] = 0b00000000;
+    s_vram[0x0105] = 0b00000001; s_vram[0x0205] = 0b01100000; s_vram[0x0305] = 0b00000000;
+    s_vram[0x0106] = 0b00000011; s_vram[0x0206] = 0b00110000; s_vram[0x0306] = 0b00000000;
+    s_vram[0x0107] = 0b00000110; s_vram[0x0207] = 0b00011000; s_vram[0x0307] = 0b00000000;
+    s_vram[0x0108] = 0b00001100; s_vram[0x0208] = 0b00001100; s_vram[0x0308] = 0b00000000;
+    s_vram[0x0109] = 0b00011111; s_vram[0x0209] = 0b11111110; s_vram[0x0309] = 0b00000000;
+    s_vram[0x010a] = 0b00110000; s_vram[0x020a] = 0b00000011; s_vram[0x030a] = 0b00000000;
+    s_vram[0x010b] = 0b01100000; s_vram[0x020b] = 0b00000001; s_vram[0x030b] = 0b10000000;
+    s_vram[0x010c] = 0b11110000; s_vram[0x020c] = 0b00000011; s_vram[0x030c] = 0b11000000;
+
 }
 
 void
@@ -47,7 +78,7 @@ render (void)
                 {
                     if (*p >> b & 1)
                     {
-                        int screen_x = x * 8 + b;
+                        int screen_x = x * 8 + (7 - b);
                         int screen_y = y;
                         glVertex2f (screen_x,   screen_y);
                         glVertex2f (screen_x+1, screen_y);
@@ -76,7 +107,7 @@ int
 main (int argc, char **argv)
 {
     glutInit (&argc, argv);
-    glutInitContextVersion (2, 1);
+    glutInitContextVersion (1, 2);
 
     glutInitDisplayMode (GLUT_DOUBLE);
     glutInitWindowSize (s_screen_width, s_screen_height);
@@ -93,7 +124,7 @@ main (int argc, char **argv)
         return 1;
     }
 
-    if (!GLEW_VERSION_2_1)
+    if (!GLEW_VERSION_1_2)
     {
         fprintf (stderr, "nsae: glew cannot find OpenGL 2.1\n");
         return 1;
@@ -127,3 +158,5 @@ main (int argc, char **argv)
 
     return 0;
 }
+
+/* end of file */
