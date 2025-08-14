@@ -12,7 +12,13 @@ project('NorthStar Advantage Emulator', 'c',
   meson_version : '>= 1.1',
 )
 
-add_project_arguments(['-D_POSIX_C_SOURCE=200809L'], language : 'c')
+add_project_arguments([
+    '-D_POSIX_C_SOURCE=200809L',
+    '-Wno-gnu-binary-literal',
+    '-Wno-unused-parameter',
+  ], 
+  language : 'c',
+)
 
 
 subdir('src')
