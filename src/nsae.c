@@ -59,6 +59,9 @@ adv_init (adv_t *self)
         0xfe, 0xF0,         /*         cpi     240      */
         0xda, 0x0d, 0xc0,   /*         jc      loop     */
         0x2e, 0x00,         /*         mvi     l,0      */
+        0x11, 0x01, 0x00,   /*         lxi     d,1      */
+        0x19,               /* wait:   dad     d        */
+        0xd2, 0x27, 0xc0,   /*         jnc     wait     */
         0xc3, 0x0d, 0xc0,   /*         jmp     loop     */
     };
 
