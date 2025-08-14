@@ -40,28 +40,26 @@ adv_init (adv_t *self)
     adv_write (self, 0x0002, 0xc0);
 
     uint8_t buf[] = {
-        /* main = 0xc000 */
-        0xaf,               /* xra a        */
-        0x32, 0x00, 0x00,   /* sta 0x0000   */
-        0x32, 0x01, 0x00,   /* sta 0x0001   */
-        0x32, 0x02, 0x00,   /* sta 0x0002   */
-        0x21, 0x00, 0x00,   /* lxi h,0x0000 */
-        /* loop = 0xc00d */
-        0x06, 0xf0,         /* mvi b,0xf0   */
-        0x7e,               /* mov a,m      */
-        0xa8,               /* xra b        */
-        0x77,               /* mov m,a      */
-        0x24,               /* inr h        */
-        0x7c,               /* mov a,h      */
-        0xfe, 0x50,         /* cpi 80       */
-        0xda, 0x0d, 0xc0,   /* jc loop     */
-        0x26, 0x00,         /* mvi h,0      */
-        0x2c,               /* inr l        */
-        0x7d,               /* mov a,l      */
-        0xfe, 0xF0,         /* cpi 240      */
-        0xda, 0x0d, 0xc0,   /* jc loop     */
-        0x2e, 0x00,         /* mvi l,0      */
-        0xc3, 0x0d, 0xc0,   /* jmp loop     */
+        0xaf,               /* main:   xra     a        */
+        0x32, 0x00, 0x00,   /*         sta     0x0000   */
+        0x32, 0x01, 0x00,   /*         sta     0x0001   */
+        0x32, 0x02, 0x00,   /*         sta     0x0002   */
+        0x21, 0x00, 0x00,   /*         lxi     h,0x0000 */
+        0x06, 0xf0,         /* loop:   mvi     b,0xf0   */
+        0x7e,               /*         mov     a,m      */
+        0xa8,               /*         xra     b        */
+        0x77,               /*         mov     m,a      */
+        0x24,               /*         inr     h        */
+        0x7c,               /*         mov     a,h      */
+        0xfe, 0x50,         /*         cpi     80       */
+        0xda, 0x0d, 0xc0,   /*         jc      loop     */
+        0x26, 0x00,         /*         mvi     h,0      */
+        0x2c,               /*         inr     l        */
+        0x7d,               /*         mov     a,l      */
+        0xfe, 0xF0,         /*         cpi     240      */
+        0xda, 0x0d, 0xc0,   /*         jc      loop     */
+        0x2e, 0x00,         /*         mvi     l,0      */
+        0xc3, 0x0d, 0xc0,   /*         jmp     loop     */
     };
 
     for (size_t i = 0; i < sizeof (buf); i++)
