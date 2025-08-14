@@ -5,16 +5,14 @@
 #include <stddef.h>
 #include <stdlib.h>
 
-ltexture_t *
+ltexture_t 
 ltex_new (void)
 {
-    ltexture_t *self = malloc (sizeof (ltexture_t));
-    if (self == NULL) return NULL;
-
-    self->id = 0;
-
-    self->width = 0;
-    self->height = 0;
+    ltexture_t self = (ltexture_t){
+        .id = 0,
+        .width = 0,
+        .height = 0,
+    };
 
     return self;
 }
@@ -32,8 +30,6 @@ ltex_free (ltexture_t *self)
 
     self->width = 0;
     self->height = 0;
-
-    free (self);
 }
 
 int
@@ -42,7 +38,7 @@ ltex_from_pixels32 (ltexture_t *self, GLuint *pixels,
 {
     assert (self != NULL);
 
-    /* free texture if exists */
+    /* destroy texture if exists */
     ltex_free (self);
 
     /* set the texture dimentions */

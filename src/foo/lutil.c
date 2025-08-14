@@ -6,7 +6,11 @@
 #include <stdio.h>
 
 
-static ltexture_t *s_checkerboard_tex = NULL;
+int g_screen_width  = 640;
+int g_screen_height = 480;
+int g_screen_fps = 60;
+
+static ltexture_t s_checkerboard_tex = { 0 };
 
 int
 init_gl (void)
@@ -54,12 +58,22 @@ load_media (void)
 
     /* go through pixels */ for (int i = 0; i < CHECKERBOARD_PIXEL_COUNT; i++) {
         GLubyte *colors = (GLubyte *)&checkerboard[i];
-        GLubyte a = (i & 0x01) ^ ((i & 0x80) >> 7);
 
-        colors[0] = 0xFF;
-        colors[1] = 0xFF * a;
-        colors[2] = 0xFF * a;
-        colors[3] = 0xFF;
+        if (((i / 128) & 16) ^ ((i % 128) & 16))
+        {
+            colors[0] = 0xFF;
+            colors[1] = 0xFF;
+            colors[2] = 0xFF;
+            colors[3] = 0xFF;
+        }
+        else
+        {
+            colors[0] = 0xFF;
+            colors[1] = 0x00;
+            colors[2] = 0x00;
+            colors[3] = 0xFF;
+        }
+
     }
 
     /* allocate the texture */
@@ -74,7 +88,7 @@ load_media (void)
     }
 
     /* load the texture */
-    if (ltex_from_pixels32 (s_checkerboard_tex, checkerboard, 
+    if (ltex_from_pixels32 (&s_checkerboard_tex, checkerboard, 
                 CHECKERBOARD_WIDTH, CHECKERBOARD_HEIGHT))
     {
         fprintf (stderr, "nsae: unable to load checkerboard texture!\n");
@@ -95,13 +109,19 @@ render (void)
 {
     glClear (GL_COLOR_BUFFER_BIT);
 
-    GLfloat x = (g_screen_width - s_checkerboard_tex->width) / 2.0f;
-    GLfloat y = (g_screen_height - s_checkerboard_tex->height) / 2.0f;
+    GLfloat x = (g_screen_width - s_checkerboard_tex.width) / 2.0f;
+    GLfloat y = (g_screen_height - s_checkerboard_tex.height) / 2.0f;
 
-    ltex_render (s_checkerboard_tex, x, y);
+    ltex_render (&s_checkerboard_tex, x, y);
 
     glutSwapBuffers ();
 }
 
+void
+reshape (int width, int height)
+{
+    g_screen_width = width;
+    g_screen_height = height;
+}
 
 /* end of file */

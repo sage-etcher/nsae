@@ -1,10 +1,6 @@
 
 #include "lutil.h"
 
-int g_screen_width  = 640;
-int g_screen_height = 480;
-int g_screen_fps = 60;
-
 
 void main_loop (int val);
 /* Pre Condition:
@@ -55,6 +51,12 @@ main (int argc, char **argv)
         fprintf (stderr, "nsae: error unable to load media\n");
         exit (EXIT_FAILURE);
     }
+
+    /* set reshape func */
+    g_screen_width = glutGet (GLUT_WINDOW_WIDTH);
+    g_screen_height = glutGet (GLUT_WINDOW_HEIGHT);
+
+    glutReshapeFunc (reshape);
 
     /* set rendering function */
     glutDisplayFunc (render);

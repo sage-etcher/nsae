@@ -13,7 +13,7 @@ typedef struct {
     GLuint height;
 } ltexture_t;
 
-ltexture_t *ltex_new (void);
+ltexture_t ltex_new (void);
 /* Post Condition:
  *  -Initializess member variables */
 

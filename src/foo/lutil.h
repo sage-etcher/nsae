@@ -54,6 +54,13 @@ void handle_keys (unsigned char key, int x, int y);
 /* Post Condition:
  *  -handles keypresses */
 
+void reshape (int width, int height);
+/* Pre Condition:
+ *  -A valid OpenGL context
+ * Post Condition:
+ *  -update program variables on window resize
+ * Side Effects:
+ *  -update g_screen_width and g_screen_height. */
 
 #endif
 /* end of file */
