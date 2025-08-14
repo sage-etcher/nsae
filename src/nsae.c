@@ -35,7 +35,7 @@ adv_init (adv_t *self)
 
 
     /* initialize memory */
-    adv_write (self, 0x0000, 0xC3); /* jmp 0xc000 */
+    adv_write (self, 0x0000, 0xC3); /* jmp main */
     adv_write (self, 0x0001, 0x00);
     adv_write (self, 0x0002, 0xc0);
 
@@ -124,6 +124,12 @@ adv_write (adv_t *self, uint16_t addr, uint8_t data)
 
     uint32_t abs_addr = mmu_decode (&self->mmu, addr);
     assert (abs_addr < ADV_RAM);
+
+    /* dont write to ROM */
+    if (abs_addr >= 0x15000) 
+    {
+        return;
+    }
 
     self->memory[abs_addr] = data;
 }
