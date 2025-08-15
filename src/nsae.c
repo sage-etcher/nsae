@@ -47,13 +47,25 @@ adv_init (adv_t *self)
     self->status1_reg = 0x02; /* no io-board or non-maskable interupts */
     self->status2_reg = 0x80;
 
+    /* initialize keyboard */
     self->cursor_lock = 0;
     self->kb_caps = 0;
     self->kb_mi = 0;
     self->kb_nmi = 1;
 
-    /* initialize keyboard */
     self->kb_count = 0;
+
+    /* initialize floppy disks */
+    self->floppys[0] = {
+        .filename = "boot.imd",
+        .blksize = 512,
+    };
+
+    self->floppys[1] = {
+        .filename = NULL,
+        .blksize = 512,
+    };
+
 
     /* initialize PROM */
     self->cpu.pc = 0x8000;

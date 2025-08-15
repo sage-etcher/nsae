@@ -47,7 +47,7 @@ typedef struct {
 
     uint8_t motor_enable;
     uint8_t disk_select;
-    fcu_t floppy[ADV_FDISK_COUNT];
+    fcu_t floppys[ADV_FDISK_COUNT];
 } adv_t;
 
 int adv_init (adv_t *self);
