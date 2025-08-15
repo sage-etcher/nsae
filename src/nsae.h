@@ -12,10 +12,15 @@ typedef struct {
     Z80_STATE cpu;
     mmu_t mmu;
     uint8_t memory[ADV_RAM];
+
     uint8_t scroll_reg;
+    uint8_t control_reg;
+    uint8_t status1_reg;
+    uint8_t status2_reg;
 } adv_t;
 
 int adv_init (adv_t *self);
+void adv_quit (void);
 
 int adv_run (adv_t *self, int number_cycles);
 

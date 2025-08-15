@@ -1,12 +1,21 @@
 
 #include "nsae.h"
 
+#include "advprom.h"
 #include "mmu.h"
 #include "z80emu.h"
 
 #include <assert.h>
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+
+const char *const LOGFILE = "nsae.log";
+static FILE *s_log = NULL;
+
+static void adv_set_memory_map (adv_t *self, uint8_t port, uint8_t data);
+
 
 int
 adv_init (adv_t *self)
@@ -34,70 +43,27 @@ adv_init (adv_t *self)
     mmu_load_page (&self->mmu, 0x03, 0x00); /* main */
 
 
-    /* initialize memory */
-    adv_write (self, 0x0000, 0xC3); /* jmp main */
-    adv_write (self, 0x0001, 0x00);
-    adv_write (self, 0x0002, 0xc0);
+    /* initialize PROM */
+    self->cpu.pc = 0x8000;
+    memcpy (&self->memory[0x15000], ___RESOURCES_ADVPROM_COM, ___RESOURCES_ADVPROM_COM_LEN);
 
-    uint8_t buf[] = {
-        0xaf,               /* main:   xra     a        */
-        0x32, 0x00, 0x00,   /*         sta     0x0000   */
-        0x32, 0x01, 0x00,   /*         sta     0x0001   */
-        0x32, 0x02, 0x00,   /*         sta     0x0002   */
-        0x21, 0x00, 0x00,   /*         lxi     h,0x0000 */
-        0x06, 0xf0,         /* loop:   mvi     b,0xf0   */
-        0x7e,               /*         mov     a,m      */
-        0xa8,               /*         xra     b        */
-        0x77,               /*         mov     m,a      */
-        0x24,               /*         inr     h        */
-        0x7c,               /*         mov     a,h      */
-        0xfe, 0x50,         /*         cpi     80       */
-        0xda, 0x0d, 0xc0,   /*         jc      loop     */
-        0x26, 0x00,         /*         mvi     h,0      */
-        0x2c,               /*         inr     l        */
-        0x7d,               /*         mov     a,l      */
-        0xfe, 0xF0,         /*         cpi     240      */
-        0xda, 0x0d, 0xc0,   /*         jc      loop     */
-        0x2e, 0x00,         /*         mvi     l,0      */
-        0x11, 0x01, 0x00,   /* wait:   lxi     d,1      */
-        0x11, 0x01, 0x00,   /*         lxi     d,1      */
-        0x19,               /*         dad     d        */
-        0xd2, 0x24, 0xc0,   /*         jnc     wait     */
-        0xc3, 0x0d, 0xc0,   /*         jmp     loop     */
-    };
-
-    for (size_t i = 0; i < sizeof (buf); i++)
+    /* initialize log file */
+    s_log = fopen (LOGFILE, "a+");
+    if (s_log == NULL)
     {
-        adv_write (self, 0x0c000 + i, buf[i]);
+        fprintf (stderr, "nsae: error, cannot open log file: '%s'\n", LOGFILE);
+        return 1;
     }
-
-
-    uint8_t buf_letter[] = {
-        0b00000000, 0b11000000, 0b00000000,
-        0b00000001, 0b01100000, 0b00000000,
-        0b00000011, 0b00110000, 0b00000000,
-        0b00000110, 0b00011000, 0b00000000,
-        0b00001100, 0b00001100, 0b00000000,
-        0b00011111, 0b11111110, 0b00000000,
-        0b00110000, 0b00000011, 0b00000000,
-        0b01100000, 0b00000001, 0b10000000,
-        0b11110000, 0b00000011, 0b11000000,
-    };
-    size_t letter_x = 1;
-    size_t letter_y = 4;
-    size_t letter_w = 3;
-    size_t letter_h = 9;
-
-    for (size_t x = 0; x < letter_w; x++)
-    {
-        for (size_t y = 0; y < letter_h; y++)
-        {
-            uint32_t offset = (((x + letter_x) << 8) | (y + letter_y));
-            adv_write (self, offset, buf_letter[y*letter_w+x]);
-        }
-    }
+    fprintf (s_log, "========== NSAE Startup ==========\n");
 
     return 0;
+}
+
+void
+adv_quit (void)
+{
+    fclose (s_log);
+    s_log = NULL;
 }
 
 int
@@ -130,6 +96,7 @@ adv_write (adv_t *self, uint16_t addr, uint8_t data)
     /* dont write to ROM */
     if (abs_addr >= 0x15000) 
     {
+        fprintf (s_log, "nsae: debug: failed write to ROM 0x%05X\n", abs_addr);
         return;
     }
 
@@ -139,13 +106,121 @@ adv_write (adv_t *self, uint16_t addr, uint8_t data)
 uint8_t
 adv_in (adv_t *self, uint8_t port)
 {
+    switch (port & 0b11110000)
+    {
+    case 0x00: /* io board 6 */
+    case 0x10: /* io board 5 */
+    case 0x20: /* io board 4 */
+    case 0x30: /* io board 3 */
+    case 0x40: /* io board 2 */
+    case 0x50: /* io board 1 */
+    case 0x60: /* input main ram parity */
+        break;
+
+    case 0xb0: /* clear display flag */
+        self->status1_reg &= ~0x04;
+        return 0x00;
+
+    case 0xc0: /* clear non-maskable interupt */
+        self->status1_reg |= 0x08;
+        return 0x00;
+
+    case 0xd0: /* get io status register 2 */
+        return self->status2_reg;
+
+    case 0xe0: /* get io status register 1 */
+        return self->status1_reg;
+    }
+
+    switch (port & 0b11110111)
+    {
+    case 0x70:  /* id code for slot 6 */
+    case 0x71:  /* id code for slot 5 */
+    case 0x72:  /* id code for slot 4 */
+    case 0x73:  /* id code for slot 3 */
+    case 0x74:  /* id code for slot 2 */
+    case 0x75:  /* id code for slot 1 */
+        return 0xff;
+
+    case 0x76:  /* unsued, returns all 1s */
+    case 0x77:
+        return 0xff;
+    }
+
+    switch (port & 0b11110011)
+    {
+    case 0x80:  /* get disk data byte */
+    case 0x81:  /* get disk sync byte */
+    case 0x82:  /* clear disk read flag */
+        break;
+
+    case 0x83:  /* beep */
+        printf ("beep! ;TODO: add sound\n");
+        return 0x00;
+    }
+
+    fprintf (s_log, "nsae: debug: unimplemented in-port: %02x\n", port);
     return 0x00;
 }
 
 void
 adv_out (adv_t *self, uint8_t port, uint8_t data)
 {
-    return;
+    switch (port & 0b11110000)
+    {
+    case 0x00: /* io board 6 */
+    case 0x10: /* io board 5 */
+    case 0x20: /* io board 4 */
+    case 0x30: /* io board 3 */
+    case 0x40: /* io board 2 */
+    case 0x50: /* io board 1 */
+    case 0x60: /* output main ram parity control bytes */
+        break;
+
+    case 0x90: /* load scroll register */
+        self->scroll_reg = data & 0x0f;
+        return;
+
+    case 0xb0: /* clear display flag */
+        self->status1_reg &= ~0x04;
+        return;
+
+    case 0xc0: /* clear non-maskable interupt */
+        self->status1_reg |= 0x08;
+        return;
+
+    case 0xf0: /* output to control register */
+        self->control_reg = data;
+        return;
+    }
+
+    switch (port & 0b11110011)
+    {
+    case 0x80:  /* send a data byte to disk */
+    case 0x81:  /* set drive control register */
+    case 0x82:  /* set disk read flag */
+    case 0x83:  /* set disk write flag */
+        break;
+
+    case 0xa0: /* memory mapping reigster */
+    case 0xa1: /* memory mapping reigster */
+    case 0xa2: /* memory mapping reigster */
+    case 0xa3: /* memory mapping reigster */
+        adv_set_memory_map (self, port, data);
+        return;
+    }
+
+    fprintf (s_log, "nsae: debug: unimplemented out-port: %02x\n", port);
 }
+
+static void
+adv_set_memory_map (adv_t *self, uint8_t port, uint8_t data)
+{
+    uint8_t page = ((data & 0x80) >> 4) | (data & 0x07);
+    uint8_t slot = port & 0x03;
+
+    mmu_load_page (&self->mmu, slot, page);
+}
+
 
 /* end of file */

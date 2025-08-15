@@ -11,6 +11,7 @@ nsae_bin = executable('nsae', [
     'mmu.c',
     'nsae.c',
     'z80emu/z80emu.c',
+    advprom_h,
   ],
   include_directories : [
     nsae_inc,

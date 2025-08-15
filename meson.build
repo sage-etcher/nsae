@@ -21,6 +21,7 @@ add_project_arguments([
 )
 
 
+subdir('resources')
 subdir('src')
 
 if get_option('tests')

@@ -14,6 +14,8 @@ static int s_screen_fps = 60;
 
 static adv_t s_emu_state = { 0 };
 
+static int s_exit_flag = 0;
+
 void
 reshape (int width, int height)
 {
@@ -29,6 +31,15 @@ update (void)
     unsigned adv_cpu_speed = 4000000;
     unsigned adv_cycles = adv_cpu_speed / s_screen_fps;
     (void)adv_run (&s_emu_state, adv_cycles);
+}
+
+void
+key_handler (unsigned char key, int x, int y)
+{
+    if (key == 'q')
+    {
+        s_exit_flag = 1;
+    }
 }
 
 void
@@ -69,6 +80,13 @@ render (void)
 void
 main_loop (int val)
 {
+    /* exit before doing anyting if it is time */
+    if (s_exit_flag) 
+    {
+        glutLeaveMainLoop ();
+        return;
+    }
+
     /* queue the next iteration imediately */
     glutTimerFunc (1000 / s_screen_fps, main_loop, val);
 
@@ -141,6 +159,7 @@ main (int argc, char **argv)
     adv_init (&s_emu_state);
 
     /* configure glut callback handlers */
+    glutKeyboardFunc (key_handler);
     glutReshapeFunc (reshape);
     glutDisplayFunc (render);
 
@@ -148,6 +167,8 @@ main (int argc, char **argv)
 
     glutMainLoop ();
 
+    /* clean up */
+    adv_quit ();
     return 0;
 }
 
