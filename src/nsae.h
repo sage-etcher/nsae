@@ -10,6 +10,24 @@
 #define ADV_RAM (64+20+2) * (2<<10)
 #define ADV_KB_BUF_SIZE 7
 
+#define ADV_FDISK_COUNT 2
+
+#define ADV_FDISK_SIDES        2
+#define ADV_FDISK_TRACK_CNT   35
+#define ADV_FDISK_SECTOR_CNT  10
+#define ADV_FDISK_BLKSIZE    512
+#define ADV_FDISK_DATA_MAX 2*35*10*512
+
+typedef struct {
+    char *filename;
+    uint8_t side;
+    uint8_t track;
+    uint8_t sector;
+    uint16_t blksize;
+    uint8_t read_only;
+    uint8_t data[ADV_FDISK_DATA_MAX];
+} fcu_t;
+
 typedef struct {
     Z80_STATE cpu;
     mmu_t mmu;
@@ -26,6 +44,10 @@ typedef struct {
     uint8_t kb_nmi;
     uint8_t kb_buf[ADV_KB_BUF_SIZE];
     uint8_t kb_count;
+
+    uint8_t motor_enable;
+    uint8_t disk_select;
+    fcu_t floppy[ADV_FDISK_COUNT];
 } adv_t;
 
 int adv_init (adv_t *self);
