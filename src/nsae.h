@@ -8,6 +8,8 @@
 #include <stdint.h>
 
 #define ADV_RAM (64+20+2) * (2<<10)
+#define ADV_KB_BUF_SIZE 7
+
 typedef struct {
     Z80_STATE cpu;
     mmu_t mmu;
@@ -17,6 +19,13 @@ typedef struct {
     uint8_t control_reg;
     uint8_t status1_reg;
     uint8_t status2_reg;
+
+    uint8_t cursor_lock;
+    uint8_t kb_caps;
+    uint8_t kb_mi;
+    uint8_t kb_nmi;
+    uint8_t kb_buf[ADV_KB_BUF_SIZE];
+    uint8_t kb_count;
 } adv_t;
 
 int adv_init (adv_t *self);

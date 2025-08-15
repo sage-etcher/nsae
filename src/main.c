@@ -36,9 +36,27 @@ update (void)
 void
 key_handler (unsigned char key, int x, int y)
 {
+    /* handle emulator reserved */
     if (key == 'q')
     {
         s_exit_flag = 1;
+    }
+
+    /* pass throught to emulator */
+    /* handle keyboard buffer overrun bit */
+    if (s_emu_state.kb_count >= ADV_KB_BUF_SIZE)
+    {
+        s_emu_state.status2_reg |= 0x20;
+        return;
+    }
+
+    /* load kb data into kb buffer */
+    s_emu_state.kb_buf[s_emu_state.kb_count++] = key;
+
+    /* set keyboard data flag */
+    if (s_emu_state.kb_mi)
+    {
+        s_emu_state.status2_reg |= 0x40;
     }
 }
 
@@ -46,35 +64,46 @@ void
 render (void)
 {
     glClear (GL_COLOR_BUFFER_BIT);
+    
+    /* if blank display, dont update */
+    if (!(s_emu_state.control_reg & 0x20)) 
+    {
+        glBegin (GL_QUADS);
 
-    glBegin (GL_QUADS);
+            glColor3f (0.f, 1.f, 0.f);
 
-        glColor3f (0.f, 1.f, 0.f);
-
-        for (int x = 0; x < 80; x++)
-        {
             for (int y = 0; y < 240 ; y++)
             {
-                uint32_t offset = x * 0x100 + y + s_emu_state.scroll_reg;
-                unsigned char *p = &s_emu_state.memory[0x10000 + offset];
-                for (int b = 0; b < 8; b++)
+                for (int x = 0; x < 80; x++)
                 {
-                    if (*p >> b & 1)
+                    uint32_t offset = x * 0x100 + y + s_emu_state.scroll_reg;
+                    unsigned char *p = &s_emu_state.memory[0x10000 + offset];
+                    for (int b = 0; b < 8; b++)
                     {
-                        int screen_x = x * 8 + (7 - b);
-                        int screen_y = y;
-                        glVertex2f (screen_x,   screen_y);
-                        glVertex2f (screen_x+1, screen_y);
-                        glVertex2f (screen_x+1, screen_y+1);
-                        glVertex2f (screen_x,   screen_y+1);
+                        if (*p >> b & 1)
+                        {
+                            int screen_x = x * 8 + (7 - b);
+                            int screen_y = y;
+                            glVertex2f (screen_x,   screen_y);
+                            glVertex2f (screen_x+1, screen_y);
+                            glVertex2f (screen_x+1, screen_y+1);
+                            glVertex2f (screen_x,   screen_y+1);
+                        }
                     }
                 }
             }
-        }
 
-    glEnd ();
+        glEnd ();
+    }
 
     glutSwapBuffers ();
+
+
+    /* set display flag */
+    if (s_emu_state.control_reg & 0x80)
+    {
+        s_emu_state.status1_reg |= 0x04;
+    }
 }
 
 void

@@ -42,6 +42,18 @@ adv_init (adv_t *self)
     mmu_load_page (&self->mmu, 0x02, 0x0C); /* prom */
     mmu_load_page (&self->mmu, 0x03, 0x00); /* main */
 
+    /* initialize hardware registers */
+    self->control_reg = 0x00;
+    self->status1_reg = 0x02; /* no io-board or non-maskable interupts */
+    self->status2_reg = 0x80;
+
+    self->cursor_lock = 0;
+    self->kb_caps = 0;
+    self->kb_mi = 0;
+    self->kb_nmi = 1;
+
+    /* initialize keyboard */
+    self->kb_count = 0;
 
     /* initialize PROM */
     self->cpu.pc = 0x8000;
@@ -96,7 +108,8 @@ adv_write (adv_t *self, uint16_t addr, uint8_t data)
     /* dont write to ROM */
     if (abs_addr >= 0x15000) 
     {
-        fprintf (s_log, "nsae: debug: failed write to ROM 0x%05X\n", abs_addr);
+        fprintf (s_log, "nsae: debug: failed write to ROM 0x%04X:0x%05X\n", 
+                addr, abs_addr);
         return;
     }
 
@@ -106,6 +119,8 @@ adv_write (adv_t *self, uint16_t addr, uint8_t data)
 uint8_t
 adv_in (adv_t *self, uint8_t port)
 {
+    fprintf (s_log, "debug: %04x: in %02x\n", self->cpu.pc, port);
+
     switch (port & 0b11110000)
     {
     case 0x00: /* io board 6 */
@@ -166,6 +181,7 @@ adv_in (adv_t *self, uint8_t port)
 void
 adv_out (adv_t *self, uint8_t port, uint8_t data)
 {
+    fprintf (s_log, "debug: %04x: out %02x <- %02x\n", self->cpu.pc, port, data);
     switch (port & 0b11110000)
     {
     case 0x00: /* io board 6 */
@@ -190,7 +206,79 @@ adv_out (adv_t *self, uint8_t port, uint8_t data)
         return;
 
     case 0xf0: /* output to control register */
+
+        /* io commands */
+        switch (data & 0x03)
+        {
+        case 0x0: /* show sector */
+            break;
+
+        case 0x1: /* show char lsb */
+            if (self->kb_count == 0)
+            {
+                fprintf (s_log, "nsae: warning, reading LSB from empty buffer\n");
+            }
+            self->status2_reg &= ~0x0f; /* clear loworder bits */
+            self->status2_reg |= (self->kb_buf[0] & 0x0f);
+            break;
+
+        case 0x2: /* show char msb */
+            if (self->kb_count == 0)
+            {
+                fprintf (s_log, "nsae: warning, reading MSB from empty buffer\n");
+            }
+            self->status2_reg &= ~0x0f; /* clear loworder bits */
+            self->status2_reg |= ((self->kb_buf[0] & 0xf0) >> 4);
+
+            /* shift kb buffer */
+            if (self->kb_count > 0)
+            {
+                self->kb_count--;
+                memcpy (self->kb_buf, self->kb_buf+1, self->kb_count);
+            }
+
+            /* unset the character data flag */
+            if ((self->kb_count == 0) && (self->kb_mi))
+            {
+                self->status2_reg &= ~0x40;
+            }
+
+            /* clear character overrun */
+            self->status2_reg &= ~0x20;
+
+            break;
+
+        case 0x3: /* compliment kb mi */
+            self->kb_mi ^= 0x01;
+            self->status2_reg |= self->kb_mi;
+            break;
+
+        case 0x4: /* compliment cursor lock */
+            self->cursor_lock ^= 0x01;
+            break;
+
+        case 0x5: /* start drive motors */
+            break;
+
+        case 0x6: /* step 1 of compliment kb nmi */
+            break;
+
+        case 0x7: 
+            /* step 2 of compliment kb nmi */
+            if ((self->control_reg & 0x07) == 0x06) 
+            {
+                self->kb_nmi ^= 0x01;
+                self->status2_reg |= self->kb_nmi;
+            }
+            else /* compliment all caps */
+            {
+                self->kb_caps ^= 0x01;
+            }
+            break;
+        }
+
         self->control_reg = data;
+        self->status2_reg ^= 0x80;
         return;
     }
 
