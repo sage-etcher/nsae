@@ -4,3 +4,32 @@
 following <https://lazyfoo.net/tutorials/OpenGL/index.php> atm, this repo 
 will be renamed in the future to respect that it is for learning and not for 
 the actual developement of nsae.
+
+The repository was not renamed, and instead became the base for NSAE as was 
+origonally planned.
+
+
+## Runtime Dependencies
+
+- FreeGLUT
+- GLU
+- GLEW
+- OpenGL 1.2
+
+## Build Dependencies
+
+- meson
+- xxd
+
+## Build
+
+    meson setup build
+    cd build
+    ninja
+    meson install
+
+# Licensing
+
+Copyright (c) 2025 Sage I. Hendricks
+MIT Licensing 
+
