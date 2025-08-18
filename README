@@ -12,7 +12,6 @@ origonally planned.
 ## Runtime Dependencies
 
 - FreeGLUT
-- GLU
 - GLEW
 - OpenGL 1.2
 

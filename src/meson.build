@@ -1,7 +1,6 @@
 
 glew_dep = dependency('glew', required : true)
 glut_dep = dependency('glut', required : true)
-glu_dep = dependency('glu', required : true)
 
 nsae_inc = include_directories('.')
 z80emu_inc = include_directories('z80emu')
@@ -20,7 +19,6 @@ nsae_bin = executable('nsae', [
   dependencies : [
     glew_dep,
     glut_dep,
-    glu_dep,
   ],
   install : true,
 )
