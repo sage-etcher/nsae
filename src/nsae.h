@@ -33,6 +33,11 @@ typedef struct {
     mmu_t mmu;
     uint8_t memory[ADV_RAM];
 
+    int win_width;
+    int win_height;
+    int win_max_fps;
+    int win_exit;
+
     uint8_t scroll_reg;
     uint8_t control_reg;
     uint8_t status1_reg;

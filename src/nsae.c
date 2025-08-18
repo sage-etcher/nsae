@@ -20,6 +20,11 @@ static void adv_set_memory_map (adv_t *self, uint8_t port, uint8_t data);
 int
 adv_init (adv_t *self)
 {
+    /* initialize the emulator */
+    self->win_width   = 640;
+    self->win_height  = 480;
+    self->win_max_fps = 60;
+
     /* initialize the cpu */
     Z80Reset (&self->cpu);
 

@@ -5,67 +5,72 @@
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 
+#include <assert.h>
 #include <stdio.h>
 
-static int s_screen_width  = 640;
-static int s_screen_height = 480;
-static int s_screen_fps = 60;
-
-static adv_t s_emu_state = { 0 };
-
-static int s_exit_flag = 0;
 
 void
-reshape (int width, int height)
+reshape (int width, int height, void *data)
 {
-    s_screen_width = width;
-    s_screen_height = height;
-    glViewport (0.f, 0.f, s_screen_width, s_screen_height);
+    adv_t *self = data;
+    assert (self != NULL);
+
+    self->win_width = width;
+    self->win_height = height;
+    glViewport (0.f, 0.f, width, height);
 }
 
 
 void
-update (void)
+update (void *data)
 {
+    adv_t *self = data;
+    assert (self != NULL);
+
     unsigned adv_cpu_speed = 4000000;
-    unsigned adv_cycles = adv_cpu_speed / s_screen_fps;
-    (void)adv_run (&s_emu_state, adv_cycles);
+    unsigned adv_cycles = adv_cpu_speed / self->win_max_fps;
+    (void)adv_run (self, adv_cycles);
 }
 
 void
-key_handler (unsigned char key, int x, int y)
+key_handler (unsigned char key, int x, int y, void *data)
 {
+    adv_t *self = data;
+    assert (self != NULL);
     /* handle emulator reserved */
     if (key == 'q')
     {
-        s_exit_flag = 1;
+        self->win_exit = 1;
     }
 
     /* pass throught to emulator */
     /* handle keyboard buffer overrun bit */
-    if (s_emu_state.kb_count >= ADV_KB_BUF_SIZE)
+    if (self->kb_count >= ADV_KB_BUF_SIZE)
     {
-        s_emu_state.status2_reg |= 0x20;
+        self->status2_reg |= 0x20;
         return;
     }
 
     /* load kb data into kb buffer */
-    s_emu_state.kb_buf[s_emu_state.kb_count++] = key;
+    self->kb_buf[self->kb_count++] = key;
 
     /* set keyboard data flag */
-    if (s_emu_state.kb_mi)
+    if (self->kb_mi)
     {
-        s_emu_state.status2_reg |= 0x40;
+        self->status2_reg |= 0x40;
     }
 }
 
 void
-render (void)
+render (void *data)
 {
+    adv_t *self = data;
+    assert (self != NULL);
+
     glClear (GL_COLOR_BUFFER_BIT);
     
     /* if blank display, dont update */
-    if (!(s_emu_state.control_reg & 0x20)) 
+    if (!(self->control_reg & 0x20)) 
     {
         glBegin (GL_QUADS);
 
@@ -75,8 +80,8 @@ render (void)
             {
                 for (int x = 0; x < 80; x++)
                 {
-                    uint32_t offset = x * 0x100 + y + s_emu_state.scroll_reg;
-                    unsigned char *p = &s_emu_state.memory[0x10000 + offset];
+                    uint32_t offset = x * 0x100 + y + self->scroll_reg;
+                    unsigned char *p = &self->memory[0x10000 + offset];
                     for (int b = 0; b < 8; b++)
                     {
                         if (*p >> b & 1)
@@ -99,31 +104,34 @@ render (void)
 
 
     /* set display flag */
-    if (s_emu_state.control_reg & 0x80)
+    if (self->control_reg & 0x80)
     {
-        s_emu_state.status1_reg |= 0x04;
+        self->status1_reg |= 0x04;
     }
 }
 
 void
-main_loop (int val)
+main_loop (int val, void *data)
 {
+    adv_t *self = data;
+    assert (self != NULL);
+
     /* exit before doing anyting if it is time */
-    if (s_exit_flag) 
+    if (self->win_exit) 
     {
         glutLeaveMainLoop ();
         return;
     }
 
     /* queue the next iteration imediately */
-    glutTimerFunc (1000 / s_screen_fps, main_loop, val);
+    glutTimerFuncUcall (1000 / self->win_max_fps, main_loop, val, self);
 
-    update ();
-    render ();
+    update (self);
+    render (self);
 }
 
 int
-init_gl (void)
+init_gl (adv_t *self)
 {
     GLenum glew_error = glewInit ();
     if (glew_error != GLEW_OK)
@@ -139,7 +147,7 @@ init_gl (void)
         return 1;
     }
 
-    glViewport (0.f, 0.f, s_screen_width, s_screen_height);
+    glViewport (0.f, 0.f, self->win_width, self->win_height);
 
     glMatrixMode (GL_PROJECTION);
     glLoadIdentity ();
@@ -164,34 +172,36 @@ init_gl (void)
 int
 main (int argc, char **argv)
 {
+    /* initialize emulator state */
+    adv_t emu = { 0 };
+    adv_t *self = &emu;
+    adv_init (self);
+
     /* initialize freeglut */
     glutInit (&argc, argv);
     glutInitContextVersion (1, 2);
 
     /* create glut window */
     glutInitDisplayMode (GLUT_DOUBLE);
-    glutInitWindowSize (s_screen_width, s_screen_height);
+    glutInitWindowSize (self->win_width, self->win_height);
     glutCreateWindow ("NorthStar Advantage Emulator");
 
-    s_screen_width = glutGet (GLUT_WINDOW_WIDTH);
-    s_screen_height = glutGet (GLUT_WINDOW_HEIGHT);
+    self->win_width  = glutGet (GLUT_WINDOW_WIDTH);
+    self->win_height = glutGet (GLUT_WINDOW_HEIGHT);
 
     /* initialize opengl context */
-    if (init_gl ())
+    if (init_gl (self))
     {
         fprintf (stderr, "nsae: cannot initialize OpenGL\n");
         return 1;
     }
 
-    /* initialize emulator state */
-    adv_init (&s_emu_state);
-
     /* configure glut callback handlers */
-    glutKeyboardFunc (key_handler);
-    glutReshapeFunc (reshape);
-    glutDisplayFunc (render);
+    glutKeyboardFuncUcall (key_handler, self);
+    glutReshapeFuncUcall (reshape, self);
+    glutDisplayFuncUcall (render, self);
 
-    glutTimerFunc (1000 / s_screen_fps, main_loop, 0);
+    glutTimerFuncUcall (1000 / self->win_max_fps, main_loop, 0, self);
 
     glutMainLoop ();
 
