@@ -64,12 +64,12 @@ adv_init (adv_t *self)
     self->kb_count = 0;
 
     /* initialize floppy disks */
-    self->floppys[0] = {
+    self->floppys[0] = (fcu_t){
         .filename = "boot.imd",
         .blksize = 512,
     };
 
-    self->floppys[1] = {
+    self->floppys[1] = (fcu_t){
         .filename = NULL,
         .blksize = 512,
     };
