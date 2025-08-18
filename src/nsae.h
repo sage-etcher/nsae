@@ -10,23 +10,26 @@
 #define ADV_RAM (64+20+2) * (2<<10)
 #define ADV_KB_BUF_SIZE 7
 
-#define ADV_FDISK_COUNT 2
+#define ADV_FD_COUNT 2
 
-#define ADV_FDISK_SIDES        2
-#define ADV_FDISK_TRACK_CNT   35
-#define ADV_FDISK_SECTOR_CNT  10
-#define ADV_FDISK_BLKSIZE    512
-#define ADV_FDISK_DATA_MAX 2*35*10*512
+#define ADV_FD_SIDES        2
+#define ADV_FD_TRACK_CNT   35
+#define ADV_FD_SECTOR_CNT  10
+#define ADV_FD_BLKSIZE    512
+#define ADV_FD_DATA_MAX 2*35*10*512
 
 typedef struct {
     char *filename;
-    uint8_t side;
-    uint8_t track;
+    uint8_t data[ADV_FD_DATA_MAX];
     uint8_t sector;
-    uint16_t blksize;
-    uint8_t read_only;
-    uint8_t data[ADV_FDISK_DATA_MAX];
-} fcu_t;
+    uint8_t track;
+} floppy_t;
+
+enum {
+    FD_NONE,
+    FD_WRITE,
+    FD_READ,
+};
 
 typedef struct {
     Z80_STATE cpu;
@@ -52,9 +55,12 @@ typedef struct {
     uint8_t kb_buf[ADV_KB_BUF_SIZE];
     uint8_t kb_count;
 
-    uint8_t motor_enable;
-    uint8_t disk_select;
-    fcu_t floppys[ADV_FDISK_COUNT];
+    uint8_t fdc_reg;
+    uint8_t fd_num;
+    uint8_t fd_mode;
+    uint8_t fd_first_read;
+    uint16_t fd_read_cnt;
+    floppy_t fd[ADV_FD_COUNT];
 } adv_t;
 
 int adv_init (adv_t *self);
@@ -62,11 +68,11 @@ void adv_quit (void);
 
 int adv_run (adv_t *self, int number_cycles);
 
-uint8_t adv_read  (adv_t *self, uint16_t addr);
-void    adv_write (adv_t *self, uint16_t addr, uint8_t data);
+uint8_t adv_read  (adv_t *self, uint16_t addr, Z80_STATE *state);
+void    adv_write (adv_t *self, uint16_t addr, uint8_t data, Z80_STATE *state);
 
-uint8_t adv_in  (adv_t *self, uint8_t port);
-void    adv_out (adv_t *self, uint8_t port, uint8_t data);
+uint8_t adv_in  (adv_t *self, uint8_t port, Z80_STATE *state);
+void    adv_out (adv_t *self, uint8_t port, uint8_t data, Z80_STATE *state);
 
 #endif
 /* end of file */

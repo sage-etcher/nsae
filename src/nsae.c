@@ -2,6 +2,7 @@
 #include "nsae.h"
 
 #include "advprom.h"
+#include "cpmbasic_120.h"
 #include "mmu.h"
 #include "z80emu.h"
 
@@ -15,7 +16,11 @@ const char *const LOGFILE = "nsae.log";
 static FILE *s_log = NULL;
 
 static void adv_set_memory_map (adv_t *self, uint8_t port, uint8_t data);
+static void adv_fdc_register (adv_t *self, uint8_t data);
 
+static uint8_t *adv_fd_data_ptr (adv_t *self);
+static uint8_t adv_fd_read (adv_t *self);
+static void adv_fd_write (adv_t *self, uint8_t data);
 
 int
 adv_init (adv_t *self)
@@ -58,22 +63,13 @@ adv_init (adv_t *self)
     /* initialize keyboard */
     self->cursor_lock = 0;
     self->kb_caps = 0;
-    self->kb_mi = 0;
+    self->kb_mi = 1;
     self->kb_nmi = 1;
 
     self->kb_count = 0;
 
     /* initialize floppy disks */
-    self->floppys[0] = (fcu_t){
-        .filename = "boot.imd",
-        .blksize = 512,
-    };
-
-    self->floppys[1] = (fcu_t){
-        .filename = NULL,
-        .blksize = 512,
-    };
-
+    memcpy (&self->fd[0].data, CPMBASIC_120_NSI, CPMBASIC_120_NSI_len);
 
     /* initialize PROM */
     self->cpu.pc = 0x8000;
@@ -107,7 +103,7 @@ adv_run (adv_t *self, int number_cycles)
 }
 
 uint8_t
-adv_read (adv_t *self, uint16_t addr)
+adv_read (adv_t *self, uint16_t addr, Z80_STATE *state)
 {
     assert (self != NULL);
 
@@ -118,7 +114,7 @@ adv_read (adv_t *self, uint16_t addr)
 }
 
 void
-adv_write (adv_t *self, uint16_t addr, uint8_t data)
+adv_write (adv_t *self, uint16_t addr, uint8_t data, Z80_STATE *state)
 {
     assert (self != NULL);
 
@@ -137,7 +133,7 @@ adv_write (adv_t *self, uint16_t addr, uint8_t data)
 }
 
 uint8_t
-adv_in (adv_t *self, uint8_t port)
+adv_in_core (adv_t *self, uint8_t port)
 {
     switch (port & 0b11110000)
     {
@@ -183,9 +179,15 @@ adv_in (adv_t *self, uint8_t port)
     switch (port & 0b11110011)
     {
     case 0x80:  /* get disk data byte */
+        return adv_fd_read (self);
+
     case 0x81:  /* get disk sync byte */
+        self->fd_first_read = 1;
+        return 0x0fb;
+
     case 0x82:  /* clear disk read flag */
-        break;
+        self->fd_mode = FD_NONE;
+        return 0x00;
 
     case 0x83:  /* beep */
         printf ("beep! ;TODO: add sound\n");
@@ -196,9 +198,23 @@ adv_in (adv_t *self, uint8_t port)
     return 0x00;
 }
 
-void
-adv_out (adv_t *self, uint8_t port, uint8_t data)
+uint8_t
+adv_in (adv_t *self, uint8_t port, Z80_STATE *state)
 {
+    uint8_t data = adv_in_core (self, port);
+    if ((port != 0xd0) && (port != 0xe0))
+    {
+        printf ("%04x    in  %02x\n", state->pc, port);
+        fflush (stdout);
+    }
+    return data;
+}
+
+void
+adv_out (adv_t *self, uint8_t port, uint8_t data, Z80_STATE *state)
+{
+    printf ("%04x    out %02x ;%02x\n", state->pc, port, data);
+    fflush (stdout);
     switch (port & 0b11110000)
     {
     case 0x00: /* io board 6 */
@@ -225,9 +241,14 @@ adv_out (adv_t *self, uint8_t port, uint8_t data)
     case 0xf0: /* output to control register */
 
         /* io commands */
-        switch (data & 0x03)
+        switch (data & 0x07)
         {
+        case 0x5: /* start drive motors */
         case 0x0: /* show sector */
+            self->status2_reg &= 0xf;
+            self->status2_reg |= self->fd[self->fd_num].sector;
+            self->fd[self->fd_num].sector++;
+            self->fd[self->fd_num].sector %= 10;
             break;
 
         case 0x1: /* show char lsb */
@@ -274,9 +295,6 @@ adv_out (adv_t *self, uint8_t port, uint8_t data)
             self->cursor_lock ^= 0x01;
             break;
 
-        case 0x5: /* start drive motors */
-            break;
-
         case 0x6: /* step 1 of compliment kb nmi */
             break;
 
@@ -294,6 +312,18 @@ adv_out (adv_t *self, uint8_t port, uint8_t data)
             break;
         }
 
+        /* toggle aquire mode */
+        if (!(self->control_reg & 0x08) && (data & 0x08))
+        {
+            /* set the disk serial data bit */
+            self->status1_reg |= 0x80;
+        }
+        else 
+        {
+            /* unset the bit */
+            self->status1_reg &= ~0x80;
+        }
+
         self->control_reg = data;
         self->status2_reg ^= 0x80;
         return;
@@ -302,10 +332,20 @@ adv_out (adv_t *self, uint8_t port, uint8_t data)
     switch (port & 0b11110011)
     {
     case 0x80:  /* send a data byte to disk */
+        adv_fd_write (self, data);
+        return;
+
     case 0x81:  /* set drive control register */
+        adv_fdc_register (self, data);
+        return;
+
     case 0x82:  /* set disk read flag */
+        self->fd_mode = FD_READ;
+        return;
+
     case 0x83:  /* set disk write flag */
-        break;
+        self->fd_mode = FD_WRITE;
+        return;
 
     case 0xa0: /* memory mapping reigster */
     case 0xa1: /* memory mapping reigster */
@@ -327,5 +367,74 @@ adv_set_memory_map (adv_t *self, uint8_t port, uint8_t data)
     mmu_load_page (&self->mmu, slot, page);
 }
 
+static void
+adv_fdc_register (adv_t *self, uint8_t data)
+{
+    uint8_t fd_num = (data & 0x02);
+    floppy_t *p_fd = &self->fd[fd_num];
+
+    /* step floppy drive */
+    if (!(self->fdc_reg & 0x10) && (data & 0x10))
+    {
+        /* inner */
+        if (data & 0x20)
+        {
+            if (p_fd->track < ADV_FD_TRACK_CNT)
+            {
+                p_fd->track++;
+            }
+        }
+        else /* outer */
+        {
+            if (p_fd->track != 0)
+            {
+                p_fd->track--;
+            }
+        }
+
+        /* set track 0 bit flag */
+        if (p_fd->track == 0)
+        {
+            self->status1_reg |= 0x20; /* set */
+        }
+        else
+        {
+            self->status1_reg &= ~0x20; /* unset */
+        }
+    }
+
+    self->fd_num = fd_num;
+    self->fdc_reg = data;
+}
+
+static uint8_t *
+adv_fd_data_ptr (adv_t *self)
+{
+    floppy_t *fd = &self->fd[self->fd_num];
+    uint32_t offset = 0;
+
+    offset += (self->fdc_reg & 0x40) >> 6;
+    offset *= fd->track;
+    offset += fd->track;
+    offset *= ADV_FD_SECTOR_CNT;
+    offset += fd->sector;
+    offset *= ADV_FD_BLKSIZE;
+
+    return &fd->data[offset];
+}
+
+static uint8_t 
+adv_fd_read (adv_t *self)
+{
+    if (self->fd_mode != FD_READ) return 0x00;
+    return *adv_fd_data_ptr (self);
+}
+
+static void
+adv_fd_write (adv_t *self, uint8_t data)
+{
+    if (self->fd_mode != FD_WRITE) return;
+    *adv_fd_data_ptr (self) = data;
+}
 
 /* end of file */

@@ -46,12 +46,14 @@ key_handler (unsigned char key, int x, int y, void *data)
     }
 
     /* pass throught to emulator */
+    printf ("presed %c %d %02x\n", key, key, key);
 
     if (self->emu_paused) return;
 
     /* handle keyboard buffer overrun bit */
     if (self->kb_count >= ADV_KB_BUF_SIZE)
     {
+        printf ("kb buffer full\n");
         self->status2_reg |= 0x20;
         return;
     }
@@ -64,6 +66,7 @@ key_handler (unsigned char key, int x, int y, void *data)
     {
         self->status2_reg |= 0x40;
     }
+    printf ("added key\n");
 }
 
 void

@@ -93,28 +93,28 @@ extern "C" {
 
 #define Z80_READ_BYTE(address, x)                                       \
 {                                                                       \
-        (x) = adv_read ((adv_t *)context, address);                     \
+        (x) = adv_read ((adv_t *)context, address, state);              \
 }
 
 #define Z80_FETCH_BYTE(address, x)              Z80_READ_BYTE((address), (x))
 
 #define Z80_READ_WORD(address, x)                                       \
 {                                                                       \
-        (x) =  adv_read ((adv_t *)context, address);                    \
-        (x) |= adv_read ((adv_t *)context, (address) + 1) << 8;         \
+        (x) =  adv_read ((adv_t *)context, address, state);             \
+        (x) |= adv_read ((adv_t *)context, (address) + 1, state) << 8;  \
 }
 
 #define Z80_FETCH_WORD(address, x)              Z80_READ_WORD((address), (x))
 
 #define Z80_WRITE_BYTE(address, x)                                      \
 {                                                                       \
-        adv_write ((adv_t *)context, address, x);                       \
+        adv_write ((adv_t *)context, address, x, state);                \
 }
 
 #define Z80_WRITE_WORD(address, x)                                      \
 {                                                                       \
-        adv_write ((adv_t *)context, address, x);                       \
-        adv_write ((adv_t *)context, (address) + 1, (x) >> 8);          \
+        adv_write ((adv_t *)context, address, x, state);                \
+        adv_write ((adv_t *)context, (address) + 1, (x) >> 8, state);   \
 }
 
 #define Z80_READ_WORD_INTERRUPT(address, x)     Z80_READ_WORD((address), (x))
@@ -123,12 +123,12 @@ extern "C" {
 
 #define Z80_INPUT_BYTE(port, x)                                         \
 {                                                                       \
-        (x) = adv_in ((adv_t *)context, port);                          \
+        (x) = adv_in ((adv_t *)context, port, state);                   \
 }
 
 #define Z80_OUTPUT_BYTE(port, x)                                        \
 {                                                                       \
-        adv_out ((adv_t *)context, port, x);                            \
+        adv_out ((adv_t *)context, port, x, state);                     \
 }
 
 #ifdef __cplusplus
