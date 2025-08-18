@@ -21,6 +21,9 @@ int
 adv_init (adv_t *self)
 {
     /* initialize the emulator */
+    self->win_exit = 0;
+    self->emu_paused = 0;
+
     self->win_width   = 640;
     self->win_height  = 480;
     self->win_max_fps = 60;

@@ -38,6 +38,8 @@ typedef struct {
     int win_max_fps;
     int win_exit;
 
+    int emu_paused;
+
     uint8_t scroll_reg;
     uint8_t control_reg;
     uint8_t status1_reg;

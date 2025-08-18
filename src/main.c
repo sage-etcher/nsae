@@ -27,6 +27,8 @@ update (void *data)
     adv_t *self = data;
     assert (self != NULL);
 
+    if (self->emu_paused) return;
+
     unsigned adv_cpu_speed = 4000000;
     unsigned adv_cycles = adv_cpu_speed / self->win_max_fps;
     (void)adv_run (self, adv_cycles);
@@ -44,6 +46,9 @@ key_handler (unsigned char key, int x, int y, void *data)
     }
 
     /* pass throught to emulator */
+
+    if (self->emu_paused) return;
+
     /* handle keyboard buffer overrun bit */
     if (self->kb_count >= ADV_KB_BUF_SIZE)
     {
@@ -59,6 +64,29 @@ key_handler (unsigned char key, int x, int y, void *data)
     {
         self->status2_reg |= 0x40;
     }
+}
+
+void
+menu_handler (int value, void *data)
+{
+    adv_t *self = data;
+    assert (self != NULL);
+
+    switch (value)
+    {
+    case 1: self->win_exit = 1; break; /* exit */
+    case 2: self->emu_paused = 1; break; /* pause */
+    case 3: self->emu_paused = 0; break; /* start */
+
+    case 4: /* disk B: eject */
+    case 5: /* disk B: load */
+    case 6: /* disk A: eject */
+    case 7: /* disk A: load */
+            fprintf (stderr, "nsae: debug: unimplemented menu entry\n");
+            break;
+    }
+
+    return;
 }
 
 void
@@ -188,6 +216,23 @@ main (int argc, char **argv)
 
     self->win_width  = glutGet (GLUT_WINDOW_WIDTH);
     self->win_height = glutGet (GLUT_WINDOW_HEIGHT);
+
+    /* create glut menu */
+    int floppy_a_menu = glutCreateMenuUcall (menu_handler, self);
+    glutAddMenuEntry ("eject A", 7);
+    glutAddMenuEntry ("load disk file", 6);
+
+    int floppy_b_menu = glutCreateMenuUcall (menu_handler, self);
+    glutAddMenuEntry ("eject B", 5);
+    glutAddMenuEntry ("load disk file", 4);
+
+    int root_menu = glutCreateMenuUcall (menu_handler, self);
+    glutAddSubMenu ("floppy a", floppy_a_menu);
+    glutAddSubMenu ("floppy b", floppy_b_menu);
+    glutAddMenuEntry ("start", 3);
+    glutAddMenuEntry ("pause", 2);
+    glutAddMenuEntry ("exit", 1);
+    glutAttachMenu (GLUT_RIGHT_BUTTON);
 
     /* initialize opengl context */
     if (init_gl (self))
