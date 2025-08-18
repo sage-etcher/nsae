@@ -139,8 +139,6 @@ adv_write (adv_t *self, uint16_t addr, uint8_t data)
 uint8_t
 adv_in (adv_t *self, uint8_t port)
 {
-    fprintf (s_log, "debug: %04x: in %02x\n", self->cpu.pc, port);
-
     switch (port & 0b11110000)
     {
     case 0x00: /* io board 6 */
@@ -201,7 +199,6 @@ adv_in (adv_t *self, uint8_t port)
 void
 adv_out (adv_t *self, uint8_t port, uint8_t data)
 {
-    fprintf (s_log, "debug: %04x: out %02x <- %02x\n", self->cpu.pc, port, data);
     switch (port & 0b11110000)
     {
     case 0x00: /* io board 6 */
