@@ -9,6 +9,7 @@ extern "c" {
 #include <stdint.h>
 
 typedef struct {
+    bool unimplimented;
 } sio_t;
 
 

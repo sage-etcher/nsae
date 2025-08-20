@@ -9,6 +9,7 @@ extern "c" {
 #include <stdint.h>
 
 typedef struct {
+    bool unimplimented;
 } speaker_t;
 
 int speaker_init (speaker_t *self);

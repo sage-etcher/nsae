@@ -9,6 +9,7 @@ extern "c" {
 #include <stdint.h>
 
 typedef struct {
+    bool unimplimented;
 } pio_t;
 
 #ifdef __cplusplus
