@@ -6,6 +6,7 @@ extern "c" {
 #endif
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #define FD_SIDES     2
@@ -20,14 +21,14 @@ typedef struct {
 
     size_t  data_cnt[2];
     uint8_t data[2][FD_MAX_SIZE];
-    
+
     uint8_t sector[2];
     uint8_t track[2];
 
     bool powered;
     bool motor_enabled;
 
-    bool disk; /* 0:1 for disk A:B */
+    bool disk;      /* 0:1 for disk A:B */
     bool disk_side; /* 0:1 for top:bottom */
 
     bool step_pulse;

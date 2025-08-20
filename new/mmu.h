@@ -14,18 +14,19 @@ extern "c" {
 #define MMU_PAGE_CNT 16
 typedef struct {
     ram_t *p_ram;
+    uint8_t slot_bit;
     uint8_t slots[MMU_SLOT_CNT];
     uint32_t bases[MMU_PAGE_CNT];
     uint16_t masks[MMU_PAGE_CNT];
 } mmu_t;
 
-int mmu_init (mmu_t *self, ram_t *p_ram);
-void mmu_init_page (mmu_t *self, uint8_t page, uint32_t base, uint16_t mask);
+int mmu_init (mmu_t *self, uint8_t slot_bit, ram_t *p_ram);
+void mmu_init_page (mmu_t *self, uint8_t page, uint16_t mask, uint32_t base);
 void mmu_load_page (mmu_t *self, uint8_t slot, uint8_t page);
 
 uint8_t *mmu_deref (mmu_t *self, uint16_t addr);
-uint8_t read (mmu_t *self, uint16_t addr);
-void write (mmu_t *self, uint16_t addr, uint8_t data);
+uint8_t mmu_read (mmu_t *self, uint16_t addr);
+void mmu_write (mmu_t *self, uint16_t addr, uint8_t data);
 
 #ifdef __cplusplus
 }

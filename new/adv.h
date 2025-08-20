@@ -12,6 +12,7 @@ extern "c" {
 #include "kb.h"
 #include "mmu.h"
 #include "ram.h"
+#include "speaker.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -27,6 +28,10 @@ typedef struct {
     ram_t ram;
     speaker_t speaker;
 
+    bool kb_mi;     /* keyboard maskable interupt */
+    bool kb_nmi;    /* keyboard non-maskable interupt */
+    bool crt_mi;    /* crt maskable interupt */
+
     bool hw_interupt;
 
     bool cmd_ack;
@@ -37,8 +42,11 @@ typedef struct {
 
 int adv_init (adv_t *self);
 
-uint8_t adv_in (adv_t *self, uint8_t port)
-void adv_out (adv_t *self, uint8_t port, uint8_t data)
+int adv_run (adv_t *self, int cycles);
+int adv_step (adv_t *self);
+
+uint8_t adv_in (adv_t *self, uint8_t port);
+void adv_out (adv_t *self, uint8_t port, uint8_t data);
 
 
 #ifdef __cplusplus

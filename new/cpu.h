@@ -5,13 +5,20 @@
 extern "c" {
 #endif
 
+#include "z80emu.h"
+
 #include <stdbool.h>
 #include <stdint.h>
 
+
 typedef struct {
-    Z80STATE state;
+    Z80_STATE state;
 } cpu_t;
 
+int cpu_init (cpu_t *self);
+void cpu_reset (cpu_t *self);
+int cpu_run (cpu_t *self, int cycles, void *cb_data);
+int cpu_step (cpu_t *self, void *cb_data);
 
 #ifdef __cplusplus
 }

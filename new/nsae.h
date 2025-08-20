@@ -8,7 +8,7 @@ extern "c" {
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "ade.h"
+#include "adv.h"
 
 
 typedef struct {
@@ -22,10 +22,7 @@ typedef struct {
     bool exit;
 } nsae_t;
 
-nsae_t *nsae_new (void);
-void nsae_free (nsae_t *self);
-
-int nsae_start (nsae_t *self);
+int nsae_start (nsae_t *self, int *p_argc, char **argv);
 
 
 #ifdef __cplusplus

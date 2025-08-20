@@ -17,20 +17,21 @@ cpu_init (cpu_t *self)
 void
 cpu_reset (cpu_t *self)
 {
-    Z80Reset (&self->state)
+    Z80Reset (&self->state);
 }
 
-uint32_t
-cpu_step (cpu_t *self)
+int
+cpu_run (cpu_t *self, int cycles, void *cb_data)
 {
-    return 0;
+    return Z80Emulate (&self->state, cycles, cb_data);
 }
 
-uint32_t
-cpu_run (cpu_t *self, uint32_t cycles)
+int
+cpu_step (cpu_t *self, void *cb_data)
 {
-    return 0;
+    return cpu_run (self, 1, cb_data);
 }
+
 
 
 /* end of file */

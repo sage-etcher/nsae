@@ -13,8 +13,7 @@ extern "c" {
 typedef struct {
     bool overflow;
     bool data_flag;
-    bool mi;
-    bool nmi;
+    bool reset;
     uint8_t buf[KB_BUF_MAX];
     uint8_t buf_cnt;
 } kb_t;
@@ -22,7 +21,10 @@ typedef struct {
 int kb_init (kb_t *self);
 
 uint8_t kb_decode_key (kb_t *self, uint8_t host_key);
+
 void kb_push (kb_t *self, uint8_t key);
+uint8_t kb_pop (kb_t *self);
+
 uint8_t kb_get_lsb (kb_t *self);
 uint8_t kb_get_msb (kb_t *self);
 

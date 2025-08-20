@@ -15,7 +15,7 @@ typedef struct {
     const uint8_t *p_vram;
 } crt_t;
 
-int crt_init (crt_t *self);
+int crt_init (crt_t *self, uint8_t *p_vram);
 
 void crt_draw (crt_t *self);
 

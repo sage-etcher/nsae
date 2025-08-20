@@ -1,0 +1,102 @@
+
+z80
+  in stat1_reg
+  in stat2_reg
+  out ctrl_reg
+
+#if 0
+ctrl_reg
+  in z80
+  out keyboard
+  out video
+  out disk
+  out io_boards
+  out speaker
+
+stat1_reg
+  in keyboard
+  in video
+  in disk
+  in io_boards
+  out z80
+
+stat2_reg
+  in keyboard
+  in disk
+  in cmd_ack
+  out z80
+
+keyboard
+  in ctrl_reg
+  out stat1_reg
+  out stat2_reg
+
+video
+  in ctrl_reg
+  out stat1_reg
+
+disk
+  in ctrl_reg
+  out stat1_reg
+  out stat2_reg
+
+io_boards
+  in ctrl_reg
+  out stat1_reg
+
+speaker
+  in ctrl_reg
+#endif
+
+typedef struct {
+} z80_t;
+
+typedef struct {
+} keyboard_t;
+
+typedef struct {
+} video_t;
+
+typedef struct {
+} fdisk_t;
+
+typedef struct {
+} io_boards_t;
+
+typedef struct {
+    void beep()
+} speaker_t;
+
+typedef struct {
+    main[4*16k];
+    vram[16k+4k];
+    rom[2k];
+} memory_t;
+
+typedef struct {
+    memory_t *raw_mem;
+    slots[4];
+    pages[16];
+} mmu_t;
+
+typedef struct {
+    z80_t cpu;
+    memory_t ram;
+    mmu_t mmu;
+    fdisk_t fdc;
+    keyboard_t kb;
+    video_t display;
+    speaker_t speaker;
+    io_boards_t io;
+
+    uint8_t ctrl_reg;
+    uint8_t stat1_reg;
+    uint8_t stat2_reg;
+} adv_t;
+
+typedef struct {
+    adv_t adv;
+} nsae_t;
+
+
+

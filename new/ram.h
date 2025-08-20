@@ -6,6 +6,7 @@ extern "c" {
 #endif
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #define RAM_BASE_MAIN_0 0x00000
@@ -14,17 +15,19 @@ extern "c" {
 #define RAM_BASE_MAIN_3 0x0C000
 #define RAM_BASE_VRAM_8 0x10000
 #define RAM_BASE_VRAM_9 0x14000
-#define RAM_BASE_PROM_C 0x15000
+#define RAM_BASE_PROM   0x15000
+
+#define RAM_PROM_SIZE   0x00800
 #define RAM_SIZE        0x15800
 
 typedef struct {
     uint8_t m[RAM_SIZE];
 } ram_t;
 
-int ram_init (ram_t *self);
+int ram_init (ram_t *self, uint8_t prom[], size_t n);
 
 uint8_t ram_read (ram_t *self, uint32_t addr);
-void ram_write (ram_t *self, uint32_t addr, uint8_t data);
+int ram_write (ram_t *self, uint32_t addr, uint8_t data);
 
 
 #ifdef __cplusplus
