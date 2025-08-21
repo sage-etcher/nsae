@@ -20,6 +20,10 @@ add_project_arguments([
   language : 'c',
 )
 
+if get_option('debug')
+  add_project_arguments(['-D_DEBUG'], language : 'c')
+endif
+
 
 subdir('resources')
 subdir('src')

@@ -135,13 +135,13 @@ extern "C" {
 #define Z80_INPUT_BYTE(port, x)                                         \
 {                                                                       \
         assert (context != NULL);                                       \
-        (x) = adv_in (ADV_CTX, port);                                   \
+        (x) = adv_in (ADV_CTX, port, pc);                               \
 }
 
 #define Z80_OUTPUT_BYTE(port, x)                                        \
 {                                                                       \
         assert (context != NULL);                                       \
-        adv_out (ADV_CTX, port, x);                                     \
+        adv_out (ADV_CTX, port, x, pc);                                 \
 }
 
 #ifdef __cplusplus

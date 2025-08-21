@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
 
@@ -29,9 +30,13 @@ kb_push (kb_t *self, uint8_t key)
 {
     assert (self != NULL);
 
+    fprintf (stderr, "nsae: kb: push %02x '%c'\n",
+            key, key);
+
     /* set overflow */
     if (self->buf_cnt >= KB_BUF_MAX)
     {
+        fprintf (stderr, "nsae: kb: overflow\n");
         self->overflow = true;
         return;
     }
@@ -51,6 +56,9 @@ kb_pop (kb_t *self)
     /* save bottom value */
     uint8_t key = self->buf[0];
 
+    fprintf (stderr, "nsae: kb: pop  %02x '%c'\n",
+            key, key);
+
     /* shift buf left 1 */
     if (self->buf_cnt != 0)
     {
@@ -69,6 +77,11 @@ kb_get_lsb (kb_t *self)
 {
     assert (self != NULL);
 
+    if (!self->data_flag)
+    {
+        fprintf (stderr, "nsae: kb: reading lsb from empty buffer\n");
+    }
+
     return self->buf[0] & 0x0f;
 }
 
@@ -76,6 +89,11 @@ uint8_t
 kb_get_msb (kb_t *self)
 {
     assert (self != NULL);
+
+    if (!self->data_flag)
+    {
+        fprintf (stderr, "nsae: kb: reading MSB from empty buffer\n");
+    }
 
     return (kb_pop (self) & 0xf0) >> 4;
 }

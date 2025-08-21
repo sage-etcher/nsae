@@ -14,6 +14,9 @@ typedef struct {
     bool overflow;
     bool data_flag;
     bool reset;
+    bool cursor_lock;
+    bool caps_lock;
+    bool autorepeat;
     uint8_t buf[KB_BUF_MAX];
     uint8_t buf_cnt;
 } kb_t;
