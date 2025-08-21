@@ -14,13 +14,24 @@ extern "c" {
 #define FD_SECTORS  10
 #define FD_BLKSIZE 512
 
-#define FD_MAX_SIZE 2*35*10*512
+#define FD_SSDD_SIZE 179200
+#define FD_DSDD_SIZE 358400
+#define FD_MAX_SIZE  FD_DSDD_SIZE
+
+#define FD_SSDD 0
+#define FD_DSDD 1
+
+#define FD_STEP_OUT 0
+#define FD_STEP_IN  1
 
 typedef struct {
     char *filename[2];
 
-    size_t  data_cnt[2];
     uint8_t data[2][FD_MAX_SIZE];
+    bool disk_type[2];
+    uint8_t preamble;
+    uint8_t sync;
+    uint16_t index;
 
     uint8_t sector[2];
     uint8_t track[2];
@@ -28,20 +39,23 @@ typedef struct {
     bool powered;
     bool motor_enabled;
 
-    bool disk;      /* 0:1 for disk A:B */
-    bool disk_side; /* 0:1 for top:bottom */
+    bool disk;  /* 0:1 for disk A:B */
+    bool side;  /* 0:1 for top:bottom */
 
+    bool track_zero;
     bool step_pulse;
     bool step_direction; /* 0:1 for out:in */
+    bool precompensation;
 
-    bool mode_read;
-    bool mode_write;
+    bool read_mode;
+    bool write_mode;
     bool hard_ro;
 } fdc_t;
 
+
 int fdc_init (fdc_t *self);
-int fdc_load_disk (bool disk, char *filename);
-int fdc_save_disk (bool disk, char *filename);
+int fdc_load_disk (fdc_t *self, bool disk, char *filename);
+int fdc_save_disk (fdc_t *self, bool disk, char *filename);
 
 void fdc_start_motor (fdc_t *self);
 void fdc_stop_motor (fdc_t *self);

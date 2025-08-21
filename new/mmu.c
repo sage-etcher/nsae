@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
 static uint32_t mmu_decode (mmu_t *self, uint16_t addr);
@@ -77,6 +78,8 @@ mmu_read (mmu_t *self, uint16_t addr)
     assert (self->p_ram != NULL);
 
     uint32_t abs_addr = mmu_decode (self, addr);
+
+    fprintf (stderr, "mmu_read: %04x\n", addr);
 
     return ram_read (self->p_ram, abs_addr);
 }

@@ -27,7 +27,9 @@ adv_init (adv_t *self)
 
     int rc = 0;
     rc |= cpu_init (&self->cpu);
-    //rc |= fdc_init (&self->fdc);
+    rc |= fdc_init (&self->fdc);
+    fdc_load_disk (&self->fdc, 0, "CPMBASIC_120.NSI");
+
     //rc |= io_init (&self->io);
     rc |= kb_init (&self->kb);
     rc |= speaker_init (&self->speaker);
@@ -101,6 +103,7 @@ adv_update_status (adv_t *self)
     uint8_t *stat1 = &self->stat1_reg;
     uint8_t *stat2 = &self->stat2_reg;
     crt_t *crt = &self->crt;
+    fdc_t *fdc = &self->fdc;
     kb_t *kb = &self->kb;
 
     /* status register 1 */
@@ -109,7 +112,10 @@ adv_update_status (adv_t *self)
     /* bit7 disk serial data flag */
     /* bit6 sector mark */
     /* bit5 track 0 */
-    /* bit4 disk wirte protect */
+    *stat1 |= fdc->track_zero << 5;
+
+    /* bit4 disk write protect */
+    *stat1 |= fdc->hard_ro << 4;
 
     /* bit3 non-maskable interupt */
     *stat1 |= (!self->hw_interupt & 0x01) << 3;
@@ -137,7 +143,6 @@ adv_update_status (adv_t *self)
 
     /* bit 3-0 command outputs (externally managed) */
 
-#if 0
     fprintf (stderr, "status1_reg = %d%d%d%d$%d%d%d%d\n",
             (*stat1 >> 7) & 0x1, (*stat1 >> 6) & 0x1,
             (*stat1 >> 5) & 0x1, (*stat1 >> 4) & 0x1,
@@ -149,7 +154,6 @@ adv_update_status (adv_t *self)
             (*stat2 >> 5) & 0x1, (*stat2 >> 4) & 0x1,
             (*stat2 >> 3) & 0x1, (*stat2 >> 2) & 0x1,
             (*stat2 >> 1) & 0x1, (*stat2 >> 0) & 0x1);
-#endif
 }
 
 uint8_t
@@ -171,12 +175,10 @@ adv_in (adv_t *self, uint8_t port, uint16_t pc)
 
     case 0xb0: /* clear display flag */
         self->crt.vrefresh = 0;
-        //self->stat1_reg &= ~0x04;
         return 0x00;
 
     case 0xc0: /* clear non-maskable interupt */
         self->hw_interupt = 0;
-        //self->stat1_reg |= 0x08;
         return 0x00;
 
     case 0xd0: /* get io stat register 2 */
@@ -204,16 +206,14 @@ adv_in (adv_t *self, uint8_t port, uint16_t pc)
     switch (port & 0xf3)
     {
     case 0x80:  /* get disk data byte */
-        //return adv_fd_read (self);
+        return fdc_read (&self->fdc);
 
     case 0x81:  /* get disk sync byte */
-        //self->fd_first_read = 1;
-        //return 0x0fb;
+        return fdc_read_sync1 (&self->fdc);
 
     case 0x82:  /* clear disk read flag */
-        //self->fd_mode = FD_NONE;
-        //return 0x00;
-        break;
+        self->fdc.read_mode = false;
+        return 0x00;
 
     case 0x83:  /* beep */
         speaker_beep (&self->speaker);
@@ -233,11 +233,10 @@ adv_command (adv_t *self, uint8_t data)
     switch (data & 0x07)
     {
     case 0x5: /* start drive motors */
+        fdc_start_motor (&self->fdc);
     case 0x0: /* show sector */
-        //self->stat2_reg &= 0xf;
-        //self->stat2_reg |= self->fd[self->fd_num].sector;
-        //self->fd[self->fd_num].sector++;
-        //self->fd[self->fd_num].sector %= 10;
+        self->stat2_reg &= 0x0f;
+        self->stat2_reg |= fdc_get_sector (&self->fdc) & 0x0f;
         break;
 
     case 0x1: /* show char lsb */
@@ -246,30 +245,6 @@ adv_command (adv_t *self, uint8_t data)
 
     case 0x2: /* show char msb */
         self->stat2_reg |= kb_get_msb (&self->kb);
-//
-//        if (self->kb_count == 0)
-//        {
-//            fprintf (stderr, "nsae: warning, reading MSB from empty buffer\n");
-//        }
-//        self->stat2_reg &= ~0x0f; /* clear loworder bits */
-//        self->stat2_reg |= ((self->kb_buf[0] & 0xf0) >> 4);
-//
-//        /* shift kb buffer */
-//        if (self->kb_count > 0)
-//        {
-//            self->kb_count--;
-//            memcpy (self->kb_buf, self->kb_buf+1, self->kb_count);
-//        }
-//
-//        /* unset the character data flag */
-//        if ((self->kb_count == 0) && (self->kb_mi))
-//        {
-//            self->stat2_reg &= ~0x40;
-//        }
-//
-//        /* clear character overrun */
-//        self->stat2_reg &= ~0x20;
-
         break;
 
     case 0x3: /* compliment kb mi */
@@ -368,12 +343,10 @@ adv_out (adv_t *self, uint8_t port, uint8_t data, uint16_t pc)
 
     case 0xb0: /* clear display flag */
         self->crt.vrefresh = 0;
-        //stat1_reg &= ~0x04;
         return;
 
     case 0xc0: /* clear non-maskable interupt */
         self->hw_interupt = 0;
-        //self->stat1_reg |= 0x08;
         return;
 
     case 0xf0: /* output to control register */
@@ -411,21 +384,36 @@ adv_out (adv_t *self, uint8_t port, uint8_t data, uint16_t pc)
     switch (port & 0xf3)
     {
     case 0x80:  /* send a data byte to disk */
-        //adv_fd_write (self, data);
-        //return;
+        fdc_write (&self->fdc, data);
+        return;
 
     case 0x81:  /* set drive control register */
-        //adv_fdc_register (self, data);
-        //return;
+        /* bit 0-1 disk select */
+        self->fdc.disk = (data >> 1) & 0x01;
+
+        /* bit 5 precompensation and step_direction */
+        self->fdc.step_direction = (data >> 5) & 0x01;
+        self->fdc.precompensation = self->fdc.step_direction;
+
+        /* bit 6 side select */
+        self->fdc.side = (data >> 6) & 0x01;
+
+        /* bit 4 step pulse */
+        if (!self->fdc.step_pulse && ((data >> 4) & 0x01))
+        {
+            fdc_step (&self->fdc);
+        }
+        self->fdc.step_pulse = (data >> 4) & 0x01;
+
+        return;
 
     case 0x82:  /* set disk read flag */
-        //self->fd_mode = FD_READ;
-        //return;
+        self->fdc.read_mode = true;
+        return;
 
     case 0x83:  /* set disk write flag */
-        //self->fd_mode = FD_WRITE;
-        //return;
-        break;
+        self->fdc.write_mode = true;
+        return;
 
     case 0xa0: /* memory mapping reigster */
     case 0xa1: /* memory mapping reigster */
