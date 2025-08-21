@@ -76,6 +76,7 @@ nsae_start (nsae_t *self, int *p_argc, char **argv)
 
     if (rc != 0)
     {
+        fprintf (stderr, "nsae: failed to initialize\n");
         return 1;
     }
 
@@ -133,6 +134,7 @@ nsae_key_handler (unsigned char key, int x, int y, void *cb_data)
 
     if (key == 'q')
     {
+        fprintf (stderr, "nsae: exit key pressed\n");
         glutLeaveMainLoop ();
         return;
     }
@@ -202,6 +204,7 @@ nsae_main_loop (int val, void *cb_data)
 
     if (self->exit)
     {
+        fprintf (stderr, "nsae: exit conditional handled\n");
         glutLeaveMainLoop ();
         return;
     }

@@ -15,6 +15,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #define trap() assert(1==0)
@@ -54,10 +55,11 @@ adv_init (adv_t *self)
     mmu_load_page (&self->mmu, 0x03, 0x00);
 
     /* inialize the display */
-    rc |= crt_init (&self->crt, &self->ram.m[RAM_BASE_PROM]);
+    rc |= crt_init (&self->crt, &self->ram, RAM_BASE_VRAM_8);
 
     if (rc != 0)
     {
+        fprintf (stderr, "nsae: adv: failed to initialize\n");
         return 1;
     }
 

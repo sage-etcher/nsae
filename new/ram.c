@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
 
@@ -13,8 +14,9 @@ ram_init (ram_t *self, uint8_t prom[], size_t n)
     assert (self != NULL);
     assert (prom != NULL);
 
-    if (n >= RAM_PROM_SIZE)
+    if (n > RAM_PROM_SIZE)
     {
+        fprintf (stderr, "nsae: ram: failed to initialize: prom too large\n");
         return 1;
     }
 

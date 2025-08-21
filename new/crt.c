@@ -1,6 +1,8 @@
 
 #include "crt.h"
 
+#include "ram.h"
+
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 
@@ -12,14 +14,15 @@
 
 
 int
-crt_init (crt_t *self, uint8_t *p_vram)
+crt_init (crt_t *self, ram_t *p_ram, uint32_t vram_offset)
 {
     assert (self != NULL);
-    assert (p_vram != NULL);
+    assert (p_ram != NULL);
 
     (void)memset (self, 0, sizeof (*self));
 
-    self->p_vram = p_vram;
+    self->p_ram = p_ram;
+    self->vram_offset = vram_offset;
 
     return 0;
 }
@@ -28,7 +31,7 @@ void
 crt_draw (crt_t *self)
 {
     assert (self != NULL);
-    assert (self->p_vram != NULL);
+    assert (self->p_ram!= NULL);
 
     const int WIDTH = 240;
     const int HEIGHT = 80;
@@ -45,11 +48,13 @@ crt_draw (crt_t *self)
         for (int x = 0; x < HEIGHT; x++)
         {
             uint32_t offset = x * 0x100 + y + self->scroll_reg;
-            const unsigned char *p = self->p_vram + offset;
+            uint32_t abs_addr = self->vram_offset + offset;
+            uint8_t data = ram_read (self->p_ram, abs_addr);
+
             for (int b = 0; b < 8; b++) /* for each bit (1bit per pixel) */
             {
                 /* if pixel is on, draw it */
-                if (*p >> b & 1)
+                if (data >> b & 1)
                 {
                     int screen_x = x * 8 + (7 - b);
                     int screen_y = y;
