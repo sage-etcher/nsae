@@ -1,0 +1,151 @@
+
+#include "nsaeipc.h"
+
+#include <assert.h>
+#include <fcntl.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+#define NSAE_IPC_CLIENT_FILE "nsae_send_fifo"
+#define NSAE_IPC_SERVER_FILE "nsae_recieve_fifo"
+
+static const char *nsae_fifo_path (void);
+static char *path_concat (const char *parent, const char *child);
+
+static char *s_client_fifo = NULL;
+static char *s_server_fifo = NULL;
+
+static int s_client_fd = 0;
+static int s_server_fd = 0;
+
+static int *s_send = NULL;
+static int *s_recieve = NULL;
+
+
+
+int
+nsae_ipc_init (int mode)
+{
+    const char *path = nsae_fifo_path ();
+
+    s_client_fifo = path_concat (path, NSAE_IPC_CLIENT_FILE);
+    s_server_fifo = path_concat (path, NSAE_IPC_SERVER_FILE);
+
+    if (mode == NSAE_IPC_SERVER)
+    {
+        unlink (s_client_fifo);
+        unlink (s_server_fifo);
+
+        mkfifo (s_client_fifo, 0600);
+        mkfifo (s_server_fifo, 0600);
+    }
+
+    switch (mode)
+    {
+    case NSAE_IPC_CLIENT:
+        s_client_fd = open (s_client_fifo, O_RDONLY);
+        s_server_fd = open (s_server_fifo, O_WRONLY);
+        s_send = &s_server_fd;
+        s_recieve = &s_client_fd;
+        break;
+
+    case NSAE_IPC_SERVER:
+        s_client_fd = open (s_client_fifo, O_WRONLY);
+        s_server_fd = open (s_server_fifo, O_RDONLY);
+        s_send = &s_client_fd;
+        s_recieve = &s_server_fd;
+        break;
+
+    default:
+        return 1;
+    }
+
+    return 0;
+}
+
+void
+nsae_ipc_free (int mode)
+{
+    close (s_client_fd);
+    close (s_server_fd);
+
+    s_client_fd = 0;
+    s_server_fd = 0;
+
+    s_send = NULL;
+    s_recieve = NULL;
+
+    if (mode == NSAE_IPC_SERVER)
+    {
+        unlink (s_client_fifo);
+        unlink (s_server_fifo);
+    }
+
+    free (s_client_fifo);
+    free (s_server_fifo);
+
+    s_client_fifo = NULL;
+    s_server_fifo = NULL;
+}
+
+int
+nsae_ipc_send (uint8_t buf[], size_t n)
+{
+    if (s_send == NULL) return -1;
+    return write (*s_send, buf, n);
+}
+
+int
+nsae_ipc_recieve (uint8_t buf[], size_t n)
+{
+    if (s_recieve == NULL) return -1;
+    return read (*s_recieve, buf, n);
+}
+
+static const char *
+nsae_fifo_path (void)
+{
+    const char *xdg_runtime_dir = getenv ("XDG_RUNTIME_DIR");
+    const char *fallback = "/tmp";
+
+    if (xdg_runtime_dir != NULL)
+    {
+        return xdg_runtime_dir;
+    }
+    else
+    {
+        fprintf (stderr, "nsae: warning: XDG_RUNTIME_DIR is undefined\n");
+        return fallback;
+    }
+}
+
+static char *
+path_concat (const char *parent, const char *child)
+{
+    assert (parent != NULL);
+    assert (child != NULL);
+
+    size_t parent_len = strlen (parent);
+    size_t child_len  = strlen (child);
+
+    size_t n = parent_len + child_len + sizeof ('/');
+    char *path = malloc (n+1);
+    if (path == NULL) return NULL;
+
+    *path = '\0';
+    (void)strcat (path, parent);
+    (void)strcat (path, "/");
+    (void)strcat (path, child);
+
+    path[n] = '\0';
+
+    return path;
+}
+
+/* end of file */
