@@ -149,13 +149,13 @@ main (int argc, char **argv)
     {
     case NSAE_CMD_BREAKPOINT: /* cmd addr */
     case NSAE_CMD_EJECT_FD:   /* cmd fd_num */
-        send_cmd (mode, atoi (argv[1]));
+        send_cmd (mode, strtol (argv[1], NULL, 0));
         break;
 
     /* cmd fd_num len filename */
     case NSAE_CMD_LOAD_FD:
     case NSAE_CMD_SAVE_FD:
-        send_cmd (mode, atoi (argv[1]), argv[2]);
+        send_cmd (mode, strtol (argv[1], NULL, 0), argv[2]);
         break;
 
     /* cmd len filename */
