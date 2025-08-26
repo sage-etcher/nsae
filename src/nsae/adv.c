@@ -143,24 +143,24 @@ adv_update_status (adv_t *self)
 
     /* bit 3-0 command outputs (externally managed) */
 
-    fprintf (stderr, "status1_reg = %d%d%d%d$%d%d%d%d\n",
-            (*stat1 >> 7) & 0x1, (*stat1 >> 6) & 0x1,
-            (*stat1 >> 5) & 0x1, (*stat1 >> 4) & 0x1,
-            (*stat1 >> 3) & 0x1, (*stat1 >> 2) & 0x1,
-            (*stat1 >> 1) & 0x1, (*stat1 >> 0) & 0x1);
+    //fprintf (stderr, "status1_reg = %d%d%d%d$%d%d%d%d\n",
+    //        (*stat1 >> 7) & 0x1, (*stat1 >> 6) & 0x1,
+    //        (*stat1 >> 5) & 0x1, (*stat1 >> 4) & 0x1,
+    //        (*stat1 >> 3) & 0x1, (*stat1 >> 2) & 0x1,
+    //        (*stat1 >> 1) & 0x1, (*stat1 >> 0) & 0x1);
 
-    fprintf (stderr, "status2_reg = %d%d%d%d$%d%d%d%d\n",
-            (*stat2 >> 7) & 0x0, (*stat2 >> 6) & 0x1,
-            (*stat2 >> 5) & 0x1, (*stat2 >> 4) & 0x1,
-            (*stat2 >> 3) & 0x1, (*stat2 >> 2) & 0x1,
-            (*stat2 >> 1) & 0x1, (*stat2 >> 0) & 0x1);
+    //fprintf (stderr, "status2_reg = %d%d%d%d$%d%d%d%d\n",
+    //        (*stat2 >> 7) & 0x0, (*stat2 >> 6) & 0x1,
+    //        (*stat2 >> 5) & 0x1, (*stat2 >> 4) & 0x1,
+    //        (*stat2 >> 3) & 0x1, (*stat2 >> 2) & 0x1,
+    //        (*stat2 >> 1) & 0x1, (*stat2 >> 0) & 0x1);
 }
 
 uint8_t
 adv_in (adv_t *self, uint8_t port, uint16_t pc)
 {
     adv_update_status (self);
-    fprintf (stderr, "%04x    in %02x\n", pc, port);
+    //fprintf (stderr, "%04x    in %02x\n", pc, port);
 
     switch (port & 0xf0)
     {
@@ -298,17 +298,17 @@ adv_command (adv_t *self, uint8_t data)
     self->ctrl_reg = data;
     self->cmd_ack ^= 0x01;
     //self->stat2_reg ^= 0x80;
-    fprintf (stderr, "status1_reg = %d%d%d%d$%d%d%d%d\n",
-            (self->stat1_reg >> 7) & 0x1, (self->stat1_reg >> 6) & 0x1,
-            (self->stat1_reg >> 5) & 0x1, (self->stat1_reg >> 4) & 0x1,
-            (self->stat1_reg >> 3) & 0x1, (self->stat1_reg >> 2) & 0x1,
-            (self->stat1_reg >> 1) & 0x1, (self->stat1_reg >> 0) & 0x1);
+    //fprintf (stderr, "status1_reg = %d%d%d%d$%d%d%d%d\n",
+    //        (self->stat1_reg >> 7) & 0x1, (self->stat1_reg >> 6) & 0x1,
+    //        (self->stat1_reg >> 5) & 0x1, (self->stat1_reg >> 4) & 0x1,
+    //        (self->stat1_reg >> 3) & 0x1, (self->stat1_reg >> 2) & 0x1,
+    //        (self->stat1_reg >> 1) & 0x1, (self->stat1_reg >> 0) & 0x1);
 
-    fprintf (stderr, "status2_reg = %d%d%d%d$%d%d%d%d\n",
-            (self->stat2_reg >> 7) & 0x0, (self->stat2_reg >> 6) & 0x1,
-            (self->stat2_reg >> 5) & 0x1, (self->stat2_reg >> 4) & 0x1,
-            (self->stat2_reg >> 3) & 0x1, (self->stat2_reg >> 2) & 0x1,
-            (self->stat2_reg >> 1) & 0x1, (self->stat2_reg >> 0) & 0x1);
+    //fprintf (stderr, "status2_reg = %d%d%d%d$%d%d%d%d\n",
+    //        (self->stat2_reg >> 7) & 0x0, (self->stat2_reg >> 6) & 0x1,
+    //        (self->stat2_reg >> 5) & 0x1, (self->stat2_reg >> 4) & 0x1,
+    //        (self->stat2_reg >> 3) & 0x1, (self->stat2_reg >> 2) & 0x1,
+    //        (self->stat2_reg >> 1) & 0x1, (self->stat2_reg >> 0) & 0x1);
 }
 
 
@@ -319,12 +319,12 @@ adv_out (adv_t *self, uint8_t port, uint8_t data, uint16_t pc)
     uint8_t b = 0;
 
     adv_update_status (self);
-    fprintf (stderr, "%04x    out %02x ;%d%d%d%d$%d%d%d%d\n",
-            pc, port,
-            (data >> 7) & 0x01, (data >> 6) & 0x01,
-            (data >> 5) & 0x01, (data >> 4) & 0x01,
-            (data >> 3) & 0x01, (data >> 2) & 0x01,
-            (data >> 1) & 0x01, (data >> 0) & 0x01);
+    //fprintf (stderr, "%04x    out %02x ;%d%d%d%d$%d%d%d%d\n",
+    //        pc, port,
+    //        (data >> 7) & 0x01, (data >> 6) & 0x01,
+    //        (data >> 5) & 0x01, (data >> 4) & 0x01,
+    //        (data >> 3) & 0x01, (data >> 2) & 0x01,
+    //        (data >> 1) & 0x01, (data >> 0) & 0x01);
 
     switch (port & 0xf0)
     {

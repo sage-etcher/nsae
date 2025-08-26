@@ -30,13 +30,13 @@ kb_push (kb_t *self, uint8_t key)
 {
     assert (self != NULL);
 
-    fprintf (stderr, "nsae: kb: push %02x '%c'\n",
-            key, key);
+    //fprintf (stderr, "nsae: kb: push %02x '%c'\n",
+    //        key, key);
 
     /* set overflow */
     if (self->buf_cnt >= KB_BUF_MAX)
     {
-        fprintf (stderr, "nsae: kb: overflow\n");
+        //fprintf (stderr, "nsae: kb: overflow\n");
         self->overflow = true;
         return;
     }
@@ -56,8 +56,8 @@ kb_pop (kb_t *self)
     /* save bottom value */
     uint8_t key = self->buf[0];
 
-    fprintf (stderr, "nsae: kb: pop  %02x '%c'\n",
-            key, key);
+    //fprintf (stderr, "nsae: kb: pop  %02x '%c'\n",
+    //        key, key);
 
     /* shift buf left 1 */
     if (self->buf_cnt != 0)

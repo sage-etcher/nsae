@@ -120,7 +120,7 @@ fdc_step (fdc_t *self)
     }
 
     self->track_zero = (*p_track) == 0;
-    fprintf (stderr, "trackzero = %d\n", self->track_zero);
+    //fprintf (stderr, "trackzero = %d\n", self->track_zero);
 }
 
 uint8_t

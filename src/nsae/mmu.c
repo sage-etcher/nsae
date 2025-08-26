@@ -79,7 +79,7 @@ mmu_read (mmu_t *self, uint16_t addr)
 
     uint32_t abs_addr = mmu_decode (self, addr);
 
-    fprintf (stderr, "mmu_read: %04x\n", addr);
+    //fprintf (stderr, "mmu_read: %04x\n", addr);
 
     return ram_read (self->p_ram, abs_addr);
 }
