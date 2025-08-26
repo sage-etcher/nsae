@@ -15,7 +15,7 @@ main (void)
     char buf[BUF_MAX+1];
     int exit_flag = 0;
 
-    nsae_ipc_init (NSAE_IPC_SERVER);
+    nsae_ipc_init (NSAE_IPC_SERVER, NULL, NULL);
     while (!exit_flag)
     {
         uint8_t cmd = 0;

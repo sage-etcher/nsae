@@ -30,12 +30,29 @@ static int *s_recieve = NULL;
 
 
 int
-nsae_ipc_init (int mode)
+nsae_ipc_init (int mode, char *custom_client, char *custom_server)
 {
     const char *path = nsae_fifo_path ();
 
-    s_client_fifo = path_concat (path, NSAE_IPC_CLIENT_FILE);
-    s_server_fifo = path_concat (path, NSAE_IPC_SERVER_FILE);
+    /* client fifo */
+    if (custom_client == NULL)
+    {
+        s_client_fifo = path_concat (path, NSAE_IPC_CLIENT_FILE);
+    }
+    else
+    {
+        s_client_fifo = custom_client;
+    }
+
+    /* server fifo */
+    if (custom_server == NULL)
+    {
+        s_server_fifo = path_concat (path, NSAE_IPC_SERVER_FILE);
+    }
+    else
+    {
+        s_server_fifo = custom_server;
+    }
 
     if (mode == NSAE_IPC_SERVER)
     {
@@ -63,6 +80,20 @@ nsae_ipc_init (int mode)
         break;
 
     default:
+        return 1;
+    }
+
+    if (s_client_fd == -1)
+    {
+        fprintf (stderr, "libnsaeipc: cannot open client fifo\n");
+        nsae_ipc_free (mode);
+        return 1;
+    }
+
+    if (s_server_fd == -1)
+    {
+        fprintf (stderr, "libnsaeipc: cannot open server fifo\n");
+        nsae_ipc_free (mode);
         return 1;
     }
 

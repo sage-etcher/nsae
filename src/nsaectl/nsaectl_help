@@ -1,0 +1,41 @@
+Usage: nsaectl [-f fifo] [-htvV] (breakpoint <pc_address> | continue | exit |
+           fd_eject <fd_num> | fd_load <fd_num> <file> | 
+	   fd_save <fd_num> <file> | hd_eject | hd_load <file> | 
+	   hd_save <file> | pause | restart | run |  status | step)
+
+options:
+  -f fifo  specify an alternate fifo for sending data to the server.
+  -F fifo  specify an alternate fifo for recieving data from the server.
+  -t       log only essential information (the default)
+  -v       log more information
+  -V       show version page
+  -h       show this page
+
+modes:
+  breakpoint <pc_address>   set a breakpoint at pc_address if that value is
+                              found inside the program counter pause the
+                              emulator.
+  continue                  continue executation after a breakpoint/pause.
+  exit                      close out of the emulator.
+  fd_eject <fd_num>         remove floppy from fd_num specified drive.
+  fd_load <fd_num> <file>   load floppy from file into drive fd_num.
+  fd_save <fd_num> <file>   save floppy into file from drive fd_num.
+  hd_eject                  remove system hard disk.
+  hd_load <file>            load hard disk from file into system hard disk.
+  hd_save <file>            save hard disk into file from system hard disk.
+  pause                     halt execution.
+  restart                   restart the emulator, reinitialize the system.
+  run                       start executing code from the current PC.
+  status                    view information about the emulator's state.
+  step                      single step the emulator 1 instruction.
+
+fifo is the path to a named pipe to which nsaectrl can talk with nsae
+over.
+
+pc_address is a 16bit address at which if loaded into the program-counter,
+will halt the emulator for debugging purposes.
+
+fd_num is an integer index in the range of 0-1 for selecting which floppy disk
+drive to interact with.
+
+file is a path to a floppy/hard disk image to be loaded/saved into.
