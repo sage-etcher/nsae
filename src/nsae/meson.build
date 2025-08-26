@@ -17,6 +17,7 @@ nsae_bin = executable('nsae', [
     'nsae.c',
     'pio.c',
     'ram.c',
+    'server.c',
     'sio.c',
     'speaker.c',
     'z80emu/z80emu.c',
@@ -29,6 +30,7 @@ nsae_bin = executable('nsae', [
   dependencies : [
     glew_dep,
     glut_dep,
+    nsaeipc_dep,
   ],
   install : true,
 )

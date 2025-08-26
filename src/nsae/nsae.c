@@ -1,6 +1,12 @@
 
 #include "nsae.h"
 
+#include "adv.h"
+#include "crt.h"
+#include "kb.h"
+#include "nsaeipc.h"
+#include "server.h"
+
 #include <GL/glew.h>
 #include <GL/glu.h>
 #include <GL/freeglut.h>
@@ -46,6 +52,8 @@ gl_init (float win_width, float win_height, float emu_width, float emu_height)
     glLoadIdentity ();
 
     glClearColor (0.f, 0.f, 0.f, 1.f);
+    glClear (GL_COLOR_BUFFER_BIT);
+    glutSwapBuffers ();
 
     GLenum gl_error = glGetError ();
     if (gl_error != GL_NO_ERROR)
@@ -68,10 +76,11 @@ nsae_start (nsae_t *self, int *p_argc, char **argv)
     self->height = 480;
     self->max_fps = 60;
 
-    self->pause = false;
+    self->pause = true;
     self->exit = false;
 
     int rc = 0;
+    rc |= nsae_ipc_init (NSAE_IPC_SERVER, NULL, NULL);
     rc |= adv_init (&self->adv);
 
     if (rc != 0)
@@ -110,6 +119,9 @@ nsae_start (nsae_t *self, int *p_argc, char **argv)
     glutTimerFuncUcall (1000 / self->max_fps, nsae_main_loop, 0, self);
     glutMainLoop ();
 
+    /* cleanup */
+    nsae_ipc_free (NSAE_IPC_SERVER);
+
     return 0;
 }
 
@@ -132,12 +144,12 @@ nsae_key_handler (unsigned char key, int x, int y, void *cb_data)
     adv_t  *adv  = &nsae->adv;
     kb_t   *kb   = &adv->kb;
 
-    if (key == 'q')
-    {
-        fprintf (stderr, "nsae: exit key pressed\n");
-        glutLeaveMainLoop ();
-        return;
-    }
+    //if (key == 'q')
+    //{
+    //    fprintf (stderr, "nsae: exit key pressed\n");
+    //    glutLeaveMainLoop ();
+    //    return;
+    //}
 
     if (nsae->pause) return;
 
@@ -167,6 +179,10 @@ nsae_update (void *cb_data)
     nsae_t *self = cb_data;
     adv_t  *adv  = &self->adv;
 
+    /* handle ipc */
+    server_handle_ipc (self);
+
+    /* emulate the system */
     if (self->pause) return;
 
     const int CPU_HZ = 4000000; /* 4MHz */

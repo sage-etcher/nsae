@@ -18,6 +18,8 @@ typedef struct {
     int height;
     int max_fps;
 
+    bool step_pulse;
+    bool step;
     bool pause;
     bool exit;
 } nsae_t;
