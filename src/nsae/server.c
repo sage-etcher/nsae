@@ -201,7 +201,7 @@ server_handle_ipc (nsae_t *self)
     case NSAE_CMD_STEP: 
         log_verbose ("nsae: server: step\n");
         self->step = true;
-        self->step_pulse = true; 
+        self->step_pulse = true;
         break;
 
     case NSAE_CMD_RUN:
@@ -211,7 +211,9 @@ server_handle_ipc (nsae_t *self)
 
     case NSAE_CMD_STATUS:
         log_verbose ("nsae: server: status\n");
-        log_info ("status: %d %d\n", self->pause, self->exit);
+        log_info ("step: %d\n", self->step);
+        log_info ("step_pulse: %d\n", self->step_pulse);
+        log_info ("pause: %d\n", self->pause);
         break;
 
 
@@ -262,34 +264,52 @@ server_handle_ipc (nsae_t *self)
     /* keyboard */
     case NSAE_CMD_KB_PUSH:
         log_verbose ("nsae: server: kb_push %02x\n", kb_keycode);
+        kb_push (&self->adv.kb, kb_keycode);
         break;
 
     case NSAE_CMD_KB_POP:
         log_verbose ("nsae: server: kb_pop\n");
+        kb_pop (&self->adv.kb);
         break;
 
     case NSAE_CMD_KB_OVERFLOW:
         log_verbose ("nsae: server: kb_overflow %d\n", kb_state);
+        self->adv.kb.overflow = kb_state;
         break;
 
     case NSAE_CMD_KB_CAPS:
         log_verbose ("nsae: server: kb_caps %d\n", kb_state);
+        self->adv.kb.caps_lock = kb_state;
         break;
 
     case NSAE_CMD_KB_CURSOR:
         log_verbose ("nsae: server: kb_cursor %d\n", kb_state);
+        self->adv.kb.cursor_lock = kb_state;
         break;
 
     case NSAE_CMD_KB_DATA:
         log_verbose ("nsae: server: kb_data %d\n", kb_state);
+        self->adv.kb.data_flag = kb_state;
         break;
 
     case NSAE_CMD_KB_INTERUPT:
         log_verbose ("nsae: server: kb_interupt %d\n", kb_state);
+        self->adv.kb.reset = kb_state;
         break;
 
     case NSAE_CMD_KB_STATUS:
         log_verbose ("nsae: server: kb_status\n");
+        log_info ("overflow: %d\n", self->adv.kb.overflow);
+        log_info ("data_flag: %d\n", self->adv.kb.data_flag);
+        log_info ("reset: %d\n", self->adv.kb.reset);
+        log_info ("cursor_lock: %d\n", self->adv.kb.cursor_lock);
+        log_info ("caps_lock: %d\n", self->adv.kb.caps_lock);
+        log_info ("autorepeat: %d\n", self->adv.kb.autorepeat);
+        log_info ("buf[]: %02x %02x %02x %02x %02x %02x %02x\n", 
+                self->adv.kb.buf[0], self->adv.kb.buf[1], self->adv.kb.buf[2],
+                self->adv.kb.buf[3], self->adv.kb.buf[4], self->adv.kb.buf[5],
+                self->adv.kb.buf[6]);
+        log_info ("buf_cnt: %d\n", self->adv.kb.buf_cnt);
         break;
 
 
@@ -302,12 +322,23 @@ server_handle_ipc (nsae_t *self)
     /* crt display */
     case NSAE_CMD_CRT_STATUS:
         log_verbose ("nsae: server: crt_status\n");
+        log_info ("blank: %d\n", self->adv.crt.blank);
+        log_info ("vrefresh: %d\n", self->adv.crt.vrefresh);
+        log_info ("scroll_reg: %d\n", self->adv.crt.scroll_reg);
         break;
 
 
     /* system advantage */
     case NSAE_CMD_ADV_STATUS:
         log_verbose ("nsae: server: adv_status\n");
+        log_info ("kb_mi: %d\n", self->adv.kb_mi);
+        log_info ("kb_nmi: %d\n", self->adv.kb_nmi);
+        log_info ("crt_mi: %d\n", self->adv.crt_mi);
+        log_info ("hw_interupt: %d\n", self->adv.hw_interupt);
+        log_info ("cmd_ack: %d\n", self->adv.cmd_ack);
+        log_info ("ctrl_reg: %02x\n", self->adv.ctrl_reg);
+        log_info ("stat1_reg: %02x\n", self->adv.stat1_reg);
+        log_info ("stat2_reg: %02x\n", self->adv.stat2_reg);
         break;
 
 
@@ -320,34 +351,52 @@ server_handle_ipc (nsae_t *self)
     /* raw ram */
     case NSAE_CMD_RAM_READ:
         log_verbose ("nsae: server: ram_read %05x\n", abs_addr);
+        log_info ("read %02x\n", ram_read (&self->adv.ram, abs_addr));
         break;
 
     case NSAE_CMD_RAM_WRITE:
         log_verbose ("nsae: server: ram_write %05x %02x\n", abs_addr, data);
+        ram_write (&self->adv.ram, abs_addr, data);
         break;
 
 
     /* prom */
     case NSAE_CMD_PROM_LOAD:
         log_verbose ("nsae: server: prom_load %s\n", file);
+        ram_load_prom_from_file (&self->adv.ram, file);
         break;
 
 
     /* memory multipliexer */
     case NSAE_CMD_MMU_READ:
         log_verbose ("nsae: server: mmu_read %04x\n", addr);
+        log_info ("read %02x\n", mmu_read (&self->adv.mmu, addr));
         break;
 
     case NSAE_CMD_MMU_WRITE:
         log_verbose ("nsae: server: mmu_write %04x %02x\n", addr, data);
+        mmu_write (&self->adv.mmu, addr, data);
         break;
 
     case NSAE_CMD_MMU_LOAD:
         log_verbose ("nsae: server: mmu_load %1x %1x\n", mmu_slot, mmu_page);
+        mmu_load_page (&self->adv.mmu, mmu_slot, mmu_page);
         break;
 
     case NSAE_CMD_MMU_STATUS:
         log_verbose ("nsae: server: mmu_status\n");
+        log_info ("0: %1x %05x 0x0000\n", 
+                self->adv.mmu.slots[0],
+                self->adv.mmu.bases[self->adv.mmu.slots[0]]);
+        log_info ("1: %1x %05x 0x4000\n", 
+                self->adv.mmu.slots[1],
+                self->adv.mmu.bases[self->adv.mmu.slots[1]]);
+        log_info ("2: %1x %05x 0x8000\n", 
+                self->adv.mmu.slots[2],
+                self->adv.mmu.bases[self->adv.mmu.slots[2]]);
+        log_info ("3: %1x %05x 0xC000\n", 
+                self->adv.mmu.slots[3],
+                self->adv.mmu.bases[self->adv.mmu.slots[3]]);
         break;
     }
 

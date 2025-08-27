@@ -25,6 +25,8 @@ typedef struct {
 } ram_t;
 
 int ram_init (ram_t *self, uint8_t prom[], size_t n);
+int ram_load_prom (ram_t *self, uint8_t prom[], size_t n);
+int ram_load_prom_from_file (ram_t *self, char *file);
 
 uint8_t ram_read (ram_t *self, uint32_t addr);
 int ram_write (ram_t *self, uint32_t addr, uint8_t data);
