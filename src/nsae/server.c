@@ -345,6 +345,38 @@ server_handle_ipc (nsae_t *self)
     /* cpu z80 */
     case NSAE_CMD_CPU_STATUS:
         log_verbose ("nsae: server: cpu_status\n");
+        log_info ("status: %d\talternates: %04x %04x %04x %04x\n",
+                self->adv.cpu.state.status,
+                self->adv.cpu.state.alternates[0],
+                self->adv.cpu.state.alternates[1],
+                self->adv.cpu.state.alternates[2],
+                self->adv.cpu.state.alternates[3]
+        );
+        log_info ("AF: %02x %02x\tBC: %02x %02x\tDE: %02x %02x\tHL: %02x %02x\n",
+                self->adv.cpu.state.registers.byte[Z80_A],
+                self->adv.cpu.state.registers.byte[Z80_F],
+                self->adv.cpu.state.registers.byte[Z80_B],
+                self->adv.cpu.state.registers.byte[Z80_C],
+                self->adv.cpu.state.registers.byte[Z80_D],
+                self->adv.cpu.state.registers.byte[Z80_E],
+                self->adv.cpu.state.registers.byte[Z80_H],
+                self->adv.cpu.state.registers.byte[Z80_L]
+        );
+        log_info ("IX: %04x\tIY: %04x\tSP: %04x *%02x\tPC: %04x *%02x\n",
+                self->adv.cpu.state.registers.word[Z80_IX],
+                self->adv.cpu.state.registers.word[Z80_IY],
+                self->adv.cpu.state.registers.word[Z80_SP],
+                mmu_read (&self->adv.mmu, self->adv.cpu.state.registers.word[Z80_SP]),
+                self->adv.cpu.state.pc,
+                mmu_read (&self->adv.mmu, self->adv.cpu.state.pc)
+        );
+        log_info ("I: %04x  R: %04x  IFF1: %04x  IFF2: %04x  IM: %04x\n",
+                self->adv.cpu.state.i,
+                self->adv.cpu.state.r,
+                self->adv.cpu.state.iff1,
+                self->adv.cpu.state.iff2,
+                self->adv.cpu.state.im
+        );
         break;
 
 

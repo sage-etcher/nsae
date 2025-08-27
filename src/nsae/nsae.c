@@ -191,8 +191,22 @@ nsae_update (void *cb_data)
     server_handle_ipc (self);
 
     /* emulate the system */
+
+    /* single step */
+    if (self->step)
+    {
+        /* single step pulse */
+        if (!self->step_pulse) return;
+
+        (void)adv_run (adv, 1);
+        self->step_pulse = false;
+
+        return;
+    }
+
     if (self->pause) return;
 
+    /* run normally */
     const int CPU_HZ = 4000000; /* 4MHz */
     int cycles = CPU_HZ / self->max_fps;
     (void)adv_run (adv, cycles);
