@@ -129,14 +129,26 @@ int
 nsae_ipc_send (uint8_t buf[], size_t n)
 {
     if (s_send == NULL) return -1;
-    return write (*s_send, buf, n);
+    int rc = write (*s_send, buf, n);
+    return rc;
 }
 
 int
 nsae_ipc_recieve (uint8_t buf[], size_t n)
 {
     if (s_recieve == NULL) return -1;
-    return read (*s_recieve, buf, n);
+    int rc = read (*s_recieve, buf, n);
+    return rc;
+}
+
+int
+nsae_ipc_recieve_block (uint8_t buf[], size_t n)
+{
+    if (s_recieve == NULL) return -1;
+
+    int b = 0;
+    while ((b = read (*s_recieve, buf, n)) == 0) { }
+    return b;
 }
 
 static const char *

@@ -17,5 +17,6 @@ void nsae_ipc_free (int mode);
 
 int nsae_ipc_send (uint8_t buf[], size_t n);
 int nsae_ipc_recieve (uint8_t buf[], size_t n);
+int nsae_ipc_recieve_block (uint8_t buf[], size_t n);
 
 #endif /* NSAEIPC_H */
