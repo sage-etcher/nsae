@@ -4,7 +4,7 @@
 
 #include "nsae.h"
 
-void server_handle_ipc (nsae_t *self);
+int server_handle_ipc (nsae_t *self);
 
 
 #endif /* NSAE_SERVER_H */

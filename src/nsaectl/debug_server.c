@@ -37,30 +37,30 @@ main (void)
             puts ("exit"); 
             break;
 
-        case NSAE_CMD_EJECT_FD:
+        case NSAE_CMD_FD_EJECT:
             nsae_ipc_recieve ((uint8_t *)&fd_num, sizeof (uint8_t));
             printf ("eject_fd %u\n", fd_num);
             break;
 
-        case NSAE_CMD_LOAD_FD:
-        case NSAE_CMD_SAVE_FD:
+        case NSAE_CMD_FD_LOAD:
+        case NSAE_CMD_FD_SAVE:
             nsae_ipc_recieve ((uint8_t *)&fd_num, sizeof (uint8_t));
             nsae_ipc_recieve ((uint8_t *)&filename_len, sizeof (size_t));
             nsae_ipc_recieve ((uint8_t *)buf, filename_len);
             buf[BUF_MAX] = '\0';
 
             printf ("%s %u %zu %s\n", 
-                    (cmd == NSAE_CMD_LOAD_FD ? "load_fd" : "save_fd"),
+                    (cmd == NSAE_CMD_FD_LOAD ? "load_fd" : "save_fd"),
                     fd_num, filename_len, buf);
             break;
 
-        case NSAE_CMD_LOAD_HD:
-        case NSAE_CMD_SAVE_HD:
+        case NSAE_CMD_HD_LOAD:
+        case NSAE_CMD_HD_SAVE:
             nsae_ipc_recieve ((uint8_t *)&filename_len, sizeof (size_t));
             nsae_ipc_recieve ((uint8_t *)buf, filename_len);
 
             printf ("%s %zu %s\n", 
-                    (cmd == NSAE_CMD_LOAD_HD ? "load_hd" : "save_hd"),
+                    (cmd == NSAE_CMD_HD_LOAD ? "load_hd" : "save_hd"),
                     filename_len, buf);
             break;
 
@@ -73,7 +73,7 @@ main (void)
         case NSAE_CMD_RESTART: puts ("restart"); break;
         case NSAE_CMD_PAUSE: puts ("pause"); break;
         case NSAE_CMD_CONTINUE: puts ("continue"); break;
-        case NSAE_CMD_EJECT_HD: puts ("eject hd"); break;
+        case NSAE_CMD_HD_EJECT: puts ("eject hd"); break;
         case NSAE_CMD_STEP: puts ("step"); break;
         case NSAE_CMD_RUN: puts ("run"); break;
         case NSAE_CMD_STATUS: puts ("status"); break;

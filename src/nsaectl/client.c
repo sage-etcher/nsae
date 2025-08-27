@@ -39,29 +39,29 @@ vsend_cmd (uint8_t cmd, va_list args)
             break;
 
         /* cmd fd_num */
-        case NSAE_CMD_EJECT_FD:
+        case NSAE_CMD_FD_EJECT:
             send_byte (cmd);
             send_byte ((uint8_t)va_arg (args, int));
             break;
 
         /* cmd fd_num len filename */
-        case NSAE_CMD_LOAD_FD:
-        case NSAE_CMD_SAVE_FD:
+        case NSAE_CMD_FD_LOAD:
+        case NSAE_CMD_FD_SAVE:
             send_byte (cmd);
             send_byte ((uint8_t)va_arg (args, int));
             send_string (va_arg (args, char *));
             break;
 
         /* cmd len filename */
-        case NSAE_CMD_LOAD_HD:
-        case NSAE_CMD_SAVE_HD:
+        case NSAE_CMD_HD_LOAD:
+        case NSAE_CMD_HD_SAVE:
             send_byte (cmd);
             send_string (va_arg (args, char *));
             break;
 
         /* cmd */
         case NSAE_CMD_CONTINUE:
-        case NSAE_CMD_EJECT_HD:
+        case NSAE_CMD_HD_EJECT:
         case NSAE_CMD_EXIT:
         case NSAE_CMD_PAUSE:
         case NSAE_CMD_RESTART:

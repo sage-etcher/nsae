@@ -80,12 +80,12 @@ main (int argc, char **argv)
         [NSAE_CMD_RESTART]    = "restart",
         [NSAE_CMD_PAUSE]      = "pause",
         [NSAE_CMD_CONTINUE]   = "continue",
-        [NSAE_CMD_EJECT_FD]   = "fd_eject",
-        [NSAE_CMD_LOAD_FD]    = "fd_load",
-        [NSAE_CMD_SAVE_FD]    = "fd_save",
-        [NSAE_CMD_EJECT_HD]   = "hd_eject",
-        [NSAE_CMD_LOAD_HD]    = "hd_load",
-        [NSAE_CMD_SAVE_HD]    = "hd_save",
+        [NSAE_CMD_FD_EJECT]   = "fd_eject",
+        [NSAE_CMD_FD_LOAD]    = "fd_load",
+        [NSAE_CMD_FD_SAVE]    = "fd_save",
+        [NSAE_CMD_HD_EJECT]   = "hd_eject",
+        [NSAE_CMD_HD_LOAD]    = "hd_load",
+        [NSAE_CMD_HD_SAVE]    = "hd_save",
         [NSAE_CMD_STEP]       = "step",
         [NSAE_CMD_RUN]        = "run",
         [NSAE_CMD_BREAKPOINT] = "breakpoint",
@@ -125,12 +125,12 @@ main (int argc, char **argv)
         [NSAE_CMD_RESTART]    = 1,
         [NSAE_CMD_PAUSE]      = 1,
         [NSAE_CMD_CONTINUE]   = 1,
-        [NSAE_CMD_EJECT_FD]   = 2,
-        [NSAE_CMD_LOAD_FD]    = 3,
-        [NSAE_CMD_SAVE_FD]    = 3,
-        [NSAE_CMD_EJECT_HD]   = 1,
-        [NSAE_CMD_LOAD_HD]    = 2,
-        [NSAE_CMD_SAVE_HD]    = 2,
+        [NSAE_CMD_FD_EJECT]   = 2,
+        [NSAE_CMD_FD_LOAD]    = 3,
+        [NSAE_CMD_FD_SAVE]    = 3,
+        [NSAE_CMD_HD_EJECT]   = 1,
+        [NSAE_CMD_HD_LOAD]    = 2,
+        [NSAE_CMD_HD_SAVE]    = 2,
         [NSAE_CMD_STEP]       = 1,
         [NSAE_CMD_RUN]        = 1,
         [NSAE_CMD_BREAKPOINT] = 2,
@@ -158,25 +158,25 @@ main (int argc, char **argv)
     switch (mode)
     {
     case NSAE_CMD_BREAKPOINT: /* cmd addr */
-    case NSAE_CMD_EJECT_FD:   /* cmd fd_num */
+    case NSAE_CMD_FD_EJECT:   /* cmd fd_num */
         send_cmd (mode, strtol (argv[1], NULL, 0));
         break;
 
     /* cmd fd_num len filename */
-    case NSAE_CMD_LOAD_FD:
-    case NSAE_CMD_SAVE_FD:
+    case NSAE_CMD_FD_LOAD:
+    case NSAE_CMD_FD_SAVE:
         send_cmd (mode, strtol (argv[1], NULL, 0), argv[2]);
         break;
 
     /* cmd len filename */
-    case NSAE_CMD_LOAD_HD:
-    case NSAE_CMD_SAVE_HD:
+    case NSAE_CMD_HD_LOAD:
+    case NSAE_CMD_HD_SAVE:
         send_cmd (mode, argv[1]);
         break;
 
     /* cmd */
     case NSAE_CMD_CONTINUE:
-    case NSAE_CMD_EJECT_HD:
+    case NSAE_CMD_HD_EJECT:
     case NSAE_CMD_EXIT:
     case NSAE_CMD_PAUSE:
     case NSAE_CMD_RESTART:
