@@ -71,7 +71,7 @@ mmu_decode (mmu_t *self, uint16_t addr)
         ((uint32_t)rel_addr & self->masks[page_num]) + self->bases[page_num],
     };
 
-    log_debug ("nsae: mmu: decode %04x (%05x)\n", addr, abs_addr);
+    //log_debug ("nsae: mmu: decode %04x (%05x)\n", addr, abs_addr);
 
     return abs_addr;
 }
