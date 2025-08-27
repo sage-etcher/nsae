@@ -76,20 +76,52 @@ main (int argc, char **argv)
 
     /* mode selection */
     const char *mode_list[NSAE_CMD_COUNT] = {
-        [NSAE_CMD_EXIT]       = "exit",
-        [NSAE_CMD_RESTART]    = "restart",
-        [NSAE_CMD_PAUSE]      = "pause",
-        [NSAE_CMD_CONTINUE]   = "continue",
-        [NSAE_CMD_FD_EJECT]   = "fd_eject",
-        [NSAE_CMD_FD_LOAD]    = "fd_load",
-        [NSAE_CMD_FD_SAVE]    = "fd_save",
-        [NSAE_CMD_HD_EJECT]   = "hd_eject",
-        [NSAE_CMD_HD_LOAD]    = "hd_load",
-        [NSAE_CMD_HD_SAVE]    = "hd_save",
-        [NSAE_CMD_STEP]       = "step",
-        [NSAE_CMD_RUN]        = "run",
-        [NSAE_CMD_BREAKPOINT] = "breakpoint",
-        [NSAE_CMD_STATUS]     = "status",
+        [NSAE_CMD_EXIT]        = "exit",
+        [NSAE_CMD_RESTART]     = "restart",
+        [NSAE_CMD_PAUSE]       = "pause",
+        [NSAE_CMD_CONTINUE]    = "continue",
+        [NSAE_CMD_BREAKPOINT]  = "breakpoint",
+        [NSAE_CMD_STEP]        = "step",
+        [NSAE_CMD_RUN]         = "run",
+        [NSAE_CMD_STATUS]      = "status",
+
+        [NSAE_CMD_FD_EJECT]    = "fd_eject",
+        [NSAE_CMD_FD_LOAD]     = "fd_load",
+        [NSAE_CMD_FD_SAVE]     = "fd_save",
+        [NSAE_CMD_FD_BLK_READ] = "fd_blkread",
+        [NSAE_CMD_FD_STATUS]   = "fd_status",
+
+        [NSAE_CMD_HD_EJECT]    = "hd_eject",
+        [NSAE_CMD_HD_LOAD]     = "hd_load",
+        [NSAE_CMD_HD_SAVE]     = "hd_save",
+        [NSAE_CMD_HD_STATUS]   = "hd_status",
+
+        [NSAE_CMD_KB_PUSH]     = "kb_push",
+        [NSAE_CMD_KB_POP]      = "kb_pop",
+        [NSAE_CMD_KB_OVERFLOW] = "kb_overflow",
+        [NSAE_CMD_KB_CAPS]     = "kb_caps",
+        [NSAE_CMD_KB_CURSOR]   = "kb_cursor",
+        [NSAE_CMD_KB_DATA]     = "kb_data",
+        [NSAE_CMD_KB_INTERUPT] = "kb_interupt",
+        [NSAE_CMD_KB_STATUS]   = "kb_status",
+
+        [NSAE_CMD_IO_STATUS]   = "io_status",
+
+        [NSAE_CMD_CRT_STATUS]  = "crt_status",
+
+        [NSAE_CMD_ADV_STATUS]  = "adv_status",
+
+        [NSAE_CMD_CPU_STATUS]  = "cpu_status",
+
+        [NSAE_CMD_RAM_READ]    = "ram_read",
+        [NSAE_CMD_RAM_WRITE]   = "ram_write",
+
+        [NSAE_CMD_PROM_LOAD]   = "prom_load",
+
+        [NSAE_CMD_MMU_READ]    = "mmu_read",
+        [NSAE_CMD_MMU_WRITE]   = "mmu_write",
+        [NSAE_CMD_MMU_LOAD]    = "mmu_load",
+        [NSAE_CMD_MMU_STATUS]  = "mmu_status",
     };
 
     argc -= optind;
@@ -121,20 +153,52 @@ main (int argc, char **argv)
     }
 
     int mode_argc[NSAE_CMD_COUNT] = {
-        [NSAE_CMD_EXIT]       = 1,
-        [NSAE_CMD_RESTART]    = 1,
-        [NSAE_CMD_PAUSE]      = 1,
-        [NSAE_CMD_CONTINUE]   = 1,
-        [NSAE_CMD_FD_EJECT]   = 2,
-        [NSAE_CMD_FD_LOAD]    = 3,
-        [NSAE_CMD_FD_SAVE]    = 3,
-        [NSAE_CMD_HD_EJECT]   = 1,
-        [NSAE_CMD_HD_LOAD]    = 2,
-        [NSAE_CMD_HD_SAVE]    = 2,
-        [NSAE_CMD_STEP]       = 1,
-        [NSAE_CMD_RUN]        = 1,
-        [NSAE_CMD_BREAKPOINT] = 2,
-        [NSAE_CMD_STATUS]     = 1,
+        [NSAE_CMD_EXIT]        = 1,
+        [NSAE_CMD_RESTART]     = 1,
+        [NSAE_CMD_PAUSE]       = 1,
+        [NSAE_CMD_CONTINUE]    = 1,
+        [NSAE_CMD_BREAKPOINT]  = 2,
+        [NSAE_CMD_STEP]        = 1,
+        [NSAE_CMD_RUN]         = 1,
+        [NSAE_CMD_STATUS]      = 1,
+
+        [NSAE_CMD_FD_EJECT]    = 2,
+        [NSAE_CMD_FD_LOAD]     = 3,
+        [NSAE_CMD_FD_SAVE]     = 3,
+        [NSAE_CMD_FD_BLK_READ] = 5,
+        [NSAE_CMD_FD_STATUS]   = 2,
+
+        [NSAE_CMD_HD_EJECT]    = 1,
+        [NSAE_CMD_HD_LOAD]     = 2,
+        [NSAE_CMD_HD_SAVE]     = 2,
+        [NSAE_CMD_HD_STATUS]   = 1,
+
+        [NSAE_CMD_KB_PUSH]     = 2,
+        [NSAE_CMD_KB_POP]      = 1,
+        [NSAE_CMD_KB_OVERFLOW] = 2,
+        [NSAE_CMD_KB_CAPS]     = 2,
+        [NSAE_CMD_KB_CURSOR]   = 2,
+        [NSAE_CMD_KB_DATA]     = 2,
+        [NSAE_CMD_KB_INTERUPT] = 2,
+        [NSAE_CMD_KB_STATUS]   = 1,
+
+        [NSAE_CMD_IO_STATUS]   = 1,
+
+        [NSAE_CMD_CRT_STATUS]  = 1,
+
+        [NSAE_CMD_ADV_STATUS]  = 1,
+
+        [NSAE_CMD_CPU_STATUS]  = 1,
+
+        [NSAE_CMD_RAM_READ]    = 2,
+        [NSAE_CMD_RAM_WRITE]   = 3,
+
+        [NSAE_CMD_PROM_LOAD]   = 2,
+
+        [NSAE_CMD_MMU_READ]    = 2,
+        [NSAE_CMD_MMU_WRITE]   = 3,
+        [NSAE_CMD_MMU_LOAD]    = 3,
+        [NSAE_CMD_MMU_STATUS]  = 1,
     };
 
     if (argc != mode_argc[mode])
@@ -157,32 +221,68 @@ main (int argc, char **argv)
     log_verbose ("nsaectl: parsing mode\n");
     switch (mode)
     {
-    case NSAE_CMD_BREAKPOINT: /* cmd addr */
-    case NSAE_CMD_FD_EJECT:   /* cmd fd_num */
+    /* u = (u8|u16|u32); */
+
+    /* cmd u */
+    case NSAE_CMD_BREAKPOINT:   /* cmd addr */
+    case NSAE_CMD_FD_EJECT:     /* cmd fd_num */
+    case NSAE_CMD_FD_STATUS:    /* cmd fd_num */
+    case NSAE_CMD_KB_PUSH:      /* cmd keycode */
+    case NSAE_CMD_KB_OVERFLOW:  /* cmd state */
+    case NSAE_CMD_KB_CAPS:      /* cmd state */
+    case NSAE_CMD_KB_CURSOR:    /* cmd state */
+    case NSAE_CMD_KB_DATA:      /* cmd state */
+    case NSAE_CMD_KB_INTERUPT:  /* cmd state */
+    case NSAE_CMD_RAM_READ:     /* cmd abs_addr */
+    case NSAE_CMD_MMU_READ:     /* cmd addr */
         send_cmd (mode, strtol (argv[1], NULL, 0));
         break;
 
-    /* cmd fd_num len filename */
+    /* cmd u u */
+    case NSAE_CMD_RAM_WRITE:    /* cmd abs_addr data */
+    case NSAE_CMD_MMU_WRITE:    /* cmd addr data */
+    case NSAE_CMD_MMU_LOAD:     /* cmd slot page */
+        send_cmd (mode, strtol (argv[1], NULL, 0), strtol (argv[2], NULL, 0));
+        break;
+
+    /* cmd u u u u */
+    case NSAE_CMD_FD_BLK_READ:  /* cmd fd_num side track sec */
+        send_cmd (mode,
+                strtol (argv[1], NULL, 0),
+                strtol (argv[2], NULL, 0),
+                strtol (argv[3], NULL, 0),
+                strtol (argv[4], NULL, 0));
+        break;
+
+    /* cmd u file */
     case NSAE_CMD_FD_LOAD:
     case NSAE_CMD_FD_SAVE:
         send_cmd (mode, strtol (argv[1], NULL, 0), argv[2]);
         break;
 
-    /* cmd len filename */
+    /* cmd file */
     case NSAE_CMD_HD_LOAD:
     case NSAE_CMD_HD_SAVE:
+    case NSAE_CMD_PROM_LOAD:
         send_cmd (mode, argv[1]);
         break;
 
     /* cmd */
-    case NSAE_CMD_CONTINUE:
-    case NSAE_CMD_HD_EJECT:
     case NSAE_CMD_EXIT:
-    case NSAE_CMD_PAUSE:
     case NSAE_CMD_RESTART:
+    case NSAE_CMD_PAUSE:
+    case NSAE_CMD_CONTINUE:
+    case NSAE_CMD_STEP:
     case NSAE_CMD_RUN:
     case NSAE_CMD_STATUS:
-    case NSAE_CMD_STEP:
+    case NSAE_CMD_HD_EJECT:
+    case NSAE_CMD_KB_POP:
+    case NSAE_CMD_KB_STATUS:
+    case NSAE_CMD_IO_STATUS:
+    case NSAE_CMD_CRT_STATUS:
+    case NSAE_CMD_ADV_STATUS:
+    case NSAE_CMD_CPU_STATUS:
+    case NSAE_CMD_MMU_STATUS:
         send_cmd (mode);
         break;
 
