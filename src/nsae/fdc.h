@@ -9,6 +9,7 @@ extern "c" {
 #include <stddef.h>
 #include <stdint.h>
 
+#define FD_CNT       2
 #define FD_SIDES     2
 #define FD_TRACKS   35
 #define FD_SECTORS  10
@@ -25,16 +26,17 @@ extern "c" {
 #define FD_STEP_IN  1
 
 typedef struct {
-    char *filename[2];
+    char *filename[FD_CNT];
 
-    uint8_t data[2][FD_MAX_SIZE];
-    bool disk_type[2];
+    uint8_t data[FD_CNT][FD_MAX_SIZE];
+    bool disk_type[FD_CNT];
+    bool disk_loaded[FD_CNT];
     uint8_t preamble;
     uint8_t sync;
     uint16_t index;
 
-    uint8_t sector[2];
-    uint8_t track[2];
+    uint8_t sector[FD_CNT];
+    uint8_t track[FD_CNT];
 
     bool powered;
     bool motor_enabled;
@@ -56,6 +58,7 @@ typedef struct {
 int fdc_init (fdc_t *self);
 int fdc_load_disk (fdc_t *self, bool disk, char *filename);
 int fdc_save_disk (fdc_t *self, bool disk, char *filename);
+int fdc_eject (fdc_t *self, bool disk);
 
 void fdc_start_motor (fdc_t *self);
 void fdc_stop_motor (fdc_t *self);

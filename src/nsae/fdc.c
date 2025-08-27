@@ -47,6 +47,8 @@ fdc_load_disk (fdc_t *self, bool disk, char *filename)
         return 1;
     }
 
+    self->disk_loaded[disk] = true;
+
     log_verbose ("nsae: fdc: loaded disk %d with '%s'\n", disk, filename);
 
     return 0;
@@ -57,6 +59,12 @@ fdc_save_disk (fdc_t *self, bool disk, char *filename)
 {
     assert (self != NULL);
     assert (filename != NULL);
+
+    if (!self->disk_loaded[disk])
+    {
+        log_error ("nsae: fdc: cannot save ejected disk\n");
+        return 1;
+    }
 
     FILE *fp = fopen (filename, "wb+");
     if (fp == NULL)
@@ -82,6 +90,22 @@ fdc_save_disk (fdc_t *self, bool disk, char *filename)
     }
 
     log_verbose ("nsae: fdc: saved disk %d into '%s'\n", disk, filename);
+
+    return 0;
+}
+
+int
+fdc_eject (fdc_t *self, bool disk)
+{
+    if (!self->disk_loaded[disk])
+    {
+        log_error ("nsae: fdc: cannot eject from empty drive\n");
+        return 1;
+    }
+
+    self->disk_loaded[disk] = false;
+
+    log_verbose ("nsae: fdc: ejected disk %d\n", disk);
 
     return 0;
 }
