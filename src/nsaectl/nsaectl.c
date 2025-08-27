@@ -1,5 +1,6 @@
 
 #include "client.h"
+#include "log.h"
 #include "nsaecmd.h"
 #include "nsaeipc.h"
 #include "nsaectl_help.h"
@@ -22,13 +23,17 @@
 #define USAGE_STR ___SRC_NSAECTL_NSAECTL_HELP
 #define USAGE_LEN ___SRC_NSAECTL_NSAECTL_HELP_LEN
 
+bool g_log_info    = true;
+bool g_log_verbose = false;
+bool g_log_debug   = false;
+bool g_log_warning = false;
+bool g_log_error   = true;
+
 
 int
 main (int argc, char **argv)
 {
     int opt = 0;
-
-    bool verbose = false;
     char *custom_server = NULL;
     char *custom_client = NULL;
 
@@ -46,11 +51,13 @@ main (int argc, char **argv)
             break;
 
         case 't': /* terse */
-            verbose = false;
+            g_log_warning = false;
+            g_log_verbose = false;
             break;
 
         case 'v': /* verbose */
-            verbose = true;
+            g_log_warning = true;
+            g_log_verbose = true;
             break;
 
         case 'V': /* version */
@@ -90,7 +97,7 @@ main (int argc, char **argv)
 
     if (argc <= 0)
     {
-        fprintf (stderr, "nsaectl: missing field -- mode\n");
+        log_error ("nsaectl: missing field -- mode\n");
         fprintf (stderr, "%.*s", USAGE_LEN, USAGE_STR);
         exit (EXIT_FAILURE);
     }
@@ -108,7 +115,7 @@ main (int argc, char **argv)
     assert (mode <= NSAE_CMD_COUNT);
     if (mode == NSAE_CMD_COUNT)
     {
-        fprintf (stderr, "nsaectl: invalid mode -- \"%s\"\n", mode_str);
+        log_error ("nsaectl: invalid mode -- \"%s\"\n", mode_str);
         fprintf (stderr, "%.*s", USAGE_LEN, USAGE_STR);
         exit (EXIT_FAILURE);
     }
@@ -132,19 +139,22 @@ main (int argc, char **argv)
 
     if (argc != mode_argc[mode])
     {
-        fprintf (stderr, "nsaectl: missing mode argument\n");
+        log_error ("nsaectl: missing mode argument\n");
         fprintf (stderr, "%.*s", USAGE_LEN, USAGE_STR);
         exit (EXIT_FAILURE);
     }
 
+    log_verbose ("nsaectl: openning connection to server\n");
     int rc = nsae_ipc_init (NSAE_IPC_CLIENT, custom_client, custom_server);
     if (rc != 0)
     {
-        fprintf (stderr, "nsaectl: failed to initialize ipc\n");
+        log_error ("nsaectl: failed to initialize ipc\n");
         exit (EXIT_FAILURE);
     }
+    log_verbose ("nsaectl: connection opened\n");
 
 
+    log_verbose ("nsaectl: parsing mode\n");
     switch (mode)
     {
     case NSAE_CMD_BREAKPOINT: /* cmd addr */
@@ -181,6 +191,7 @@ main (int argc, char **argv)
         abort ();
     }
 
+    log_verbose ("nsaectl: closing connection to server\n");
     nsae_ipc_free (NSAE_IPC_CLIENT);
 
     return 0;

@@ -1,4 +1,5 @@
 
+#include "log.h"
 #include "ram.h"
 
 #include <assert.h>
@@ -16,7 +17,7 @@ ram_init (ram_t *self, uint8_t prom[], size_t n)
 
     if (n > RAM_PROM_SIZE)
     {
-        fprintf (stderr, "nsae: ram: failed to initialize: prom too large\n");
+        log_error ("nsae: ram: failed to initialize: prom too large\n");
         return 1;
     }
 

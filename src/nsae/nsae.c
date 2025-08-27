@@ -4,6 +4,7 @@
 #include "adv.h"
 #include "crt.h"
 #include "kb.h"
+#include "log.h"
 #include "nsaeipc.h"
 #include "server.h"
 
@@ -15,6 +16,13 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdbool.h>
+
+
+bool g_log_info = true;
+bool g_log_verbose = true;
+bool g_log_debug = true;
+bool g_log_warning = true;
+bool g_log_error = true;
 
 static int gl_init (float win_width, float win_height,
                     float emu_width, float emu_height);
@@ -31,14 +39,14 @@ gl_init (float win_width, float win_height, float emu_width, float emu_height)
     GLenum glew_error = glewInit ();
     if (glew_error != GLEW_OK)
     {
-        fprintf (stderr, "nsae: glew: initialization error: %s\n",
+        log_error ("nsae: glew: initialization error: %s\n",
                 glewGetErrorString (glew_error));
         return 1;
     }
 
     if (!GLEW_VERSION_1_2)
     {
-        fprintf (stderr, "nsae: glew: insuffient OpenGL version, requires >=1.2\n");
+        log_error ("nsae: glew: insuffient OpenGL version, requires >=1.2\n");
         return 2;
     }
 
@@ -58,7 +66,7 @@ gl_init (float win_width, float win_height, float emu_width, float emu_height)
     GLenum gl_error = glGetError ();
     if (gl_error != GL_NO_ERROR)
     {
-        fprintf (stderr, "nsae: opengl: initialization error: %s\n",
+        log_error ("nsae: opengl: initialization error: %s\n",
                 gluErrorString (gl_error));
         return 1;
     }
@@ -85,7 +93,7 @@ nsae_start (nsae_t *self, int *p_argc, char **argv)
 
     if (rc != 0)
     {
-        fprintf (stderr, "nsae: failed to initialize\n");
+        log_error ("nsae: failed to initialize\n");
         return 1;
     }
 
@@ -146,7 +154,7 @@ nsae_key_handler (unsigned char key, int x, int y, void *cb_data)
 
     //if (key == 'q')
     //{
-    //    fprintf (stderr, "nsae: exit key pressed\n");
+    //    log_debug ("nsae: exit key pressed\n");
     //    glutLeaveMainLoop ();
     //    return;
     //}
@@ -220,7 +228,7 @@ nsae_main_loop (int val, void *cb_data)
 
     if (self->exit)
     {
-        fprintf (stderr, "nsae: exit conditional handled\n");
+        log_verbose ("nsae: exit conditional handled\n");
         glutLeaveMainLoop ();
         return;
     }

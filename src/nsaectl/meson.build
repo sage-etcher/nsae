@@ -31,6 +31,7 @@ nsaectl = executable('nsaectl', [
     nsaectl_version_h,
   ],
   dependencies : [
+    log_dep,
     nsaeipc_dep,
   ],
   install : true,

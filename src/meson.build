@@ -1,4 +1,5 @@
 
+subdir('log')
 subdir('libnsaeipc')
 subdir('nsae')
 subdir('nsaectl')

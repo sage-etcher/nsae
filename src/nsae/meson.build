@@ -30,6 +30,7 @@ nsae_bin = executable('nsae', [
   dependencies : [
     glew_dep,
     glut_dep,
+    log_dep,
     nsaeipc_dep,
   ],
   install : true,

@@ -1,6 +1,7 @@
 
 #include "client.h"
 
+#include "log.h"
 #include "nsaeipc.h"
 #include "nsaecmd.h"
 
@@ -72,6 +73,7 @@ vsend_cmd (uint8_t cmd, va_list args)
 
         /* error */
         default: 
+            log_error ("nsaectl: error: unknown command\n");
             abort ();
     }
 }
@@ -79,6 +81,7 @@ vsend_cmd (uint8_t cmd, va_list args)
 static void
 send_byte (uint8_t b)
 {
+    log_verbose ("nsaectl: send: (u8)%u\n", b);
     nsae_ipc_send (&b, sizeof (uint8_t));
 }
 
@@ -86,6 +89,7 @@ static void
 send_string (char *s)
 {
     size_t len = strlen (s);
+    log_verbose ("nsaectl: send: (size_t)%zu '%s'\n", len, s);
     nsae_ipc_send ((uint8_t *)&len, sizeof (size_t));
     nsae_ipc_send ((uint8_t *)s, len);
 }
@@ -93,6 +97,7 @@ send_string (char *s)
 static void
 send_u32 (uint32_t u)
 {
+    log_verbose ("nsaectl: send: (u32)%u\n", u);
     nsae_ipc_send ((uint8_t *)&u, sizeof (uint32_t));
 }
 

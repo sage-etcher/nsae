@@ -1,6 +1,8 @@
 
 #include "fdc.h"
 
+#include "log.h"
+
 #include <assert.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -27,7 +29,7 @@ fdc_load_disk (fdc_t *self, bool disk, char *filename)
     FILE *fp = fopen (filename, "rb");
     if (fp == NULL)
     {
-        fprintf (stderr, "nsae: fdc: cannot open file: '%s'\n",
+        log_error ("nsae: fdc: cannot open file: '%s'\n",
                 filename);
         return 1;
     }
@@ -40,10 +42,12 @@ fdc_load_disk (fdc_t *self, bool disk, char *filename)
     case FD_SSDD_SIZE: self->disk_type[disk] = FD_SSDD; break;
     case FD_DSDD_SIZE: self->disk_type[disk] = FD_DSDD; break;
     default:
-        fprintf (stderr, "nsae: fdc: unknown disk type, %zuB\n",
+        log_error ("nsae: fdc: unknown disk type, %zuB\n",
                 len);
         return 1;
     }
+
+    log_verbose ("nsae: fdc: loaded disk %d with '%s'\n", disk, filename);
 
     return 0;
 }
@@ -57,7 +61,7 @@ fdc_save_disk (fdc_t *self, bool disk, char *filename)
     FILE *fp = fopen (filename, "wb+");
     if (fp == NULL)
     {
-        fprintf (stderr, "nsae: fdc: cannot write to file: '%s'\n",
+        log_error ("nsae: fdc: cannot write to file: '%s'\n",
                 filename);
         return 1;
     }
@@ -73,9 +77,11 @@ fdc_save_disk (fdc_t *self, bool disk, char *filename)
     fclose (fp);
     if (len != n)
     {
-        fprintf (stderr, "nsae: fdc: failed to write complete disk to file\n");
+        log_error ("nsae: fdc: failed to write complete disk to file\n");
         return 1;
     }
+
+    log_verbose ("nsae: fdc: saved disk %d into '%s'\n", disk, filename);
 
     return 0;
 }
@@ -120,7 +126,7 @@ fdc_step (fdc_t *self)
     }
 
     self->track_zero = (*p_track) == 0;
-    //fprintf (stderr, "trackzero = %d\n", self->track_zero);
+    //log_debug ("trackzero = %d\n", self->track_zero);
 }
 
 uint8_t
@@ -212,7 +218,7 @@ fdc_write (fdc_t *self, uint8_t data)
     {
         if (data != 0x00)
         {
-            fprintf (stderr, "nsae: fdc: bad preamble, data not 0x00\n");
+            log_error ("nsae: fdc: bad preamble, data not 0x00\n");
         }
         self->preamble++;
         return;
@@ -223,7 +229,7 @@ fdc_write (fdc_t *self, uint8_t data)
     {
         if (data != 0xfb)
         {
-            fprintf (stderr, "nsae: fdc: bad sync1 byte\n");
+            log_error ("nsae: fdc: bad sync1 byte\n");
         }
         self->sync++;
         return;
@@ -234,7 +240,7 @@ fdc_write (fdc_t *self, uint8_t data)
     {
         if (data != fdc_read_sync2 (self))
         {
-            fprintf (stderr, "nsae: fdc: bad sync2 byte\n");
+            log_error ("nsae: fdc: bad sync2 byte\n");
         }
         self->sync++;
         return;

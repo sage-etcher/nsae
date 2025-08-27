@@ -1,6 +1,8 @@
 
 #include "speaker.h"
 
+#include "log.h"
+
 #include <assert.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -18,7 +20,7 @@ speaker_beep (speaker_t *self)
 {
     assert (self != NULL);
 
-    fprintf (stdout, "TODO: speaker BEEEEEEEEP!!\n");
+    log_info ("TODO: speaker BEEEEEEEEP!!\n");
 }
 
 
