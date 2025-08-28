@@ -12,18 +12,43 @@ options:
   -h       show this page
 
 modes:
-  breakpoint <pc_address>   set a breakpoint at pc_address if that value is
-                              found inside the program counter pause the
-                              emulator.
+  adv_status                display avantage (motherboard) state
+  br_list                   list all breakpoints
+  br_remove <pc_address>    remove a breakpoint
+  br_set <pc_address>       add a new breakpoint
   continue                  continue executation after a breakpoint/pause.
+  cpu_status                display cpu state
+  crt_status                display crt display's state
   exit                      close out of the emulator.
+  fd_blkread <fd_num> <side> <track> <sector>
+                            read a block (512 bytes) from floppy disk
   fd_eject <fd_num>         remove floppy from fd_num specified drive.
   fd_load <fd_num> <file>   load floppy from file into drive fd_num.
   fd_save <fd_num> <file>   save floppy into file from drive fd_num.
+  fd_status <fd_num>        display floppy drive state
   hd_eject                  remove system hard disk.
   hd_load <file>            load hard disk from file into system hard disk.
   hd_save <file>            save hard disk into file from system hard disk.
+  hd_status                 display hard disk state
+  kb_caps <state>           set/unset capslock
+  kb_cursor <state>         set/unset cursorlock
+  kb_data <state>           set/unset kb data flag
+  kb_interupt <state>       set/unset kb interupt flag (reset)
+  kb_overflow <state>       set/unset kb overflow flag
+  kb_push <keycode>         push a keycode onto the keyboard buffer
+  kb_pop                    pop a key off of the keyboard buffer
+  kb_status <state>         display keyboard state
+  mmu_load <slot> <page>    load an mmu slot with a page of memory
+  mmu_read <addr> <n>       derefernce addr in the mmu, read n bytes
+  mmu_status                display memory multiplexer state
+  mmu_write <addr> <data>   dereference addr in the mmu, write into location
+                              data
+  io_status                 display io board state
   pause                     halt execution.
+  prom_load <file>          load a file into the PROM, overwrite default
+  ram_read <abs_addr> <n>   read from raw memory n bytes at abs_addr
+  ram_write <abs_addr> <data>
+                            write data into abs_addr of raw memory.
   restart                   restart the emulator, reinitialize the system.
   run                       start executing code from the current PC.
   status                    view information about the emulator's state.
