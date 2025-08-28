@@ -269,6 +269,42 @@ server_handle_ipc (nsae_t *self)
 
     case NSAE_CMD_FD_STATUS:
         log_verbose ("nsae: server: fd_status %d\n", fd_num);
+
+        log_info ("power:     %1d\tmotor:     %1d\tdisk:      %1d\tside: %1d\n",
+                self->adv.fdc.powered,
+                self->adv.fdc.motor_enabled,
+                self->adv.fdc.disk,
+                self->adv.fdc.side);
+        log_info ("track0:    %1d\tdirection: %1d\tprecomp:   %1d\tread: %1d \twrite: %1d\n",
+                self->adv.fdc.track_zero,
+                self->adv.fdc.step_direction,
+                self->adv.fdc.precompensation,
+                self->adv.fdc.read_mode,
+                self->adv.fdc.write_mode);
+        log_info ("preamble: %2d\tsync:      %1d\tindex:   %3d\n",
+                self->adv.fdc.preamble,
+                self->adv.fdc.sync,
+                self->adv.fdc.index);
+        log_info ("\n");
+        log_info ("disk 0: %4s\tt: %2d\ts: %2d\twp:%1d\n",
+                (!self->adv.fdc.disk_loaded[0] ? "    " :
+                    (self->adv.fdc.disk_type[0] == FD_SSDD ? "SSDD" :
+                     self->adv.fdc.disk_type[0] == FD_DSDD ? "DSDD" : "????")),
+                self->adv.fdc.track[0],
+                self->adv.fdc.sector[0],
+                self->adv.fdc.hard_ro);
+        log_info ("%s\n",
+                (!self->adv.fdc.disk_loaded[0] ? "none" : self->adv.fdc.filename[0]));
+        log_info ("\n");
+        log_info ("disk 1: %4s\tt: %2d\ts: %2d\twp:%1d\n",
+                (!self->adv.fdc.disk_loaded[1] ? "    " :
+                    (self->adv.fdc.disk_type[1] == FD_SSDD ? "SSDD" :
+                     self->adv.fdc.disk_type[1] == FD_DSDD ? "DSDD" : "????")),
+                self->adv.fdc.track[1],
+                self->adv.fdc.sector[1],
+                self->adv.fdc.hard_ro);
+        log_info ("%s\n",
+                (!self->adv.fdc.disk_loaded[1] ? "none" : self->adv.fdc.filename[1]));
         break;
 
 
@@ -377,7 +413,7 @@ server_handle_ipc (nsae_t *self)
 
     case NSAE_CMD_ADV_IN:
         log_verbose ("nsae: server: adv_in %02x\n", port);
-        log_info ("port (%02x): %02x\n", adv_in (&self->adv, port, 0x00000));
+        log_info ("port (%02x): %02x\n", port, adv_in (&self->adv, port, 0x00000));
         break;
 
 
