@@ -17,7 +17,7 @@ static void send_byte (uint8_t b);
 static void send_string (char *s);
 static void send_u16 (uint16_t u);
 static void send_u32 (uint32_t u);
-
+static void send_sz (size_t sz);
 
 void
 send_cmd (uint8_t cmd, ...)
@@ -33,16 +33,23 @@ vsend_cmd (uint8_t cmd, va_list args)
 {
     switch (cmd)
     {
-        /* cmd u32 */
-        case NSAE_CMD_RAM_READ:     /* cmd abs_addr */
+        /* cmd u32 size_t */
+        case NSAE_CMD_RAM_READ:     /* cmd abs_addr len */
             send_byte (cmd);
             send_u32 ((uint32_t)va_arg (args, int));
+            send_sz ((size_t)va_arg (args, size_t));
+            break;
+
+        /* cmd u16 size_t */
+        case NSAE_CMD_MMU_READ:     /* cmd addr len */
+            send_byte (cmd);
+            send_u16 ((uint16_t)va_arg (args, int));
+            send_sz ((size_t)va_arg (args, size_t));
             break;
 
         /* cmd u16 */
         case NSAE_CMD_BRKPNT_SET:   /* cmd addr */
         case NSAE_CMD_BRKPNT_REMOVE:/* cmd addr */
-        case NSAE_CMD_MMU_READ:     /* cmd addr */
             send_byte (cmd);
             send_u16 ((uint16_t)va_arg (args, int));
             break;
@@ -161,6 +168,13 @@ send_u32 (uint32_t u)
 {
     log_verbose ("nsaectl: send: (u32)%u\n", u);
     nsae_ipc_send ((uint8_t *)&u, sizeof (uint32_t));
+}
+
+static void
+send_sz (size_t sz)
+{
+    log_verbose ("nsaectl: send: (size_t)%zu\n", sz);
+    nsae_ipc_send ((uint8_t *)&sz, sizeof (size_t));
 }
 
 /* end of file */

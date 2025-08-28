@@ -11,6 +11,7 @@
 #include "ram.h"
 
 #include <assert.h>
+#include <ctype.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -86,6 +87,7 @@ server_handle_ipc (nsae_t *self)
 
     case NSAE_CMD_RAM_READ:
         nsae_ipc_recieve_block ((uint8_t *)&abs_addr, sizeof (uint32_t));
+        nsae_ipc_recieve_block ((uint8_t *)&n, sizeof (size_t));
         break;
 
     case NSAE_CMD_RAM_WRITE:
@@ -100,6 +102,7 @@ server_handle_ipc (nsae_t *self)
 
     case NSAE_CMD_MMU_READ:
         nsae_ipc_recieve_block ((uint8_t *)&addr, sizeof (uint16_t));
+        nsae_ipc_recieve_block ((uint8_t *)&n, sizeof (size_t));
         break;
 
     case NSAE_CMD_MMU_WRITE:
@@ -398,8 +401,26 @@ server_handle_ipc (nsae_t *self)
 
     /* raw ram */
     case NSAE_CMD_RAM_READ:
-        log_verbose ("nsae: server: ram_read %05x\n", abs_addr);
-        log_info ("read %02x\n", ram_read (&self->adv.ram, abs_addr));
+        log_verbose ("nsae: server: ram_read %05x %zu\n", abs_addr, n);
+        for (uint32_t iter = abs_addr; iter < abs_addr + n; iter = (iter & ~0xf) + 0x10)
+        {
+            log_info ("ram (%05x): ", iter & ~0xf);
+            for (int i = 0; i < 0x10; i++)
+            {
+                log_info ("%02x ", ram_read (&self->adv.ram, (iter & ~0xf) + i));
+                if (((i+1) % 4) == 0)
+                {
+                    log_info (" ");
+                }
+            }
+            log_info ("\t");
+            for (int i = 0; i < 0x10; i++)
+            {
+                data = ram_read (&self->adv.ram, (iter & ~0xf) + i);
+                log_info ("%c", (isprint (data) ? data : '.'));
+            }
+            log_info ("\n");
+        }
         break;
 
     case NSAE_CMD_RAM_WRITE:
@@ -417,8 +438,26 @@ server_handle_ipc (nsae_t *self)
 
     /* memory multipliexer */
     case NSAE_CMD_MMU_READ:
-        log_verbose ("nsae: server: mmu_read %04x\n", addr);
-        log_info ("read %02x\n", mmu_read (&self->adv.mmu, addr));
+        log_verbose ("nsae: server: mmu_read %04x %zu\n", addr, n);
+        for (uint16_t iter = addr; iter < addr + n; iter = (iter & ~0xf) + 0x10)
+        {
+            log_info ("mmu (%04x):  ", iter & ~0xf);
+            for (int i = 0; i < 0x10; i++)
+            {
+                log_info ("%02x ", mmu_read (&self->adv.mmu, (iter & ~0xf) + i));
+                if (((i+1) % 4) == 0)
+                {
+                    log_info (" ");
+                }
+            }
+            log_info ("\t");
+            for (int i = 0; i < 0x10; i++)
+            {
+                data = mmu_read (&self->adv.mmu, (iter & ~0xf) + i);
+                log_info ("%c", (isprint (data) ? data : '.'));
+            }
+            log_info ("\n");
+        }
         break;
 
     case NSAE_CMD_MMU_WRITE:

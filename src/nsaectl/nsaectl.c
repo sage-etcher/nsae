@@ -194,12 +194,12 @@ main (int argc, char **argv)
 
         [NSAE_CMD_CPU_STATUS]    = 1,
 
-        [NSAE_CMD_RAM_READ]      = 2,
+        [NSAE_CMD_RAM_READ]      = 3,
         [NSAE_CMD_RAM_WRITE]     = 3,
 
         [NSAE_CMD_PROM_LOAD]     = 2,
 
-        [NSAE_CMD_MMU_READ]      = 2,
+        [NSAE_CMD_MMU_READ]      = 3,
         [NSAE_CMD_MMU_WRITE]     = 3,
         [NSAE_CMD_MMU_LOAD]      = 3,
         [NSAE_CMD_MMU_STATUS]    = 1,
@@ -238,8 +238,6 @@ main (int argc, char **argv)
     case NSAE_CMD_KB_CURSOR:    /* cmd state */
     case NSAE_CMD_KB_DATA:      /* cmd state */
     case NSAE_CMD_KB_INTERUPT:  /* cmd state */
-    case NSAE_CMD_RAM_READ:     /* cmd abs_addr */
-    case NSAE_CMD_MMU_READ:     /* cmd addr */
         send_cmd (mode, strtol (argv[1], NULL, 0));
         break;
 
@@ -247,6 +245,8 @@ main (int argc, char **argv)
     case NSAE_CMD_RAM_WRITE:    /* cmd abs_addr data */
     case NSAE_CMD_MMU_WRITE:    /* cmd addr data */
     case NSAE_CMD_MMU_LOAD:     /* cmd slot page */
+    case NSAE_CMD_RAM_READ:     /* cmd abs_addr len */
+    case NSAE_CMD_MMU_READ:     /* cmd addr len */
         send_cmd (mode, strtol (argv[1], NULL, 0), strtol (argv[2], NULL, 0));
         break;
 

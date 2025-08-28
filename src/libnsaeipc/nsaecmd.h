@@ -53,15 +53,15 @@ typedef enum {
     NSAE_CMD_CPU_STATUS,    /* 1     cmd                           */
 
     /* ram */
-    NSAE_CMD_RAM_READ,      /* 5     cmd abs_addr                  */
+    NSAE_CMD_RAM_READ,      /* 9/13  cmd abs_addr len              */
     NSAE_CMD_RAM_WRITE,     /* 6     cmd abs_addr data             */
 
     /* prom */
     NSAE_CMD_PROM_LOAD,     /* 5/9+  cmd fielname_len file         */
 
     /* mmu */
-    NSAE_CMD_MMU_READ,      /* 5     cmd addr                      */
-    NSAE_CMD_MMU_WRITE,     /* 6     cmd addr data                 */
+    NSAE_CMD_MMU_READ,      /* 7/11  cmd addr len                  */
+    NSAE_CMD_MMU_WRITE,     /* 4     cmd addr data                 */
     NSAE_CMD_MMU_LOAD,      /* 3     cmd slot page                 */
     NSAE_CMD_MMU_STATUS,    /* 1     cmd                           */
 

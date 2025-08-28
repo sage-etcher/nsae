@@ -37,6 +37,7 @@ main (void)
         uint16_t addr = 0;
         uint32_t abs_addr = 0;
         uint8_t data = 0;
+        size_t n = 0;
 
         switch (cmd)
         {
@@ -126,7 +127,8 @@ main (void)
 
         case NSAE_CMD_RAM_READ:
             nsae_ipc_recieve_block ((uint8_t *)&abs_addr, sizeof (uint32_t));
-            printf ("ram_read %08x\n", abs_addr);
+            nsae_ipc_recieve_block ((uint8_t *)&n, sizeof (size_t));
+            printf ("ram_read %08x %zu\n", abs_addr, n);
             break;
 
         case NSAE_CMD_RAM_WRITE:
@@ -137,7 +139,8 @@ main (void)
 
         case NSAE_CMD_MMU_READ:
             nsae_ipc_recieve_block ((uint8_t *)&addr, sizeof (uint16_t));
-            printf ("mmu_read %04x\n", addr);
+            nsae_ipc_recieve_block ((uint8_t *)&n, sizeof (size_t));
+            printf ("mmu_read %04x %zu\n", addr, n);
             break;
 
         case NSAE_CMD_MMU_WRITE:
