@@ -22,7 +22,7 @@ typedef enum {
     NSAE_CMD_FD_LOAD,       /* 6/10+ cmd fd_num filename_len file  */
     NSAE_CMD_FD_SAVE,       /* 6/10+ cmd fd_num filename_len file  */
     NSAE_CMD_FD_BLK_READ,   /* 5     cmd fd_num side track sec     */
-    NSAE_CMD_FD_STATUS,     /* 2     cmd fd_num                    */
+    NSAE_CMD_FD_STATUS,     /* 1     cmd                           */
 
     /* harddisk */
     NSAE_CMD_HD_EJECT,      /* 1     cmd                           */

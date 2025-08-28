@@ -1,7 +1,15 @@
-Usage: nsaectl [-f fifo] [-htvV] (breakpoint <pc_address> | continue | exit |
-           fd_eject <fd_num> | fd_load <fd_num> <file> | 
-	   fd_save <fd_num> <file> | hd_eject | hd_load <file> | 
-	   hd_save <file> | pause | restart | run |  status | step)
+Usage: nsaectl [-f fifo] [-htvV] (adv_in <port> | adv_out <port> <data> |
+           adv_status | br_list | br_remove <pc_address> |
+           br_set <pc_address> | continue | cpu_state | crt_state | exit |
+           fd_blkread <fd_num> <side> <track> <sector> | fd_eject <fd_num> |
+           fd_load <fd_num> <file> | fd_save <fd_num> <file> | fd_status |
+           hd_eject | hd_load <file> | hd_save <file> | hd_status |
+           kb_caps <state> | kb_cursor <state> | kb_data <state> |
+           kb_interupt <state> | kb_overflow <state> | kb_push <keycode> |
+           kb_pop | mmu_load <slot> <page> | mmu_read <addr> <n> | mmu_status |
+           mmu_write <addr> <data> | io_status | pause | prom_load <file> |
+           ram_read <abs_addr> <n> | ram_write <abs_addr> <data> | restart |
+           run | status | step)
 
 options:
   -f fifo  specify an alternate fifo for sending data to the server.
@@ -27,7 +35,7 @@ modes:
   fd_eject <fd_num>         remove floppy from fd_num specified drive.
   fd_load <fd_num> <file>   load floppy from file into drive fd_num.
   fd_save <fd_num> <file>   save floppy into file from drive fd_num.
-  fd_status <fd_num>        display floppy drive state
+  fd_status                 display floppy drive control state
   hd_eject                  remove system hard disk.
   hd_load <file>            load hard disk from file into system hard disk.
   hd_save <file>            save hard disk into file from system hard disk.

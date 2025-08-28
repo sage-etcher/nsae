@@ -172,7 +172,7 @@ main (int argc, char **argv)
         [NSAE_CMD_FD_LOAD]       = 3,
         [NSAE_CMD_FD_SAVE]       = 3,
         [NSAE_CMD_FD_BLK_READ]   = 5,
-        [NSAE_CMD_FD_STATUS]     = 2,
+        [NSAE_CMD_FD_STATUS]     = 1,
 
         [NSAE_CMD_HD_EJECT]      = 1,
         [NSAE_CMD_HD_LOAD]       = 2,
@@ -235,7 +235,6 @@ main (int argc, char **argv)
     case NSAE_CMD_BRKPNT_SET:   /* cmd addr */
     case NSAE_CMD_BRKPNT_REMOVE:/* cmd addr */
     case NSAE_CMD_FD_EJECT:     /* cmd fd_num */
-    case NSAE_CMD_FD_STATUS:    /* cmd fd_num */
     case NSAE_CMD_KB_PUSH:      /* cmd keycode */
     case NSAE_CMD_KB_OVERFLOW:  /* cmd state */
     case NSAE_CMD_KB_CAPS:      /* cmd state */
@@ -287,6 +286,7 @@ main (int argc, char **argv)
     case NSAE_CMD_STEP:
     case NSAE_CMD_RUN:
     case NSAE_CMD_STATUS:
+    case NSAE_CMD_FD_STATUS:
     case NSAE_CMD_HD_EJECT:
     case NSAE_CMD_KB_POP:
     case NSAE_CMD_KB_STATUS:
