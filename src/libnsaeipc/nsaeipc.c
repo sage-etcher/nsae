@@ -12,11 +12,12 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#define NSAE_IPC_CLIENT_FILE "nsae_send_fifo"
-#define NSAE_IPC_SERVER_FILE "nsae_recieve_fifo"
+#define NSAE_IPC_CLIENT_FILE "nsae_client_fifo"
+#define NSAE_IPC_SERVER_FILE "nsae_server_fifo"
 
 static const char *nsae_fifo_path (void);
 static char *path_concat (const char *parent, const char *child);
+static int open_fifo (char *filename, int o_mode, int o_cancel_mode);
 
 static char *s_client_fifo = NULL;
 static char *s_server_fifo = NULL;
@@ -59,24 +60,27 @@ nsae_ipc_init (int mode, char *custom_client, char *custom_server)
         unlink (s_client_fifo);
         unlink (s_server_fifo);
 
+        remove (s_client_fifo);
+        remove (s_server_fifo);
+
         mkfifo (s_client_fifo, 0600);
         mkfifo (s_server_fifo, 0600);
     }
 
     switch (mode)
     {
-    case NSAE_IPC_CLIENT:
-        s_client_fd = open (s_client_fifo, O_RDONLY);
-        s_server_fd = open (s_server_fifo, O_WRONLY);
-        s_send = &s_server_fd;
-        s_recieve = &s_client_fd;
+    case NSAE_IPC_SERVER:
+        s_client_fd = open_fifo (s_client_fifo, O_WRONLY, O_RDONLY);
+        s_server_fd = open (s_server_fifo, O_RDONLY | O_NONBLOCK);
+        s_send    = &s_client_fd;
+        s_recieve = &s_server_fd;
         break;
 
-    case NSAE_IPC_SERVER:
-        s_client_fd = open (s_client_fifo, O_WRONLY);
-        s_server_fd = open (s_server_fifo, O_RDONLY | O_NONBLOCK);
-        s_send = &s_client_fd;
-        s_recieve = &s_server_fd;
+    case NSAE_IPC_CLIENT:
+        s_client_fd = open_fifo (s_client_fifo, O_RDONLY, O_WRONLY);
+        s_server_fd = open_fifo (s_server_fifo, O_WRONLY, O_RDONLY);
+        s_send    = &s_server_fd;
+        s_recieve = &s_client_fd;
         break;
 
     default:
@@ -116,6 +120,9 @@ nsae_ipc_free (int mode)
     {
         unlink (s_client_fifo);
         unlink (s_server_fifo);
+
+        remove (s_client_fifo);
+        remove (s_server_fifo);
     }
 
     free (s_client_fifo);
@@ -148,6 +155,19 @@ nsae_ipc_recieve_block (uint8_t buf[], size_t n)
 
     int b = 0;
     while ((b = read (*s_recieve, buf, n)) == 0) { }
+    return b;
+}
+
+int
+nsae_ipc_send_block (uint8_t buf[], size_t n)
+{
+    if (s_send == NULL) return -1;
+
+    int b = 0;
+    while ((b = write (*s_send, buf, n)) == 0) 
+    { 
+        printf ("%d\n", b);
+    }
     return b;
 }
 
@@ -190,5 +210,37 @@ path_concat (const char *parent, const char *child)
 
     return path;
 }
+
+static int 
+open_fifo (char *filename, int o_mode, int o_cancel_mode)
+{
+    /* by default a blocking fifo will block on open until both read and write
+     * ends are opened. this is non-ideal.
+     * this workaround forks the process and allows the caller to open both
+     * heads then discard the latter unecessary one. in turn this stops the
+     * open lock even on blocking opens */
+
+    int pid = fork();
+    if (pid > 0) /* parent */
+    {
+        return open (filename, o_mode);
+    }
+    else if (pid == 0) /* cihld */
+    {
+        int fifo_fd = open (filename, o_cancel_mode);
+        close (fifo_fd);
+        exit (0);
+    }
+    else if (pid < 0) /* error */
+    {
+        fprintf (stderr, "libnsaeipc: failed to fork\n");
+        return -1;
+    }
+
+    /* unreachable */
+    return -1;
+}
+
+
 
 /* end of file */
