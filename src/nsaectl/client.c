@@ -40,7 +40,8 @@ vsend_cmd (uint8_t cmd, va_list args)
             break;
 
         /* cmd u16 */
-        case NSAE_CMD_BREAKPOINT:   /* cmd addr */
+        case NSAE_CMD_BRKPNT_SET:   /* cmd addr */
+        case NSAE_CMD_BRKPNT_REMOVE:/* cmd addr */
         case NSAE_CMD_MMU_READ:     /* cmd addr */
             send_byte (cmd);
             send_u16 ((uint16_t)va_arg (args, int));
@@ -110,6 +111,7 @@ vsend_cmd (uint8_t cmd, va_list args)
         case NSAE_CMD_RESTART:
         case NSAE_CMD_PAUSE:
         case NSAE_CMD_CONTINUE:
+        case NSAE_CMD_BRKPNT_LIST:
         case NSAE_CMD_STEP:
         case NSAE_CMD_RUN:
         case NSAE_CMD_STATUS:

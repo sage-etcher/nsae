@@ -9,23 +9,25 @@ extern "c" {
 #include <stdint.h>
 
 #include "adv.h"
+#include "breakpoints.h"
 
+
+#define NSAE_BREAKPOINT_MAX 256
 
 typedef struct {
     adv_t adv;
+    breakpoints_t br;
 
     int width;
     int height;
     int max_fps;
 
-    bool step_pulse;
     bool step;
     bool pause;
     bool exit;
 } nsae_t;
 
 int nsae_start (nsae_t *self, int *p_argc, char **argv);
-
 
 #ifdef __cplusplus
 }

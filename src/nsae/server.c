@@ -41,7 +41,8 @@ server_handle_ipc (nsae_t *self)
     /* get parameters */
     switch (cmd)
     {
-    case NSAE_CMD_BREAKPOINT:
+    case NSAE_CMD_BRKPNT_SET:
+    case NSAE_CMD_BRKPNT_REMOVE:
         nsae_ipc_recieve_block ((uint8_t *)&addr, sizeof (uint16_t));
         break;
 
@@ -194,25 +195,40 @@ server_handle_ipc (nsae_t *self)
         self->pause = false;
         break;
 
-    case NSAE_CMD_BREAKPOINT:
-        log_verbose ("nsae: server: breakpiont %04x\n", addr);
+    case NSAE_CMD_BRKPNT_SET:
+        log_verbose ("nsae: server: breakpoint set %04x\n", addr);
+        br_add (&self->br, addr);
+        break;
+
+    case NSAE_CMD_BRKPNT_REMOVE:
+        log_verbose ("nsae: server: breakpoint remove %04x\n", addr);
+        br_remove (&self->br, addr);
+        break;
+
+    case NSAE_CMD_BRKPNT_LIST:
+        log_verbose ("nsae: server: breakpoint list\n");
+        log_info ("breakpoint list:\n");
+        for (size_t i = 0; i < self->br.cnt; i++)
+        {
+            log_info ("%3lu: %04x\n", i, self->br.m[i]);
+        }
         break;
 
     case NSAE_CMD_STEP: 
         log_verbose ("nsae: server: step\n");
         self->step = true;
-        self->step_pulse = true;
+        self->pause = false;
         break;
 
     case NSAE_CMD_RUN:
         log_verbose ("nsae: server: run\n");
         self->step = false;
+        self->pause = false;
         break;
 
     case NSAE_CMD_STATUS:
         log_verbose ("nsae: server: status\n");
         log_info ("step: %d\n", self->step);
-        log_info ("step_pulse: %d\n", self->step_pulse);
         log_info ("pause: %d\n", self->pause);
         break;
 

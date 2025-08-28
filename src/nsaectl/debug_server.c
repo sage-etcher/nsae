@@ -45,10 +45,18 @@ main (void)
             puts ("exit"); 
             break;
 
-        case NSAE_CMD_BREAKPOINT:
+        case NSAE_CMD_BRKPNT_SET:
+        case NSAE_CMD_BRKPNT_REMOVE:
             nsae_ipc_recieve_block ((uint8_t *)&addr, sizeof (uint16_t));
 
-            printf ("breakpoint %04x\n", (unsigned)addr);
+            printf ("breakpoint %s %04x\n", 
+                    (cmd == NSAE_CMD_BRKPNT_SET    ? "set"    :
+                     cmd == NSAE_CMD_BRKPNT_REMOVE ? "remove" : "unknown"),
+                    (unsigned)addr);
+            break;
+
+        case NSAE_CMD_BRKPNT_LIST:
+            printf ("breakpoint list\n");
             break;
 
         case NSAE_CMD_FD_EJECT:

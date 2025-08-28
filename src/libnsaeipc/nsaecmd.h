@@ -10,7 +10,9 @@ typedef enum {
     NSAE_CMD_RESTART,       /* 1     cmd                           */
     NSAE_CMD_PAUSE,         /* 1     cmd                           */
     NSAE_CMD_CONTINUE,      /* 1     cmd                           */
-    NSAE_CMD_BREAKPOINT,    /* 3     cmd abs_addr                  */
+    NSAE_CMD_BRKPNT_SET,    /* 3     cmd abs_addr                  */
+    NSAE_CMD_BRKPNT_REMOVE, /* 3     cmd abs_addr                  */
+    NSAE_CMD_BRKPNT_LIST,   /* 1     cmd                           */
     NSAE_CMD_STEP,          /* 1     cmd                           */
     NSAE_CMD_RUN,           /* 1     cmd                           */
     NSAE_CMD_STATUS,        /* 1     cmd                           */

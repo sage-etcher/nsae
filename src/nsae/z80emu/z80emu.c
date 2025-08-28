@@ -6,6 +6,14 @@
  * This code is free, do whatever you want with it.
  */
 
+/* NSAE Changelog:
+ * 2025 August 28 -- Added breakpoint_met label
+ *     implementing breakpoints using the defined macros proved insufficient
+ *     we cannot panick and `goto stop_emulation` as the Z80_FETCH_BYTE()
+ *     macro is used within both in emulate() and Z80Emulate() where
+ *     stop_emulation is not present.
+ */
+
 #include "z80emu.h"
 #include "z80user.h"
 #include "instructions.h"
@@ -239,6 +247,7 @@ int Z80Emulate (Z80_STATE *state, int number_cycles, void *context)
 	elapsed_cycles = 0;
 	pc = state->pc;
         Z80_FETCH_BYTE(pc, opcode);
+breakpoint_met:
         state->pc = pc + 1;
 
         return emulate(state, opcode, elapsed_cycles, number_cycles, context);
@@ -2608,6 +2617,7 @@ emulate_next_instruction:
 
         }
 
+breakpoint_met:
 stop_emulation:
 
         state->r = (state->r & 0x80) | (r & 0x7f);

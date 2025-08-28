@@ -83,19 +83,11 @@ adv_init (adv_t *self)
 }
 
 int
-adv_run (adv_t *self, int cycles)
+adv_run (adv_t *self, int cycles, void *cb_data)
 {
     assert (self != NULL);
 
-    return cpu_run (&self->cpu, cycles, self);
-}
-
-int
-adv_step (adv_t *self)
-{
-    assert (self != NULL);
-
-    return cpu_step (&self->cpu, self);
+    return cpu_run (&self->cpu, cycles, cb_data);
 }
 
 static void

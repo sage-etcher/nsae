@@ -90,12 +90,17 @@ extern "C" {
  */
 
 #include "adv.h"
+#include "breakpoints.h"
+#include "log.h"
 #include "mmu.h"
+#include "nsae.h"
 
 #include <assert.h>
 #include <stddef.h>
 
-#define ADV_CTX ((adv_t *)context)
+#define NSAE_CTX ((nsae_t *)context)
+#define BR_CTX ((breakpoints_t *)&NSAE_CTX->br)
+#define ADV_CTX ((adv_t *)&NSAE_CTX->adv)
 #define MMU_CTX ((mmu_t *)&ADV_CTX->mmu)
 
 #define Z80_READ_BYTE(address, x)                                       \
@@ -104,7 +109,18 @@ extern "C" {
         (x) = mmu_read (MMU_CTX, address);                              \
 }
 
-#define Z80_FETCH_BYTE(address, x)              Z80_READ_BYTE((address), (x))
+#define Z80_FETCH_BYTE(address, x)                                      \
+{                                                                       \
+        Z80_READ_BYTE((address), (x))                                   \
+        if (br_lookup (BR_CTX, address) != -1)                          \
+        {                                                               \
+                NSAE_CTX->pause = true;                                 \
+                log_verbose ("breakpoint met %04x\n", address);         \
+                                                                        \
+                /* required source modification (z80emu.c changelog) */ \
+                goto breakpoint_met;                                    \
+        }                                                               \
+}
 
 #define Z80_READ_WORD(address, x)                                       \
 {                                                                       \

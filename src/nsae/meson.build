@@ -7,6 +7,7 @@ z80emu_inc = include_directories('z80emu')
 
 nsae_bin = executable('nsae', [
     'adv.c',
+    'breakpoints.c',
     'cpu.c',
     'crt.c',
     'fdc.c',
