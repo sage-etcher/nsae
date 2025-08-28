@@ -36,6 +36,7 @@ main (void)
         uint8_t page = 0;
         uint16_t addr = 0;
         uint32_t abs_addr = 0;
+        uint8_t port = 0;
         uint8_t data = 0;
         size_t n = 0;
 
@@ -153,6 +154,17 @@ main (void)
             nsae_ipc_recieve_block ((uint8_t *)&slot, sizeof (uint8_t));
             nsae_ipc_recieve_block ((uint8_t *)&page, sizeof (uint8_t));
             printf ("mmu_load %x %x\n", (unsigned)slot, (unsigned)page);
+            break;
+        
+        case NSAE_CMD_ADV_IN:
+            nsae_ipc_recieve_block ((uint8_t *)&port, sizeof (uint8_t));
+            printf ("adv_in %02x", port);
+            break;
+
+        case NSAE_CMD_ADV_OUT:
+            nsae_ipc_recieve_block ((uint8_t *)&port, sizeof (uint8_t));
+            nsae_ipc_recieve_block ((uint8_t *)&data, sizeof (uint8_t));
+            printf ("adv_out %02x %02x", port, data);
             break;
 
         case NSAE_CMD_RESTART:      puts ("restart"); break;

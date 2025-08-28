@@ -34,6 +34,7 @@ server_handle_ipc (nsae_t *self)
     uint16_t addr = 0x0000;
     uint32_t abs_addr = 0x00000000;
     char *file = NULL;
+    uint8_t port = 0x00;
     size_t n = 0;
 
     int rc = nsae_ipc_recieve (&cmd, sizeof (uint8_t));
@@ -83,6 +84,15 @@ server_handle_ipc (nsae_t *self)
     case NSAE_CMD_KB_DATA:
     case NSAE_CMD_KB_INTERUPT:
         nsae_ipc_recieve_block ((uint8_t *)&kb_state, sizeof (uint8_t));
+        break;
+
+    case NSAE_CMD_ADV_IN:
+        nsae_ipc_recieve_block ((uint8_t *)&port, sizeof (uint8_t));
+        break;
+
+    case NSAE_CMD_ADV_OUT:
+        nsae_ipc_recieve_block ((uint8_t *)&port, sizeof (uint8_t));
+        nsae_ipc_recieve_block ((uint8_t *)&data, sizeof (uint8_t));
         break;
 
     case NSAE_CMD_RAM_READ:
@@ -358,6 +368,16 @@ server_handle_ipc (nsae_t *self)
         log_info ("ctrl_reg: %02x\n", self->adv.ctrl_reg);
         log_info ("stat1_reg: %02x\n", self->adv.stat1_reg);
         log_info ("stat2_reg: %02x\n", self->adv.stat2_reg);
+        break;
+
+    case NSAE_CMD_ADV_OUT:
+        log_verbose ("nsae: server: adv_out %02x %02x\n", port, data);
+        adv_out (&self->adv, port, data, 0x0000);
+        break;
+
+    case NSAE_CMD_ADV_IN:
+        log_verbose ("nsae: server: adv_in %02x\n", port);
+        log_info ("port (%02x): %02x\n", adv_in (&self->adv, port, 0x00000));
         break;
 
 

@@ -63,6 +63,7 @@ vsend_cmd (uint8_t cmd, va_list args)
         case NSAE_CMD_KB_CURSOR:    /* cmd state */
         case NSAE_CMD_KB_DATA:      /* cmd state */
         case NSAE_CMD_KB_INTERUPT:  /* cmd state */
+        case NSAE_CMD_ADV_IN:       /* cmd port */
             send_byte (cmd);
             send_byte ((uint8_t)va_arg (args, int));
             break;
@@ -82,6 +83,7 @@ vsend_cmd (uint8_t cmd, va_list args)
             break;
 
         /* cmd u8 u8 */
+        case NSAE_CMD_ADV_OUT:      /* cmd port data */
         case NSAE_CMD_MMU_LOAD:     /* cmd slot page */
             send_byte (cmd);
             send_byte ((uint8_t)va_arg (args, int));

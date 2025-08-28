@@ -48,6 +48,8 @@ typedef enum {
 
     /* advantage */
     NSAE_CMD_ADV_STATUS,    /* 1     cmd                           */
+    NSAE_CMD_ADV_OUT,       /* 3     cmd port data                 */
+    NSAE_CMD_ADV_IN,        /* 2     cmd port                      */
 
     /* cpu */
     NSAE_CMD_CPU_STATUS,    /* 1     cmd                           */

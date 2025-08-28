@@ -12,6 +12,8 @@ options:
   -h       show this page
 
 modes:
+  adv_in <port>             read from port
+  adv_out <port> <data>     write data to port
   adv_status                display avantage (motherboard) state
   br_list                   list all breakpoints
   br_remove <pc_address>    remove a breakpoint
