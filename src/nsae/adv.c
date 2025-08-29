@@ -99,11 +99,21 @@ adv_update_status (adv_t *self)
     fdc_t *fdc = &self->fdc;
     kb_t *kb = &self->kb;
 
+    /* rotate the disk if enable */
+    if (fdc->motor_enabled)
+    {
+        fdc_disk_rotate (fdc);
+    }
+
     /* status register 1 */
     *stat1 &= 0x01;
 
     /* bit7 disk serial data flag */
+    *stat1 |= fdc->serial_data << 7;
+
     /* bit6 sector mark */
+    *stat1 |= !fdc->sector_mark << 6;
+
     /* bit5 track 0 */
     *stat1 |= fdc->track_zero << 5;
 
@@ -134,7 +144,25 @@ adv_update_status (adv_t *self)
     /* bit 4 auto repeat */
     *stat2 |= (self->kb_mi & kb->autorepeat) << 4;
 
-    /* bit 3-0 command outputs (externally managed) */
+    /* bit 3-0 command outputs (mostly externally managed) */
+
+
+    /* fdc commands have special properties */
+
+
+    if ((self->ctrl_reg & 0x7) != 0x5)
+    {
+        /* turn motor off in 3 seconds */
+    }
+
+    switch (self->ctrl_reg & 0x7)
+    {
+    case 0x0:
+    case 0x5:
+        *stat2 &= ~0x7;
+        *stat2 |= fdc_get_sector (fdc) & 0x7;
+        break;
+    }
 
     //log_debug ("status1_reg = %d%d%d%d$%d%d%d%d\n",
     //        (*stat1 >> 7) & 0x1, (*stat1 >> 6) & 0x1,

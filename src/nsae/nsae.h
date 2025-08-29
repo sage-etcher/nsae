@@ -7,6 +7,7 @@ extern "c" {
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <time.h>
 
 #include "adv.h"
 #include "breakpoints.h"
@@ -25,6 +26,8 @@ typedef struct {
     bool step;
     bool pause;
     bool exit;
+
+    struct timeval update_tv;
 } nsae_t;
 
 int nsae_start (nsae_t *self, int *p_argc, char **argv);

@@ -34,7 +34,9 @@ br_remove (breakpoints_t *self, uint16_t pc)
     if (index == -1) return -1;
     uint16_t addr = self->m[index];
 
-    memcpy (&self->m[index], &self->m[index+1], --self->cnt - index);
+    memcpy (&self->m[index], &self->m[index+1], self->cnt - index);
+    self->cnt--;
+
     return addr;
 }
 

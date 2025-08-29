@@ -2,6 +2,7 @@
 #include "fdc.h"
 
 #include "log.h"
+#include "timer.h"
 
 #include <assert.h>
 #include <stdbool.h>
@@ -9,6 +10,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/time.h>
 
 int
 fdc_init (fdc_t *self)
@@ -153,12 +155,47 @@ fdc_step (fdc_t *self)
     //log_debug ("trackzero = %d\n", self->track_zero);
 }
 
+
+
+#define MARK_BEGIN ((struct timeval){ .tv_sec = 0, .tv_usec = 0 })
+#define MARK_END   ((struct timeval){ .tv_sec = 0, .tv_usec = 3000 })
+
+#define DATARDY_BEGIN ((struct timeval){ .tv_sec = 0, .tv_usec = 3500 })
+#define DATARDY_END   ((struct timeval){ .tv_sec = 0, .tv_usec = 3650 })
+
+#define SECTOR_LEN ((struct timeval){ .tv_sec = 0, .tv_usec = 1000000 / 50 })
+void
+fdc_disk_rotate (fdc_t *self)
+{
+    struct timeval tv = { 0 };
+    gettimeofday (&tv, NULL);
+
+    struct timeval diff = timeval_diff (self->rot_tv, tv);
+
+    /* reset values on sector end */
+    if (timeval_cmp (diff, SECTOR_LEN) >= 0)
+    {
+        self->rot_tv = tv;
+        diff = timeval_diff (self->rot_tv, tv);
+
+        self->sector[self->disk]++;
+        self->sector[self->disk] %= FD_SECTORS;
+
+        self->write_mode = false;
+        self->read_mode = false;
+    }
+
+    /* set flags */
+    self->sector_mark = timeval_between (diff, MARK_BEGIN, MARK_END);
+    self->serial_data = timeval_between (diff, DATARDY_BEGIN, DATARDY_END);
+}
+
+
 uint8_t
 fdc_get_sector (fdc_t *self)
 {
     assert (self != NULL);
-    uint8_t sec = self->sector[self->disk]++;
-    self->sector[self->disk] %= FD_SECTORS;
+    uint8_t sec = self->sector[self->disk];
 
     self->preamble = 0;
     self->sync = 0;

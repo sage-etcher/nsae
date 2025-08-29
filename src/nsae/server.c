@@ -269,22 +269,26 @@ server_handle_ipc (nsae_t *self)
     case NSAE_CMD_FD_STATUS:
         log_verbose ("nsae: server: fd_status\n");
 
-        log_info ("power:     %1d\tmotor:     %1d\tdisk:      %1d\tside: %1d\n",
+        log_info ("power:     %1d\tmotor:   %1d\tdisk:    %1d\tside:  %1d\n",
                 self->adv.fdc.powered,
                 self->adv.fdc.motor_enabled,
                 self->adv.fdc.disk,
                 self->adv.fdc.side);
-        log_info ("track0:    %1d\tdirection: %1d\tprecomp:   %1d\tread: %1d\n",
+        log_info ("track0:    %1d\tspulse:  %1d\tsmark:   %1d\tsdata: %1d\n",
                 self->adv.fdc.track_zero,
+                self->adv.fdc.step_pulse,
+                self->adv.fdc.sector_mark,
+                self->adv.fdc.serial_data);
+        log_info ("direction: %1d\tprecomp: %1d\tread:    %1d\twrite: %1d\n",
                 self->adv.fdc.step_direction,
                 self->adv.fdc.precompensation,
-                self->adv.fdc.read_mode);
-        log_info ("preamble: %2d\tsync:      %1d\tindex:   %3d\twrite: %1d\n",
+                self->adv.fdc.read_mode,
+                self->adv.fdc.write_mode);
+        log_info ("preamble: %2d\tsync:    %1d\tindex: %3d\n",
                 self->adv.fdc.preamble,
                 self->adv.fdc.sync,
-                self->adv.fdc.index,
-                self->adv.fdc.write_mode);
-        log_info ("disk 0: %4s\tt: %2d\ts: %2d\twp:%1d\t%s\n",
+                self->adv.fdc.index);
+        log_info ("disk 0: %4s\tt: %2d\ts: %2d\twp: %1d\t%s\n",
                 (!self->adv.fdc.disk_loaded[0] ? "    " :
                     (self->adv.fdc.disk_type[0] == FD_SSDD ? "SSDD" :
                      self->adv.fdc.disk_type[0] == FD_DSDD ? "DSDD" : "????")),
@@ -292,7 +296,7 @@ server_handle_ipc (nsae_t *self)
                 self->adv.fdc.sector[0],
                 self->adv.fdc.hard_ro,
                 (!self->adv.fdc.disk_loaded[0] ? "none" : self->adv.fdc.filename[0]));
-        log_info ("disk 1: %4s\tt: %2d\ts: %2d\twp:%1d\t%s\n",
+        log_info ("disk 1: %4s\tt: %2d\ts: %2d\twp: %1d\t%s\n",
                 (!self->adv.fdc.disk_loaded[1] ? "    " :
                     (self->adv.fdc.disk_type[1] == FD_SSDD ? "SSDD" :
                      self->adv.fdc.disk_type[1] == FD_DSDD ? "DSDD" : "????")),

@@ -7,6 +7,7 @@
 #include "log.h"
 #include "nsaeipc.h"
 #include "server.h"
+#include "timer.h"
 
 #include <GL/glew.h>
 #include <GL/glu.h>
@@ -16,6 +17,8 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <time.h>
+#include <unistd.h>
 
 
 bool g_log_info = true;
@@ -186,25 +189,46 @@ nsae_update (void *cb_data)
     assert (cb_data != NULL);
     nsae_t *self = cb_data;
     adv_t  *adv  = &self->adv;
+    fdc_t  *fdc  = &adv->fdc;
+
+    /* current time */
+    struct timeval tv = { 0 };
+    gettimeofday (&tv, NULL);
+
+    /* time since last update */
+    struct timeval diff = timeval_diff (tv, self->update_tv);
+
+    /* update timers */
+    fdc->rot_tv = timeval_sum (fdc->rot_tv, diff);
 
     /* handle ipc */
     server_handle_ipc (self);
 
     /* emulate the system */
-    if (self->pause) return;
+    if (self->pause) goto exit;
 
-    /* single step */
+    unsigned long CPU_HZ = 4000000; /* 4MHz */
+    unsigned long stop_cycles = CPU_HZ / self->max_fps;
+    unsigned long batch_cycles = 2000;
+    unsigned long i = 0;
+
     if (self->step)
     {
-        (void)adv_run (adv, 1, self);
+        batch_cycles = 1;
         self->pause = true;
     }
-    else /* run normally */
+
+    while (i < stop_cycles)
     {
-        const int CPU_HZ = 4000000; /* 4MHz */
-        int cycles = CPU_HZ / self->max_fps;
-        (void)adv_run (adv, cycles, self);
+        i += adv_run (adv, batch_cycles, self);
+
+        (void)usleep ((batch_cycles * 1000000) / CPU_HZ);
+
+        if (self->pause) goto exit;
     }
+
+exit:
+    gettimeofday (&self->update_tv, NULL);
 }
 
 static void

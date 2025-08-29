@@ -8,6 +8,7 @@ extern "c" {
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <sys/time.h>
 
 #define FD_CNT       2
 #define FD_SIDES     2
@@ -22,8 +23,8 @@ extern "c" {
 #define FD_SSDD 0
 #define FD_DSDD 1
 
-#define FD_STEP_OUT 0
-#define FD_STEP_IN  1
+#define FD_STEP_OUT 1
+#define FD_STEP_IN  0
 
 typedef struct {
     char *filename[FD_CNT];
@@ -34,6 +35,7 @@ typedef struct {
     uint8_t preamble;
     uint8_t sync;
     uint16_t index;
+    struct timeval rot_tv;
 
     uint8_t sector[FD_CNT];
     uint8_t track[FD_CNT];
@@ -44,9 +46,11 @@ typedef struct {
     bool disk;  /* 0:1 for disk A:B */
     bool side;  /* 0:1 for top:bottom */
 
-    bool track_zero;
     bool step_pulse;
     bool step_direction; /* 0:1 for out:in */
+    bool track_zero;
+    bool sector_mark;
+    bool serial_data;
     bool precompensation;
 
     bool read_mode;
@@ -64,6 +68,7 @@ void fdc_start_motor (fdc_t *self);
 void fdc_stop_motor (fdc_t *self);
 
 void fdc_step (fdc_t *self);
+void fdc_disk_rotate (fdc_t *self);
 uint8_t fdc_get_sector (fdc_t *self);
 
 uint8_t fdc_read_sync1 (fdc_t *self);
