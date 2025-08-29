@@ -359,17 +359,19 @@ server_handle_ipc (nsae_t *self)
 
     case NSAE_CMD_KB_STATUS:
         log_verbose ("nsae: server: kb_status\n");
-        log_info ("overflow: %d\n", self->adv.kb.overflow);
-        log_info ("data_flag: %d\n", self->adv.kb.data_flag);
-        log_info ("reset: %d\n", self->adv.kb.reset);
-        log_info ("cursor_lock: %d\n", self->adv.kb.cursor_lock);
-        log_info ("caps_lock: %d\n", self->adv.kb.caps_lock);
-        log_info ("autorepeat: %d\n", self->adv.kb.autorepeat);
+        log_info ("overflow: %1d\tdata_flag: %1d\treset: %1d\n",
+                self->adv.kb.overflow,
+                self->adv.kb.data_flag,
+                self->adv.kb.reset);
+        log_info ("cursor_lock: %1d\tcaps_lock: %1d\tautorepeat: %1d\n", 
+                self->adv.kb.cursor_lock,
+                self->adv.kb.caps_lock,
+                self->adv.kb.autorepeat);
         log_info ("buf[]: %02x %02x %02x %02x %02x %02x %02x\n", 
                 self->adv.kb.buf[0], self->adv.kb.buf[1], self->adv.kb.buf[2],
                 self->adv.kb.buf[3], self->adv.kb.buf[4], self->adv.kb.buf[5],
                 self->adv.kb.buf[6]);
-        log_info ("buf_cnt: %d\n", self->adv.kb.buf_cnt);
+        log_info ("buf_cnt: %1d\n", self->adv.kb.buf_cnt);
         break;
 
 
@@ -382,23 +384,26 @@ server_handle_ipc (nsae_t *self)
     /* crt display */
     case NSAE_CMD_CRT_STATUS:
         log_verbose ("nsae: server: crt_status\n");
-        log_info ("blank: %d\n", self->adv.crt.blank);
-        log_info ("vrefresh: %d\n", self->adv.crt.vrefresh);
-        log_info ("scroll_reg: %d\n", self->adv.crt.scroll_reg);
+        log_info ("blank: %1d\tvrefresh: %1d\tscroll_reg: %d\n",
+                self->adv.crt.blank,
+                self->adv.crt.vrefresh,
+                self->adv.crt.scroll_reg);
         break;
 
 
     /* system advantage */
     case NSAE_CMD_ADV_STATUS:
         log_verbose ("nsae: server: adv_status\n");
-        log_info ("kb_mi: %d\n", self->adv.kb_mi);
-        log_info ("kb_nmi: %d\n", self->adv.kb_nmi);
-        log_info ("crt_mi: %d\n", self->adv.crt_mi);
-        log_info ("hw_interupt: %d\n", self->adv.hw_interupt);
-        log_info ("cmd_ack: %d\n", self->adv.cmd_ack);
-        log_info ("ctrl_reg: %02x\n", self->adv.ctrl_reg);
-        log_info ("stat1_reg: %02x\n", self->adv.stat1_reg);
-        log_info ("stat2_reg: %02x\n", self->adv.stat2_reg);
+        log_info ("kb_mi: %1d\tkb_nmi: %1d\tcrt_mi: %1d\thw_interupt: %1d\n",
+                self->adv.kb_mi,
+                self->adv.kb_nmi,
+                self->adv.crt_mi,
+                self->adv.hw_interupt);
+        log_info ("cmd_ack: %1d\tctrl: %02x\tstat1: %02x\tstat2: %02x\n",
+                self->adv.cmd_ack,
+                self->adv.ctrl_reg,
+                self->adv.stat1_reg,
+                self->adv.stat2_reg);
         break;
 
     case NSAE_CMD_ADV_OUT:
