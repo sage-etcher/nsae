@@ -35,7 +35,6 @@ typedef struct {
     uint8_t preamble;
     uint8_t sync;
     uint16_t index;
-    struct timeval rot_tv;
 
     uint8_t sector[FD_CNT];
     uint8_t track[FD_CNT];
@@ -50,12 +49,14 @@ typedef struct {
     bool step_direction; /* 0:1 for out:in */
     bool track_zero;
     bool sector_mark;
+    int  sector_mark_hold;
     bool serial_data;
     bool precompensation;
 
     bool read_mode;
     bool write_mode;
     bool hard_ro;
+
 } fdc_t;
 
 

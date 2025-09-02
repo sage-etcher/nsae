@@ -8,6 +8,7 @@
 #include "kb.h"
 #include "log.h"
 #include "mmu.h"
+#include "nslog.h"
 #include "embed.h"
 #include "ram.h"
 #include "speaker.h"
@@ -98,11 +99,38 @@ adv_update_status (adv_t *self)
     crt_t *crt = &self->crt;
     fdc_t *fdc = &self->fdc;
     kb_t *kb = &self->kb;
-
-    /* rotate the disk if enable */
-    if (fdc->motor_enabled)
+    
+    /* hi:lo 19850:150us */
+    /* 25cycle loop at 4mhz = 6.25us */
+    /* to high hold for 3300 iterations (normally ~20ms) */
+    if ((self->fdc.sector_mark_hold == 0) && 
+        (self->fdc.sector_mark))
     {
-        fdc_disk_rotate (fdc);
+        //log_fdc ("nsae: fdc: sector_mark low\n");
+        self->fdc.sector_mark = false;
+        self->fdc.serial_data = false;
+        //self->fdc.sector_mark_hold = 3300;
+        self->fdc.sector_mark_hold = 40;
+    }
+    /* to low hold for 25 iterations (normally 150us) */
+    else if ((self->fdc.sector_mark_hold == 0) && 
+             (!self->fdc.sector_mark))
+    {
+        //log_fdc ("nsae: fdc: sector_mark high\n");
+        self->fdc.sector_mark = true;
+        self->fdc.serial_data = true;
+        //self->fdc.sector_mark_hold = 25;
+        self->fdc.sector_mark_hold = 5;
+        self->fdc.sector[self->fdc.disk]++;
+        self->fdc.sector[self->fdc.disk] %= FD_SECTORS;
+        self->fdc.write_mode = false;
+        self->fdc.read_mode = false;
+    }
+    else if ((self->fdc.powered && self->fdc.motor_enabled) &&
+             !(self->fdc.read_mode || self->fdc.write_mode) &&
+             (self->fdc.sector_mark_hold != 0))
+    {
+        self->fdc.sector_mark_hold--;
     }
 
     /* status register 1 */
@@ -112,7 +140,7 @@ adv_update_status (adv_t *self)
     *stat1 |= fdc->serial_data << 7;
 
     /* bit6 sector mark */
-    *stat1 |= !fdc->sector_mark << 6;
+    *stat1 |= fdc->sector_mark << 6;
 
     /* bit5 track 0 */
     *stat1 |= fdc->track_zero << 5;
@@ -148,8 +176,6 @@ adv_update_status (adv_t *self)
 
 
     /* fdc commands have special properties */
-
-
     if ((self->ctrl_reg & 0x7) != 0x5)
     {
         /* turn motor off in 3 seconds */
@@ -164,24 +190,24 @@ adv_update_status (adv_t *self)
         break;
     }
 
-    //log_debug ("status1_reg = %d%d%d%d$%d%d%d%d\n",
-    //        (*stat1 >> 7) & 0x1, (*stat1 >> 6) & 0x1,
-    //        (*stat1 >> 5) & 0x1, (*stat1 >> 4) & 0x1,
-    //        (*stat1 >> 3) & 0x1, (*stat1 >> 2) & 0x1,
-    //        (*stat1 >> 1) & 0x1, (*stat1 >> 0) & 0x1);
-
-    //log_debug ("status2_reg = %d%d%d%d$%d%d%d%d\n",
-    //        (*stat2 >> 7) & 0x0, (*stat2 >> 6) & 0x1,
-    //        (*stat2 >> 5) & 0x1, (*stat2 >> 4) & 0x1,
-    //        (*stat2 >> 3) & 0x1, (*stat2 >> 2) & 0x1,
-    //        (*stat2 >> 1) & 0x1, (*stat2 >> 0) & 0x1);
+    ///* toggle aquire mode */
+    //if (!(self->ctrl_reg & 0x08) && (data & 0x08))
+    //{
+    //    /* set the disk serial data bit */
+    //    self->stat1_reg |= 0x80;
+    //}
+    //else 
+    //{
+    //    /* unset the bit */
+    //    self->stat1_reg &= ~0x80;
+    //}
 }
 
 uint8_t
 adv_in (adv_t *self, uint8_t port, uint16_t pc)
 {
     adv_update_status (self);
-    //log_debug ("%04x    in %02x\n", pc, port);
+    //log_mobo ("%04x    in %02x\n", pc, port);
 
     switch (port & 0xf0)
     {
@@ -191,21 +217,28 @@ adv_in (adv_t *self, uint8_t port, uint16_t pc)
     case 0x30: /* io board 3 */
     case 0x40: /* io board 2 */
     case 0x50: /* io board 1 */
-    case 0x60: /* input main ram parity */
         break;
 
+    case 0x60: /* input main ram parity */
+        log_ram ("nsae: adv: ram parity okay\n");
+        return 0x01; /* always okay */
+
     case 0xb0: /* clear display flag */
+        log_crt ("nsae: crt: clear display flag\n");
         self->crt.vrefresh = 0;
         return 0x00;
 
     case 0xc0: /* clear non-maskable interupt */
-        self->hw_interupt = 0;
+        log_mobo ("nsae: mobo: clear non-maskable interupt\n");
+        self->hw_interupt = 1;
         return 0x00;
 
     case 0xd0: /* get io stat register 2 */
+        //log_mobo ("nsae: mobo: get status register 2\n");
         return self->stat2_reg;
 
     case 0xe0: /* get io stat register 1 */
+        //log_mobo ("nsae: mobo: get status register 1\n");
         return self->stat1_reg;
     }
 
@@ -217,6 +250,7 @@ adv_in (adv_t *self, uint8_t port, uint16_t pc)
     case 0x73:  /* id code for slot 3 */
     case 0x74:  /* id code for slot 2 */
     case 0x75:  /* id code for slot 1 */
+        log_mobo ("nsae: mobo: get slot id code\n");
         return 0xff;
 
     case 0x76:  /* unsued, returns all 1s */
@@ -227,12 +261,15 @@ adv_in (adv_t *self, uint8_t port, uint16_t pc)
     switch (port & 0xf3)
     {
     case 0x80:  /* get disk data byte */
+        log_fdc ("nsae: fdc: get floppy disk data\n");
         return fdc_read (&self->fdc);
 
     case 0x81:  /* get disk sync byte */
+        log_fdc ("nsae: fdc: get disk sync1 byte\n");
         return fdc_read_sync1 (&self->fdc);
 
     case 0x82:  /* clear disk read flag */
+        log_fdc ("nsae: fdc: clear disk read flag\n");
         self->fdc.read_mode = false;
         return 0x00;
 
@@ -259,18 +296,22 @@ adv_command (adv_t *self, uint8_t data)
     case 0x0: /* show sector */
         self->stat2_reg &= 0x0f;
         self->stat2_reg |= fdc_get_sector (&self->fdc) & 0x0f;
+        log_fdc ("nsae: fdc: %02x get sector\n", self->stat2_reg & 0x0f);
         break;
 
     case 0x1: /* show char lsb */
+        log_kb ("nsae: kb: cmd: show char lsb\n");
         self->stat2_reg |= kb_get_lsb (&self->kb);
         break;
 
     case 0x2: /* show char msb */
+        log_kb ("nsae: kb: cmd: show char msb\n");
         self->stat2_reg |= kb_get_msb (&self->kb);
         break;
 
     case 0x3: /* compliment kb mi */
         self->kb_mi ^= 0x01;
+        log_kb ("nsae: kb: compliment kb_mi %d\n", self->kb_mi);
 
         self->stat1_reg &= ~0x01;
         self->stat1_reg |= self->kb_mi;
@@ -278,12 +319,14 @@ adv_command (adv_t *self, uint8_t data)
 
     case 0x4: /* compliment cursor lock */
         self->kb.cursor_lock ^= 0x01;
+        log_kb ("nsae: kb: compliment cursor_lock %d\n", self->kb.cursor_lock);
 
         self->stat2_reg &= ~0x01;
         self->stat2_reg |= self->kb.cursor_lock;
         break;
 
     case 0x6: /* step 1 of compliment kb nmi */
+        log_kb ("nsae: kb: compliment kb_nmi step 1\n");
         break;
 
     case 0x7: 
@@ -291,6 +334,7 @@ adv_command (adv_t *self, uint8_t data)
         if ((self->ctrl_reg & 0x07) == 0x06) 
         {
             self->kb_nmi ^= 0x01;
+            log_kb ("nsae: kb: compliment kb_nmi step 2 %d\n", self->kb_nmi);
 
             self->stat2_reg &= ~0x01;
             self->stat2_reg |= self->kb_nmi;
@@ -298,6 +342,7 @@ adv_command (adv_t *self, uint8_t data)
         else /* compliment all caps */
         {
             self->kb.caps_lock ^= 0x01;
+            log_kb ("nsae: kb: compliment caps_lock %d\n", self->kb.caps_lock);
 
             self->stat2_reg &= ~0x01;
             self->stat2_reg |= self->kb.caps_lock;
@@ -305,28 +350,17 @@ adv_command (adv_t *self, uint8_t data)
         break;
     }
 
-    ///* toggle aquire mode */
-    //if (!(self->ctrl_reg & 0x08) && (data & 0x08))
-    //{
-    //    /* set the disk serial data bit */
-    //    self->stat1_reg |= 0x80;
-    //}
-    //else 
-    //{
-    //    /* unset the bit */
-    //    self->stat1_reg &= ~0x80;
-    //}
 
     self->ctrl_reg = data;
     self->cmd_ack ^= 0x01;
     //self->stat2_reg ^= 0x80;
-    //log_debug ("status1_reg = %d%d%d%d$%d%d%d%d\n",
+    //log_mobo ("status1_reg = %d%d%d%d$%d%d%d%d\n",
     //        (self->stat1_reg >> 7) & 0x1, (self->stat1_reg >> 6) & 0x1,
     //        (self->stat1_reg >> 5) & 0x1, (self->stat1_reg >> 4) & 0x1,
     //        (self->stat1_reg >> 3) & 0x1, (self->stat1_reg >> 2) & 0x1,
     //        (self->stat1_reg >> 1) & 0x1, (self->stat1_reg >> 0) & 0x1);
 
-    //log_debug ("status2_reg = %d%d%d%d$%d%d%d%d\n",
+    //log_mobo ("status2_reg = %d%d%d%d$%d%d%d%d\n",
     //        (self->stat2_reg >> 7) & 0x0, (self->stat2_reg >> 6) & 0x1,
     //        (self->stat2_reg >> 5) & 0x1, (self->stat2_reg >> 4) & 0x1,
     //        (self->stat2_reg >> 3) & 0x1, (self->stat2_reg >> 2) & 0x1,
@@ -341,7 +375,7 @@ adv_out (adv_t *self, uint8_t port, uint8_t data, uint16_t pc)
     uint8_t b = 0;
 
     adv_update_status (self);
-    //log_debug ("%04x    out %02x ;%d%d%d%d$%d%d%d%d\n",
+    //log_mobo ("%04x    out %02x ;%d%d%d%d$%d%d%d%d\n",
     //        pc, port,
     //        (data >> 7) & 0x01, (data >> 6) & 0x01,
     //        (data >> 5) & 0x01, (data >> 4) & 0x01,
@@ -356,22 +390,30 @@ adv_out (adv_t *self, uint8_t port, uint8_t data, uint16_t pc)
     case 0x30: /* io board 3 */
     case 0x40: /* io board 2 */
     case 0x50: /* io board 1 */
-    case 0x60: /* output main ram parity control bytes */
         break;
 
+    case 0x60: /* output main ram parity control bytes */
+        log_ram ("nsae: ram: 0x%02x configure parity (does nothing)\n", data);
+        return;
+
     case 0x90: /* load scroll register */
+        log_crt ("nsae: crt: 0x%02x load scroll register\n", data);
         self->crt.scroll_reg = data & 0x0f;
         return;
 
     case 0xb0: /* clear display flag */
+        log_crt ("nsae: crt: clear display flag \n");
         self->crt.vrefresh = 0;
         return;
 
     case 0xc0: /* clear non-maskable interupt */
+        log_mobo ("nsae: mobo: clear non-maskable interupt\n");
         self->hw_interupt = 0;
         return;
 
     case 0xf0: /* output to control register */
+        log_debug ("pc %04x\n", pc);
+        log_mobo ("nsae: mobo: 0x%02x control register populate\n", data);
         /* bit 7 display interupt enable */
         self->crt_mi = (data >> 7) & 0x01;
 
@@ -406,10 +448,12 @@ adv_out (adv_t *self, uint8_t port, uint8_t data, uint16_t pc)
     switch (port & 0xf3)
     {
     case 0x80:  /* send a data byte to disk */
+        log_fdc ("nsae: fdc: 0x%02x write data byte\n", data);
         fdc_write (&self->fdc, data);
         return;
 
     case 0x81:  /* set drive control register */
+        log_fdc ("nsae: fdc: 0x%02x program drive control register\n", data);
         /* bit 0-1 disk select */
         self->fdc.disk = (data >> 1) & 0x01;
 
@@ -430,17 +474,24 @@ adv_out (adv_t *self, uint8_t port, uint8_t data, uint16_t pc)
         return;
 
     case 0x82:  /* set disk read flag */
+        log_fdc ("nsae: fdc: set disk read flag\n");
         self->fdc.read_mode = true;
+        self->fdc.index = 0;
+        self->fdc.sync = 0;
         return;
 
     case 0x83:  /* set disk write flag */
+        log_fdc ("nsae: fdc: set disk write flag\n");
         self->fdc.write_mode = true;
+        self->fdc.index = 0;
+        self->fdc.sync = 0;
         return;
 
     case 0xa0: /* memory mapping reigster */
     case 0xa1: /* memory mapping reigster */
     case 0xa2: /* memory mapping reigster */
     case 0xa3: /* memory mapping reigster */
+        log_mmu ("nsae: mmu: %02x %02x program mmu pages\n", port, data);
         a = port & 0x03;
         b = ((data & 0x80) >> 4) | (data & 0x07);
         mmu_load_page (&self->mmu, a, b);

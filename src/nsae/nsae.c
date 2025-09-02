@@ -6,8 +6,8 @@
 #include "kb.h"
 #include "log.h"
 #include "nsaeipc.h"
+#include "nslog.h"
 #include "server.h"
-#include "timer.h"
 
 #include <GL/glew.h>
 #include <GL/glu.h>
@@ -26,6 +26,15 @@ bool g_log_verbose = true;
 bool g_log_debug = true;
 bool g_log_warning = true;
 bool g_log_error = true;
+
+bool g_log_cpu = false;
+bool g_log_mmu = false;
+bool g_log_ram = false;
+bool g_log_fdc = true;
+bool g_log_crt = false;
+bool g_log_kb = false;
+bool g_log_mobo = true;
+
 
 static int gl_init (float win_width, float win_height,
                     float emu_width, float emu_height);
@@ -189,46 +198,24 @@ nsae_update (void *cb_data)
     assert (cb_data != NULL);
     nsae_t *self = cb_data;
     adv_t  *adv  = &self->adv;
-    fdc_t  *fdc  = &adv->fdc;
-
-    /* current time */
-    struct timeval tv = { 0 };
-    gettimeofday (&tv, NULL);
-
-    /* time since last update */
-    struct timeval diff = timeval_diff (tv, self->update_tv);
-
-    /* update timers */
-    fdc->rot_tv = timeval_sum (fdc->rot_tv, diff);
 
     /* handle ipc */
     server_handle_ipc (self);
 
     /* emulate the system */
-    if (self->pause) goto exit;
+    if (self->pause) return;
 
     unsigned long CPU_HZ = 4000000; /* 4MHz */
-    unsigned long stop_cycles = CPU_HZ / self->max_fps;
-    unsigned long batch_cycles = 2000;
+    unsigned long cycles = CPU_HZ / self->max_fps;
     unsigned long i = 0;
 
     if (self->step)
     {
-        batch_cycles = 1;
+        cycles = 1;
         self->pause = true;
     }
 
-    while (i < stop_cycles)
-    {
-        i += adv_run (adv, batch_cycles, self);
-
-        (void)usleep ((batch_cycles * 1000000) / CPU_HZ);
-
-        if (self->pause) goto exit;
-    }
-
-exit:
-    gettimeofday (&self->update_tv, NULL);
+    i += adv_run (adv, cycles, self);
 }
 
 static void

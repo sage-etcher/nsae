@@ -2,7 +2,7 @@
 #include "fdc.h"
 
 #include "log.h"
-#include "timer.h"
+#include "nslog.h"
 
 #include <assert.h>
 #include <stdbool.h>
@@ -10,7 +10,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/time.h>
 
 int
 fdc_init (fdc_t *self)
@@ -18,6 +17,7 @@ fdc_init (fdc_t *self)
     assert (self != NULL);
 
     memset (self, 0, sizeof (*self));
+    self->powered = true;
 
     return 0;
 }
@@ -116,6 +116,7 @@ void
 fdc_start_motor (fdc_t *self)
 {
     assert (self != NULL);
+    log_verbose ("nsae: fdc: start motor\n");
     self->motor_enabled = true;
 }
 
@@ -123,6 +124,7 @@ void
 fdc_stop_motor (fdc_t *self)
 {
     assert (self != NULL);
+    log_verbose ("nsae: fdc: stop motor\n");
     self->motor_enabled = false;
 }
 
@@ -130,6 +132,8 @@ void
 fdc_step (fdc_t *self)
 {
     assert (self != NULL);
+
+    log_verbose ("nsae: fdc: step\n");
 
     uint8_t *p_track = &self->track[self->disk];
 
@@ -156,52 +160,17 @@ fdc_step (fdc_t *self)
 }
 
 
-
-#define MARK_BEGIN ((struct timeval){ .tv_sec = 0, .tv_usec = 0 })
-#define MARK_END   ((struct timeval){ .tv_sec = 0, .tv_usec = 3000 })
-
-#define DATARDY_BEGIN ((struct timeval){ .tv_sec = 0, .tv_usec = 3500 })
-#define DATARDY_END   ((struct timeval){ .tv_sec = 0, .tv_usec = 3650 })
-
-#define SECTOR_LEN ((struct timeval){ .tv_sec = 0, .tv_usec = 1000000 / 50 })
-void
-fdc_disk_rotate (fdc_t *self)
-{
-    struct timeval tv = { 0 };
-    gettimeofday (&tv, NULL);
-
-    struct timeval diff = timeval_diff (self->rot_tv, tv);
-
-    /* reset values on sector end */
-    if (timeval_cmp (diff, SECTOR_LEN) >= 0)
-    {
-        self->rot_tv = tv;
-        diff = timeval_diff (self->rot_tv, tv);
-
-        self->sector[self->disk]++;
-        self->sector[self->disk] %= FD_SECTORS;
-
-        self->write_mode = false;
-        self->read_mode = false;
-    }
-
-    /* set flags */
-    self->sector_mark = timeval_between (diff, MARK_BEGIN, MARK_END);
-    self->serial_data = timeval_between (diff, DATARDY_BEGIN, DATARDY_END);
-}
-
-
 uint8_t
 fdc_get_sector (fdc_t *self)
 {
     assert (self != NULL);
     uint8_t sec = self->sector[self->disk];
 
-    self->preamble = 0;
-    self->sync = 0;
-    self->index = 0;
-    self->read_mode = false;
-    self->write_mode = false;
+    //self->preamble = 0;
+    //self->sync = 0;
+    //self->index = 0;
+    //self->read_mode = false;
+    //self->write_mode = false;
 
     return sec;
 }
@@ -210,6 +179,7 @@ uint8_t
 fdc_read_sync1 (fdc_t *self)
 {
     assert (self != NULL);
+    self->sync = 1;
     return 0xfb;
 }
 
@@ -247,22 +217,42 @@ fdc_read (fdc_t *self)
 
     if (self->sync == 1)
     {
+        log_fdc ("nsae: fdc: read sync 2\n");
         self->sync = 2;
         return fdc_read_sync2 (self);
     }
 
     if (self->index >= FD_BLKSIZE)
     {
+        log_fdc ("nsae: fdc: read crc\n");
         /* crc */
-        self->index = 0;
         self->sync = 0;
+        self->index = 0;
         self->read_mode = false;
+        self->sector[self->disk]++;
+        self->sector[self->disk] %= FD_SECTORS;
+        self->sector_mark = true;
+        self->sector_mark_hold = 40;
+        self->serial_data = true;
+
+        /* calculate crc */
         return 0x00;
     }
 
     uint32_t sec_base = fdc_get_disk_offset (self);
     uint32_t offset = sec_base + self->index;
     uint8_t data = self->data[self->disk][offset];
+
+    log_fdc ("nsae: fdc: read data 0x%02x from D%d Si%d T%2d Sec%2d I%2d (0x%08x)\n",
+            data, 
+            self->disk,
+            self->side,
+            self->track[self->disk],
+            self->sector[self->disk],
+            self->index,
+            offset);
+    
+    self->index++;
 
     return data;
 }
@@ -277,6 +267,7 @@ fdc_write (fdc_t *self, uint8_t data)
     /* preamble 33 bytes */
     if (self->preamble < 33)
     {
+        log_fdc ("nsae: fdc: write preamble %d %d\n", data, self->preamble);
         if (data != 0x00)
         {
             log_error ("nsae: fdc: bad preamble, data not 0x00\n");
@@ -288,6 +279,7 @@ fdc_write (fdc_t *self, uint8_t data)
     /* sync1 byte */
     if (self->sync == 0)
     {
+        log_fdc ("nsae: fdc: write sync1 %d\n", data);
         if (data != 0xfb)
         {
             log_error ("nsae: fdc: bad sync1 byte\n");
@@ -299,6 +291,7 @@ fdc_write (fdc_t *self, uint8_t data)
     /* sync2 byte */
     if (self->sync == 1)
     {
+        log_fdc ("nsae: fdc: write sync2 %d\n", data);
         if (data != fdc_read_sync2 (self))
         {
             log_error ("nsae: fdc: bad sync2 byte\n");
@@ -310,11 +303,17 @@ fdc_write (fdc_t *self, uint8_t data)
     /* crc */
     if (self->index >= FD_BLKSIZE)
     {
+        log_fdc ("nsae: fdc: write crc %d\n", data);
         /* crc */
         self->preamble = 0;
         self->sync = 0;
         self->index = 0;
         self->write_mode = false;
+        self->sector[self->disk]++;
+        self->sector[self->disk] %= FD_SECTORS;
+        self->sector_mark = true;
+        self->sector_mark_hold = 40;
+        self->serial_data = true;
         return;
     }
 
@@ -322,6 +321,17 @@ fdc_write (fdc_t *self, uint8_t data)
     uint32_t sec_base = fdc_get_disk_offset (self);
     uint32_t offset = sec_base + self->index;
     uint8_t *p_addr = &self->data[self->disk][offset];
+
+    log_fdc ("nsae: fdc: write data 0x%02x to D%d Si%d T%2d Sec%2d I%2d (%08x)\n",
+            data, 
+            self->disk,
+            self->side,
+            self->track[self->disk],
+            self->sector[self->disk],
+            self->index,
+            offset);
+    
+    self->index++;
 
     *p_addr = data;
 }
