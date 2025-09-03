@@ -42,8 +42,8 @@
 0DF53H                  dec     c
 0DF54H                  jr      nz,labDF3A
 0DF56H          labDF56:
-0DF56H                  ld      a,3
-0DF58H                  out     (060H),a
+0DF56H                  ld      a,3		;int enable, clear
+0DF58H                  out     (060H),a	;program parity
 0DF5AH                  ld      bc,0100H
 0DF5DH                  call    0E909H
 0DF60H                  ld      bc,0201H
@@ -182,6 +182,7 @@
 0E033H                  jp      labE347
 0E036H          labE036:
 0E036H                  ret
+
 0E037H                  nop
 0E038H                  nop
 0E039H          labE039:
@@ -245,10 +246,10 @@
 0E08FH                  ld      a,e
 0E090H                  cp      b
 0E091H                  jr      nc,labE095
-0E093H                  set     5,l
+0E093H                  set     5,l		;enable step inner/use precomp
 0E095H          labE095:
 0E095H                  ld      a,l
-0E096H                  ld      (0F074H),a
+0E096H                  ld      (drvctrl),a	;save drvctrl from l		;0F074H
 0E099H                  di
 0E09AH                  ld      de,(0E912H)
 0E09EH          labE09E:
@@ -258,17 +259,17 @@
 0E0A6H                  jr      nz,labE09E
 0E0A8H                  push    bc
 0E0A9H                  call    labE28A
-0E0ACH                  ld      a,(0F074H)
-0E0AFH                  out     (081H),a
+0E0ACH                  ld      a,(drvctrl)	;0F074H
+0E0AFH                  out     (081H),a	;load drive control register
 0E0B1H                  pop     bc
 0E0B2H                  pop     hl
 0E0B3H                  ld      a,l
 0E0B4H                  or      a
 0E0B5H                  jr      nz,labE0C0
-0E0B7H                  in      a,(0E0H)
-0E0B9H                  and     010H
+0E0B7H                  in      a,(0E0H)	;status 1
+0E0B9H                  and     010H		;Z if disk write protect
 0E0BBH                  ld      a,6
-0E0BDH                  jp      nz,labE111
+0E0BDH                  jp      nz,labE111	;jmp if writable
 0E0C0H          labE0C0:
 0E0C0H                  push    hl
 0E0C1H                  push    bc
@@ -283,8 +284,8 @@
 0E0D2H                  pop     hl
 0E0D3H                  pop     af
 0E0D4H                  call    labE2FC
-0E0D7H                  ld      a,(0F074H)
-0E0DAH                  out     (081H),a
+0E0D7H                  ld      a,(drvctrl)	;0F074H
+0E0DAH                  out     (081H),a	;load drive control register
 0E0DCH                  call    labE2E1
 0E0DFH                  pop     bc
 0E0E0H                  pop     hl
@@ -296,15 +297,15 @@
 0E0E4H                  call    nz,labE25F
 0E0E7H                  cp      b
 0E0E8H                  push    af
-0E0E9H                  in      a,(0E0H)
-0E0EBH                  and     048H
-0E0EDH                  jr      nz,labE0FC
+0E0E9H                  in      a,(0E0H)	;status 1
+0E0EBH                  and     048H		;no sector mark, no nmi
+0E0EDH                  jr      nz,labE0FC	;jump if neither are set
 0E0EFH                  call    labE21F
 0E0F2H                  pop     af
 0E0F3H                  jr      nz,labE0E4
 0E0F5H                  dec     c
-0E0F6H                  jp      m,labE1AF
-0E0F9H                  jp      labE128
+0E0F6H                  jp      m,write_disk
+0E0F9H                  jp      read_disk
 0E0FCH          labE0FC:
 0E0FCH                  call    labE2A9
 0E0FFH                  pop     af
@@ -328,131 +329,138 @@
 0E119H                  ex      de,hl
 0E11AH                  call    labE33F
 0E11DH                  ex      de,hl
-0E11EH                  in      a,(082H)
+0E11EH                  in      a,(082H)	;clear disk read
 0E120H                  pop     af
 0E121H                  pop     bc
 0E122H                  or      a
 0E123H                  ld      sp,(0F07AH)
 0E127H                  ret
-0E128H          labE128:
+
+0E128H          read_disk:
 0E128H                  push    bc
 0E129H                  ld      hl,023H
 0E12CH                  call    labE207
-0E12FH                  ld      a,(labE6BF+2)
-0E132H                  and     0F7H
-0E134H                  out     (0F8H),a
-0E136H                  out     (082H),a
+0E12FH                  ld      a,(ctrlreg)	;labE6BF+2
+0E132H                  and     0F7H		;set aquire to 0 (on) start disk read
+0E134H                  out     (0F8H),a	;set ctrlreg
+0E136H                  out     (082H),a	;set disk read
 0E138H                  ld      hl,9
 0E13BH                  call    labE207
-0E13EH                  ld      a,(labE6BF+2)
-0E141H                  out     (0F8H),a
+0E13EH                  ld      a,(ctrlreg)	;labE6BF+2
+0E141H                  out     (0F8H),a	;set ctrlreg
 0E143H                  pop     bc
 0E144H                  dec     c
-0E145H                  ld      hl,labE171
-0E148H                  jr      nz,labE14D
-0E14AH                  ld      hl,labE191
-0E14DH          labE14D:
+0E145H                  ld      hl,read_secdata
+0E148H                  jr      nz,read_sync
+0E14AH                  ld      hl,cmp_secdata
+0E14DH          read_sync:
 0E14DH                  ex      (sp),hl
 0E14EH                  call    labE26C
-0E151H                  in      a,(081H)
-0E153H                  cp      0FBH
+0E151H                  in      a,(081H)	;read sync1
+0E153H                  cp      0FBH		;check validity
 0E155H                  jp      nz,labE285
 0E158H                  ld      a,(0F078H)
 0E15BH                  ld      b,a
-0E15CH                  in      a,(080H)
+0E15CH                  in      a,(080H)	;read sync2
 0E15EH                  cp      b
 0E15FH                  ld      (0F079H),a
 0E162H                  ld      bc,0
-0E165H                  ret     z
+0E165H                  ret	z
 0E166H                  cp      0FBH
-0E168H                  ret     z
+0E168H                  ret	z
 0E169H                  ld      hl,(labE6E6)
 0E16CH                  ld      (hl),059H
 0E16EH                  jp      labE1AA
-0E171H          labE171:
-0E171H                  in      a,(080H)
-0E173H                  ld      (hl),a
-0E174H                  xor     c
+
+0E171H          read_secdata:
+0E171H                  in      a,(080H)	;read data byte
+0E173H                  ld      (hl),a		;store byte
+0E174H                  xor     c		;calc crc
 0E175H                  rlca
 0E176H                  ld      c,a
 0E177H                  call    labE1E1
-0E17AH                  in      a,(080H)
-0E17CH                  inc     hl
-0E17DH                  ld      (hl),a
-0E17EH                  inc     hl
-0E17FH                  xor     c
+0E17AH                  in      a,(080H)	;read data byte
+0E17CH                  inc     hl		;next destptr
+0E17DH                  ld      (hl),a		;store byte
+0E17EH                  inc     hl		;next destptr
+0E17FH                  xor     c		;calc crc
 0E180H                  rlca
 0E181H                  ld      c,a
-0E182H                  djnz    labE171
-0E184H          labE184:
-0E184H                  in      a,(080H)
-0E186H                  xor     c
-0E187H                  in      a,(082H)
-0E189H                  jp      z,labE103
+0E182H                  djnz    read_secdata
+0E184H          read_crc:
+0E184H                  in      a,(080H)	;read crc
+0E186H                  xor     c		;check crc
+0E187H                  in      a,(082H)	;clear disk read flag
+0E189H                  jp      z,labE103	;if crc match
 0E18CH                  ld      a,2
 0E18EH                  jp      labE111
-0E191H          labE191:
-0E191H                  in      a,(080H)
-0E193H                  cp      (hl)
-0E194H                  jr      nz,labE1AA
-0E196H                  xor     c
+
+0E191H          cmp_secdata:
+0E191H                  in      a,(080H)	;read data byte
+0E193H                  cp      (hl)		;compare against (hl)
+0E194H                  jr      nz,labE1AA	;if they dont match, jump
+0E196H                  xor     c		;calc crc
 0E197H                  rlca
 0E198H                  ld      c,a
 0E199H                  call    labE1E1
-0E19CH                  in      a,(080H)
-0E19EH                  inc     hl
-0E19FH                  cp      (hl)
-0E1A0H                  jr      nz,labE1AA
-0E1A2H                  xor     c
+0E19CH                  in      a,(080H)	;read data byte
+0E19EH                  inc     hl		;next destdir
+0E19FH                  cp      (hl)		;compare against (hl)
+0E1A0H                  jr      nz,labE1AA	;if they dont match, jump
+0E1A2H                  xor     c		;calc crc
 0E1A3H                  rlca
 0E1A4H                  ld      c,a
-0E1A5H                  inc     hl
-0E1A6H                  djnz    labE191
-0E1A8H                  jr      labE184
+0E1A5H                  inc     hl		;next destdir
+0E1A6H                  djnz    cmp_secdata
+0E1A8H                  jr      read_crc
+
 0E1AAH          labE1AA:
 0E1AAH                  ld      a,3
 0E1ACH                  jp      labE111
-0E1AFH          labE1AF:
+
+0E1AFH          write_disk:
 0E1AFH                  ld      bc,02200H
-0E1B2H                  out     (083H),a
-0E1B4H          labE1B4:
-0E1B4H                  xor     a
-0E1B5H                  out     (080H),a
+0E1B2H                  out     (083H),a	;set disk write flag
+0E1B4H          write_preamble:
+0E1B4H                  xor     a		;a = 0
+0E1B5H                  out     (080H),a	;write preamble byte
 0E1B7H                  call    labE1E1
-0E1BAH                  djnz    labE1B4
+0E1BAH                  djnz    write_preamble
 0E1BCH                  ld      a,0FBH
-0E1BEH                  out     (080H),a
+0E1BEH                  out     (080H),a	;write sync1
 0E1C0H                  ex      (sp),hl
 0E1C1H                  ex      (sp),hl
 0E1C2H                  ld      a,(0F078H)
-0E1C5H                  out     (080H),a
+0E1C5H                  out     (080H),a	;write sync2?
 0E1C7H                  pop     hl
-0E1C8H          labE1C8:
+0E1C8H          write_secdata:
 0E1C8H                  ld      a,(hl)
 0E1C9H                  inc     hl
-0E1CAH                  out     (080H),a
-0E1CCH                  xor     c
+0E1CAH                  out     (080H),a	;write data
+0E1CCH                  xor     c		;calc crc
 0E1CDH                  rlca
 0E1CEH                  ld      c,a
 0E1CFH                  call    labE1E1
 0E1D2H                  ld      a,(hl)
-0E1D3H                  out     (080H),a
-0E1D5H                  inc     hl
-0E1D6H                  xor     c
+0E1D3H                  out     (080H),a	;write data
+0E1D5H                  inc     hl		;next srcptr
+0E1D6H                  xor     c		;calc crc
 0E1D7H                  rlca
 0E1D8H                  ld      c,a
-0E1D9H                  djnz    labE1C8
+0E1D9H                  djnz    write_secdata
 0E1DBH                  ld      a,c
-0E1DCH                  out     (080H),a
+0E1DCH                  out     (080H),a	;write crc
 0E1DEH                  jp      labE103
+
 0E1E1H          labE1E1:
-0E1E1H                  in      a,(0E0H)
-0E1E3H                  and     0
-0E1E5H                  ret     z
-0E1E6H                  in      a,(0)
+0E1E1H                  in      a,(0E0H)	;status 1
+0E1E3H                  and     0		;always eval to 0
+0E1E5H                  ret     z		;always return
+0E1E6H                  in      a,(0)		;access io board 6
 0E1E8H                  ld      (de),a
 0E1E9H                  inc     de
 0E1EAH                  ret
+
 0E1EBH                  push    af
 0E1ECH                  push    de
 0E1EDH                  ld      de,(0E912H)
@@ -461,51 +469,55 @@
 0E1F8H                  pop     de
 0E1F9H                  pop     af
 0E1FAH                  ret
+
 0E1FBH          labE1FB:
 0E1FBH                  ld      (0E912H),de
 0E1FFH                  ret
+
 0E200H                  ld      (hl),c
 0E201H                  xor     0EDH
 0E203H                  ld      e,e
 0E204H                  ld      (de),a
 0E205H                  jp      (hl)
 0E206H                  ret
+
 0E207H          labE207:
 0E207H                  ld      bc,0FFFFH
 0E20AH          labE20A:
-0E20AH                  in      a,(0E0H)
-0E20CH                  and     0
-0E20EH                  jp      z,labE21A
+0E20AH                  in      a,(0E0H)	;status 1
+0E20CH                  and     0		;discard a
+0E20EH                  jp      z,labE21A	;jmp always
 0E211H                  add     hl,bc
-0E212H                  jp      nc,labE21E
-0E215H                  in      a,(0)
+0E212H                  jp      nc,ret0
+0E215H                  in      a,(000h)	;access ioboard in slot 6
 0E217H                  ld      (de),a
 0E218H                  inc     de
 0E219H                  or      a
 0E21AH          labE21A:
 0E21AH                  add     hl,bc
 0E21BH                  jp      c,labE20A
-0E21EH          labE21E:
+0E21EH          ret0:
 0E21EH                  ret
+
 0E21FH          labE21F:
 0E21FH                  ld      hl,0198H
 0E222H          labE222:
-0E222H                  in      a,(0E0H)
-0E224H                  and     040H
-0E226H                  ret     nz
-0E227H                  in      a,(0E0H)
-0E229H                  and     0
-0E22BH                  jp      z,labE237
-0E22EH                  in      a,(0E0H)
-0E230H                  and     040H
-0E232H                  ret     nz
+0E222H                  in      a,(0E0H)	;status 1
+0E224H                  and     040H		;check sector mark
+0E226H                  ret     nz		;return if set
+0E227H                  in      a,(0E0H)	;status 1
+0E229H                  and     0		;always 0?
+0E22BH                  jp      z,labE237	;im starting to think my disassembler is buggy, this doesnt make sence
+0E22EH                  in      a,(0E0H)	;status 1
+0E230H                  and     040H		;check sector mark
+0E232H                  ret     nz		;return if set
 0E233H                  in      a,(0)
 0E235H                  ld      (de),a
 0E236H                  inc     de
 0E237H          labE237:
-0E237H                  in      a,(0E0H)
-0E239H                  and     040H
-0E23BH                  ret     nz
+0E237H                  in      a,(0E0H)	;status 1
+0E239H                  and     040H		;check sector mark
+0E23BH                  ret     nz		;return if we read a sector mark
 0E23CH                  dec     hl
 0E23DH                  ld      a,h
 0E23EH                  or      l
@@ -518,9 +530,9 @@
 0E24AH                  ld      hl,04EFH
 0E24DH          labE24D:
 0E24DH                  call    labE1E1
-0E250H                  in      a,(0E0H)
-0E252H                  and     040H
-0E254H                  ret     z
+0E250H                  in      a,(0E0H)	;status 1
+0E252H                  and     040H		;check sector mark
+0E254H                  ret     z		;return if not at sector mark
 0E255H                  dec     hl
 0E256H                  ld      a,h
 0E257H                  or      l
@@ -535,15 +547,16 @@
 0E268H                  inc     a
 0E269H                  and     0FH
 0E26BH                  ret
+
 0E26CH          labE26C:
 0E26CH                  ld      bc,035E0H
 0E26FH          labE26F:
-0E26FH                  in      f,(c)
+0E26FH                  in      f,(c)		;load status1 into flags
 0E271H                  ret     m
-0E272H                  in      a,(0E0H)
+0E272H                  in      a,(0E0H)	;status 1
 0E274H                  and     0
 0E276H                  jp      z,labE280
-0E279H                  in      f,(c)
+0E279H                  in      f,(c)		;load status1 into flags
 0E27BH                  ret     m
 0E27CH                  in      a,(0)
 0E27EH                  ld      (de),a
@@ -574,6 +587,7 @@
 0E2A5H                  djnz    labE29A
 0E2A7H                  pop     hl
 0E2A8H                  ret
+
 0E2A9H          labE2A9:
 0E2A9H                  call    labE2B4
 0E2ACH                  cp      0EH
@@ -585,7 +599,7 @@
 0E2B4H                  ld      h,0
 0E2B6H          labE2B6:
 0E2B6H                  call    labE1E1
-0E2B9H                  ld      a,(labE6BF+2)
+0E2B9H                  ld      a,(ctrlreg)	;labE6BF+2
 0E2BCH                  ld      l,a
 0E2BDH                  and     0F8H
 0E2BFH                  or      h
@@ -596,7 +610,7 @@
 0E2C6H                  ld      l,a
 0E2C7H                  ld      a,h
 0E2C8H                  out     (0F8H),a
-0E2CAH                  ld      (labE6BF+2),a
+0E2CAH                  ld      (ctrlreg),a	;labE6BF+2
 0E2CDH          labE2CD:
 0E2CDH                  call    labE1E1
 0E2D0H                  in      a,(0D0H)
@@ -645,7 +659,7 @@
 0E30DH                  ret     nz
 0E30EH                  ld      l,0
 0E310H          labE310:
-0E310H                  ld      a,(0F074H)
+0E310H                  ld      a,(drvctrl) ;0F074H
 0E313H                  and     0CFH
 0E315H                  or      l
 0E316H                  ld      l,a
@@ -678,6 +692,7 @@
 0E344H                  ret     z
 0E345H                  ei
 0E346H                  ret
+
 0E347H          labE347:
 0E347H                  ld      (0F076H),a
 0E34AH          labE34A:
@@ -705,6 +720,7 @@
 0E370H          labE370:
 0E370H                  xor     a
 0E371H                  ret
+
 0E372H          labE372:
 0E372H                  ld      (labE3D2+1),a
 0E375H                  cp      4
@@ -737,6 +753,7 @@
 0E3A5H                  xor     a
 0E3A6H                  scf
 0E3A7H                  ret
+
 0E3A8H          labE3A8:
 0E3A8H                  ld      c,0FFH
 0E3AAH          labE3AA:
@@ -747,6 +764,7 @@
 0E3B1H                  ld      (hl),a
 0E3B2H                  dec     hl
 0E3B3H                  ret
+
 0E3B4H          labE3B4:
 0E3B4H                  or      a
 0E3B5H                  call    labE6EA
@@ -762,6 +780,7 @@
 0E3CAH                  ld      a,(labE6F9)
 0E3CDH                  cp      b
 0E3CEH                  ret
+
 0E3CFH          labE3CF:
 0E3CFH                  dec     c
 0E3D0H                  ld      a,(bc)
@@ -878,11 +897,13 @@
 0E482H                  ld      (0F06AH),a
 0E485H                  inc     hl
 0E486H                  ret
+
 0E487H          labE487:
 0E487H                  ld      hl,0
 0E48AH                  xor     a
 0E48BH                  ld      (4),a
 0E48EH                  ret
+
 0E48FH          labE48F:
 0E48FH                  dec     a
 0E490H                  ld      hl,labE6E6+2
@@ -902,6 +923,7 @@
 0E4AAH          labE4AA:
 0E4AAH                  inc     a
 0E4ABH                  ret
+
 0E4ACH          labE4AC:
 0E4ACH                  dec     c
 0E4ADH                  ld      a,(bc)
@@ -1065,20 +1087,24 @@
 0E55AH                  ld      l,c
 0E55BH                  ld      (0F06BH),hl
 0E55EH                  ret
+
 0E55FH          labE55F:
 0E55FH                  ld      a,c
 0E560H          labE560:
 0E560H                  ld      (0F06DH),a
 0E563H                  ret
+
 0E564H          labE564:
 0E564H                  ld      h,b
 0E565H                  ld      l,c
 0E566H                  ld      (0F070H),hl
 0E569H                  ret
+
 0E56AH          labE56A:
 0E56AH                  ld      l,c
 0E56BH                  ld      h,b
 0E56CH                  ret
+
 0E56DH          labE56D:
 0E56DH                  push    bc
 0E56EH          labE56E:
@@ -1197,6 +1223,7 @@
 0E635H                  call    z,labE642
 0E638H                  xor     a
 0E639H                  ret
+
 0E63AH          labE63A:
 0E63AH                  ld      a,d
 0E63BH                  xor     h
@@ -1205,6 +1232,7 @@
 0E63FH                  ld      a,e
 0E640H                  xor     l
 0E641H                  ret
+
 0E642H          labE642:
 0E642H                  ld      a,(labE6F3)
 0E645H                  or      a
@@ -1331,12 +1359,15 @@
 0E6E9H                  ld      a,(bc)
 0E6EAH          labE6EA:
 0E6EAH                  ret
+
 0E6EBH                  nop
 0E6ECH                  nop
 0E6EDH                  ret
+
 0E6EEH                  nop
 0E6EFH                  nop
 0E6F0H                  ret
+
 0E6F1H                  nop
 0E6F2H                  nop
 0E6F3H          labE6F3:
