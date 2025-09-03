@@ -29,6 +29,17 @@ kb_decode_key (kb_t *self, uint8_t host_key)
 }
 
 void
+kb_reset (kb_t *self)
+{
+    self->buf_cnt     = 0;
+    self->data_flag   = 0;
+    self->cursor_lock = 0;
+    self->caps_lock   = 0;
+    self->autorepeat  = 0;
+    self->overflow    = 0;
+}
+
+void
 kb_push (kb_t *self, uint8_t key)
 {
     assert (self != NULL);

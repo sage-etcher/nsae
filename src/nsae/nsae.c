@@ -30,10 +30,10 @@ bool g_log_error = true;
 bool g_log_cpu = false;
 bool g_log_mmu = false;
 bool g_log_ram = false;
-bool g_log_fdc = true;
+bool g_log_fdc = false;
 bool g_log_crt = false;
 bool g_log_kb = false;
-bool g_log_mobo = true;
+bool g_log_mobo = false;
 
 
 static int gl_init (float win_width, float win_height,

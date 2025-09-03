@@ -25,6 +25,7 @@ int kb_init (kb_t *self);
 
 uint8_t kb_decode_key (kb_t *self, uint8_t host_key);
 
+void kb_reset (kb_t *self);
 void kb_push (kb_t *self, uint8_t key);
 uint8_t kb_pop (kb_t *self);
 

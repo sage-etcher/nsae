@@ -83,6 +83,13 @@ adv_init (adv_t *self)
     return 0;
 }
 
+void
+adv_reset (adv_t *self)
+{
+    self->stat1_reg |= 0x01;
+    self->kb_mi = 1;
+}
+
 int
 adv_run (adv_t *self, int cycles, void *cb_data)
 {
@@ -99,39 +106,10 @@ adv_update_status (adv_t *self)
     crt_t *crt = &self->crt;
     fdc_t *fdc = &self->fdc;
     kb_t *kb = &self->kb;
-    
-    /* hi:lo 19850:150us */
-    /* 25cycle loop at 4mhz = 6.25us */
-    /* to high hold for 3300 iterations (normally ~20ms) */
-    if ((self->fdc.sector_mark_hold == 0) && 
-        (self->fdc.sector_mark))
-    {
-        //log_fdc ("nsae: fdc: sector_mark low\n");
-        self->fdc.sector_mark = false;
-        self->fdc.serial_data = false;
-        //self->fdc.sector_mark_hold = 3300;
-        self->fdc.sector_mark_hold = 40;
-    }
-    /* to low hold for 25 iterations (normally 150us) */
-    else if ((self->fdc.sector_mark_hold == 0) && 
-             (!self->fdc.sector_mark))
-    {
-        //log_fdc ("nsae: fdc: sector_mark high\n");
-        self->fdc.sector_mark = true;
-        self->fdc.serial_data = true;
-        //self->fdc.sector_mark_hold = 25;
-        self->fdc.sector_mark_hold = 5;
-        self->fdc.sector[self->fdc.disk]++;
-        self->fdc.sector[self->fdc.disk] %= FD_SECTORS;
-        self->fdc.write_mode = false;
-        self->fdc.read_mode = false;
-    }
-    else if ((self->fdc.powered && self->fdc.motor_enabled) &&
-             !(self->fdc.read_mode || self->fdc.write_mode) &&
-             (self->fdc.sector_mark_hold != 0))
-    {
-        self->fdc.sector_mark_hold--;
-    }
+
+
+    /* update fdc */
+    fdc_update (fdc);
 
     /* status register 1 */
     *stat1 &= 0x01;
@@ -140,7 +118,7 @@ adv_update_status (adv_t *self)
     *stat1 |= fdc->serial_data << 7;
 
     /* bit6 sector mark */
-    *stat1 |= fdc->sector_mark << 6;
+    *stat1 |= !fdc->sector_mark << 6;
 
     /* bit5 track 0 */
     *stat1 |= fdc->track_zero << 5;
@@ -189,18 +167,6 @@ adv_update_status (adv_t *self)
         *stat2 |= fdc_get_sector (fdc) & 0x7;
         break;
     }
-
-    ///* toggle aquire mode */
-    //if (!(self->ctrl_reg & 0x08) && (data & 0x08))
-    //{
-    //    /* set the disk serial data bit */
-    //    self->stat1_reg |= 0x80;
-    //}
-    //else 
-    //{
-    //    /* unset the bit */
-    //    self->stat1_reg &= ~0x80;
-    //}
 }
 
 uint8_t
@@ -269,8 +235,7 @@ adv_in (adv_t *self, uint8_t port, uint16_t pc)
         return fdc_read_sync1 (&self->fdc);
 
     case 0x82:  /* clear disk read flag */
-        log_fdc ("nsae: fdc: clear disk read flag\n");
-        self->fdc.read_mode = false;
+        fdc_set_read (&self->fdc, false);
         return 0x00;
 
     case 0x83:  /* beep */
@@ -412,7 +377,6 @@ adv_out (adv_t *self, uint8_t port, uint8_t data, uint16_t pc)
         return;
 
     case 0xf0: /* output to control register */
-        log_debug ("pc %04x\n", pc);
         log_mobo ("nsae: mobo: 0x%02x control register populate\n", data);
         /* bit 7 display interupt enable */
         self->crt_mi = (data >> 7) & 0x01;
@@ -424,18 +388,10 @@ adv_out (adv_t *self, uint8_t port, uint8_t data, uint16_t pc)
         /* bit 4 io reset */
         if ((~data >> 4) & 0x01)
         {
-            /* kb */
-            self->stat1_reg |= 0x01;
-            self->kb_mi = 1;
-            self->kb.buf_cnt = 0;
-            self->kb.data_flag = 0;
-            self->kb.cursor_lock = 0;
-            self->kb.caps_lock = 0;
-            self->kb.autorepeat = 0;
-            self->kb.overflow = 0;
-
-            /* disk */ 
-            /* io boards */
+            kb_reset (&self->kb);
+            adv_reset (self);
+            fdc_reset (&self->fdc);
+            //io_reset (&self->io);
         }
 
         /* bit 3 aquire mode */
@@ -453,38 +409,15 @@ adv_out (adv_t *self, uint8_t port, uint8_t data, uint16_t pc)
         return;
 
     case 0x81:  /* set drive control register */
-        log_fdc ("nsae: fdc: 0x%02x program drive control register\n", data);
-        /* bit 0-1 disk select */
-        self->fdc.disk = (data >> 1) & 0x01;
-
-        /* bit 5 precompensation and step_direction */
-        self->fdc.step_direction = (data >> 5) & 0x01;
-        self->fdc.precompensation = self->fdc.step_direction;
-
-        /* bit 6 side select */
-        self->fdc.side = (data >> 6) & 0x01;
-
-        /* bit 4 step pulse */
-        if (!self->fdc.step_pulse && ((data >> 4) & 0x01))
-        {
-            fdc_step (&self->fdc);
-        }
-        self->fdc.step_pulse = (data >> 4) & 0x01;
-
+        fdc_load_drvctrl (&self->fdc, data);
         return;
 
     case 0x82:  /* set disk read flag */
-        log_fdc ("nsae: fdc: set disk read flag\n");
-        self->fdc.read_mode = true;
-        self->fdc.index = 0;
-        self->fdc.sync = 0;
+        fdc_set_read (&self->fdc, true);
         return;
 
     case 0x83:  /* set disk write flag */
-        log_fdc ("nsae: fdc: set disk write flag\n");
-        self->fdc.write_mode = true;
-        self->fdc.index = 0;
-        self->fdc.sync = 0;
+        fdc_set_write (&self->fdc, true);
         return;
 
     case 0xa0: /* memory mapping reigster */

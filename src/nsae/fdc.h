@@ -38,6 +38,7 @@ typedef struct {
 
     uint8_t sector[FD_CNT];
     uint8_t track[FD_CNT];
+    uint8_t last_sector;
 
     bool powered;
     bool motor_enabled;
@@ -65,11 +66,19 @@ int fdc_load_disk (fdc_t *self, bool disk, char *filename);
 int fdc_save_disk (fdc_t *self, bool disk, char *filename);
 int fdc_eject (fdc_t *self, bool disk);
 
+void fdc_reset (fdc_t *self);
 void fdc_start_motor (fdc_t *self);
 void fdc_stop_motor (fdc_t *self);
 
+void fdc_load_drvctrl (fdc_t *self, uint8_t data);
+
+void fdc_set_read (fdc_t *self, bool state);
+void fdc_set_write (fdc_t *self, bool state);
+
+void fdc_update (fdc_t *self);
 void fdc_step (fdc_t *self);
 void fdc_disk_rotate (fdc_t *self);
+void fdc_next_sector (fdc_t *self);
 uint8_t fdc_get_sector (fdc_t *self);
 
 uint8_t fdc_read_sync1 (fdc_t *self);
@@ -78,6 +87,8 @@ uint8_t fdc_read (fdc_t *self);
 
 void fdc_write (fdc_t *self, uint8_t data);
 
+uint32_t fdc_calc_disk_offset (uint8_t side, uint8_t track, uint8_t sector, 
+        uint16_t i);
 
 #ifdef __cplusplus
 }

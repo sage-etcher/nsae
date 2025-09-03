@@ -18,6 +18,7 @@ fdc_init (fdc_t *self)
 
     memset (self, 0, sizeof (*self));
     self->powered = true;
+    self->last_sector = FD_SECTORS - 1;
 
     return 0;
 }
@@ -99,6 +100,8 @@ fdc_save_disk (fdc_t *self, bool disk, char *filename)
 int
 fdc_eject (fdc_t *self, bool disk)
 {
+    assert (self != NULL);
+
     if (!self->disk_loaded[disk])
     {
         log_error ("nsae: fdc: cannot eject from empty drive\n");
@@ -113,10 +116,118 @@ fdc_eject (fdc_t *self, bool disk)
 }
 
 void
+fdc_reset (fdc_t *self)
+{
+    assert (self != NULL);
+}
+
+void
+fdc_load_drvctrl (fdc_t *self, uint8_t data)
+{
+    assert (self != NULL);
+    log_fdc ("nsae: fdc: 0x%02x load drive control\n", data);
+
+    /* bit 5 precompensation and step_direction */
+    self->step_direction = (data >> 5) & 0x01;
+    self->precompensation = self->step_direction;
+
+    /* bit 6 side select */
+    self->side = (data >> 6) & 0x01;
+
+    /* bit 4 step pulse */
+    if (!self->step_pulse && ((data >> 4) & 0x01))
+    {
+        fdc_step (self);
+    }
+    self->step_pulse = (data >> 4) & 0x01;
+
+    /* bit 0-1 disk select */
+    self->disk = (data >> 1) & 0x01;
+}
+
+
+static void 
+fdc_secmark_low (fdc_t *self)
+{
+    //log_fdc ("nsae: fdc: sector_mark high\n");
+
+    fdc_set_read (self, false);     /* cleared on the 0-1 */
+    fdc_set_write (self, false);    /* cleared on leading edge */
+
+    self->sector_mark = true;
+    self->sector_mark_hold = 5;
+    //self->fdc.sector_mark_hold = 25;
+
+    fdc_next_sector (self);
+
+    /* data is not ready while we are over the sector mark */
+    self->serial_data = false;
+}
+
+static void 
+fdc_secmark_high (fdc_t *self)
+{
+    //log_fdc ("nsae: fdc: sector_mark low\n");
+
+    self->sector_mark = false;
+    self->sector_mark_hold = 40;
+    //self->fdc.sector_mark_hold = 3300;
+
+    /* it is only ready after the sectormark leaves */
+    self->serial_data = true;
+}
+
+
+void
+fdc_update (fdc_t *self)
+{
+    /* hi:lo 19850:150us */
+    /* 25cycle loop at 4mhz = 6.25us */
+    /* to high hold for 3300 iterations (normally ~20ms) */
+    if ((self->sector_mark_hold == 0) && 
+        (self->sector_mark))
+    {
+        fdc_secmark_high (self);
+    }
+    /* to low hold for 25 iterations (normally 150us) */
+    else if ((self->sector_mark_hold == 0) && 
+             (!self->sector_mark))
+    {
+        fdc_secmark_low (self);
+    }
+    else if ((self->powered && self->motor_enabled) &&
+             !(self->read_mode || self->write_mode) &&
+             (self->sector_mark_hold != 0))
+    {
+        self->sector_mark_hold--;
+    }
+}
+
+void
+fdc_set_read (fdc_t *self, bool state)
+{
+    assert (self != NULL);
+    //log_fdc ("nsae: fdc: %d set disk read\n", state);
+    self->read_mode = state;
+    self->index = 0;
+    self->sync = 0;
+}
+
+void
+fdc_set_write (fdc_t *self, bool state)
+{
+    assert (self != NULL);
+    //log_fdc ("nsae: fdc: %d set disk write\n", state);
+    self->write_mode = state;
+    self->index = 0;
+    self->sync = 0;
+}
+
+void
 fdc_start_motor (fdc_t *self)
 {
     assert (self != NULL);
-    log_verbose ("nsae: fdc: start motor\n");
+    log_fdc ("nsae: fdc: start motor\n");
     self->motor_enabled = true;
 }
 
@@ -124,7 +235,7 @@ void
 fdc_stop_motor (fdc_t *self)
 {
     assert (self != NULL);
-    log_verbose ("nsae: fdc: stop motor\n");
+    log_fdc ("nsae: fdc: stop motor\n");
     self->motor_enabled = false;
 }
 
@@ -133,7 +244,7 @@ fdc_step (fdc_t *self)
 {
     assert (self != NULL);
 
-    log_verbose ("nsae: fdc: step\n");
+    log_fdc ("nsae: fdc: step\n");
 
     uint8_t *p_track = &self->track[self->disk];
 
@@ -160,11 +271,21 @@ fdc_step (fdc_t *self)
 }
 
 
+void
+fdc_next_sector (fdc_t *self)
+{
+    self->last_sector = self->sector[self->disk];
+    self->sector[self->disk]++;
+    self->sector[self->disk] %= FD_SECTORS;
+    //log_debug ("at sector: %2d\n", self->sector[self->disk]);
+}
+
+
 uint8_t
 fdc_get_sector (fdc_t *self)
 {
     assert (self != NULL);
-    uint8_t sec = self->sector[self->disk];
+    uint8_t sec = self->last_sector;
 
     //self->preamble = 0;
     //self->sync = 0;
@@ -195,17 +316,52 @@ fdc_read_sync2 (fdc_t *self)
     return c;
 }
 
+
+uint32_t 
+fdc_calc_disk_offset (uint8_t side, uint8_t track, uint8_t sector, uint16_t i)
+{
+
+    uint32_t abs_track = (side * FD_TRACKS) + track;
+    uint32_t abs_sector = (abs_track * FD_SECTORS) + sector;
+    uint32_t offset = (abs_sector * FD_BLKSIZE) + i;
+    return offset;
+
+    //uint32_t offset = side;
+    //offset *= FD_TRACKS;
+    //offset += track;
+    //offset <<= 4;
+    //offset += sector;
+    //offset *= FD_BLKSIZE;
+
+    //return offset;
+}
+
 static uint32_t
 fdc_get_disk_offset (fdc_t *self)
 {
-    uint32_t offset = self->side;
-    offset *= FD_TRACKS;
-    offset += self->track[self->disk];
-    offset <<= 4;
-    offset += self->sector[self->disk];
-    offset *= FD_BLKSIZE;
+    return fdc_calc_disk_offset (self->side,
+                                 self->track[self->disk],
+                                 self->sector[self->disk],
+                                 0);
+}
 
-    return offset;
+static uint8_t
+fdc_calc_crc8 (uint8_t *buf, size_t n)
+{
+    uint8_t crc = 0;
+    uint8_t oh = 0;
+
+    for (; n > 0; n--, buf++)
+    {
+        crc ^= *buf;
+        oh = (crc & 0x80) >> 7;
+        crc &= ~0x80;
+        crc <<= 1;
+        crc |= oh;
+        //printf ("crc8 calc: %3x: %02x %02x\n", n, *buf, crc);
+    }
+
+    return crc;
 }
 
 uint8_t
@@ -222,27 +378,22 @@ fdc_read (fdc_t *self)
         return fdc_read_sync2 (self);
     }
 
-    if (self->index >= FD_BLKSIZE)
-    {
-        log_fdc ("nsae: fdc: read crc\n");
-        /* crc */
-        self->sync = 0;
-        self->index = 0;
-        self->read_mode = false;
-        self->sector[self->disk]++;
-        self->sector[self->disk] %= FD_SECTORS;
-        self->sector_mark = true;
-        self->sector_mark_hold = 40;
-        self->serial_data = true;
-
-        /* calculate crc */
-        return 0x00;
-    }
-
+    /* variables */
     uint32_t sec_base = fdc_get_disk_offset (self);
     uint32_t offset = sec_base + self->index;
     uint8_t data = self->data[self->disk][offset];
 
+    /* crc */
+    if (self->index >= FD_BLKSIZE)
+    {
+        log_fdc ("nsae: fdc: read crc\n");
+        fdc_secmark_low (self);
+
+        /* calculate crc */
+        return fdc_calc_crc8 (&self->data[self->disk][sec_base], FD_BLKSIZE);
+    }
+
+    /* data */
     log_fdc ("nsae: fdc: read data 0x%02x from D%d Si%d T%2d Sec%2d I%2d (0x%08x)\n",
             data, 
             self->disk,
@@ -251,7 +402,7 @@ fdc_read (fdc_t *self)
             self->sector[self->disk],
             self->index,
             offset);
-    
+
     self->index++;
 
     return data;
@@ -304,16 +455,7 @@ fdc_write (fdc_t *self, uint8_t data)
     if (self->index >= FD_BLKSIZE)
     {
         log_fdc ("nsae: fdc: write crc %d\n", data);
-        /* crc */
-        self->preamble = 0;
-        self->sync = 0;
-        self->index = 0;
-        self->write_mode = false;
-        self->sector[self->disk]++;
-        self->sector[self->disk] %= FD_SECTORS;
-        self->sector_mark = true;
-        self->sector_mark_hold = 40;
-        self->serial_data = true;
+        fdc_secmark_low (self);
         return;
     }
 
