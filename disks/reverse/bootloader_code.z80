@@ -1,0 +1,1356 @@
+                        org     0DF0AH
+                init:
+0DF0AH                  jp      start
+0DF0DH          start:
+0DF0DH                  di
+0DF0EH                  ld      sp,stack_ptr	;0F0DCH
+0DF11H                  ld      hl,labE6FF
+0DF14H                  ld      a,(hl)
+0DF15H                  push    af
+0DF16H                  ld      (hl),0
+0DF18H                  ld      bc,081H
+0DF1BH                  ld      de,0801H
+0DF1EH                  ld      hl,labE6FF+1
+0DF21H                  ld      a,1
+0DF23H                  call    labE033
+0DF26H                  ld      bc,081H
+0DF29H                  ld      de,0101H
+0DF2CH                  ld      hl,0E900H
+0DF2FH                  ld      a,3
+0DF31H                  call    labE033
+0DF34H                  call    labE2B4
+0DF37H                  ld      bc,8
+0DF3AH          labDF3A:
+0DF3AH                  push    bc
+0DF3BH                  ld      c,0
+0DF3DH                  call    0E909H
+0DF40H                  ld      bc,03FFFH
+0DF43H                  ld      h,b
+0DF44H                  ld      l,c
+0DF45H                  ld      d,h
+0DF46H                  ld      e,l
+0DF47H                  lddr
+0DF49H                  pop     bc
+0DF4AH                  ld      a,(hl)
+0DF4BH                  cpl
+0DF4CH                  ld      (hl),a
+0DF4DH                  cp      (hl)
+0DF4EH                  cpl
+0DF4FH                  ld      (hl),a
+0DF50H                  jr      nz,labDF56
+0DF52H                  inc     b
+0DF53H                  dec     c
+0DF54H                  jr      nz,labDF3A
+0DF56H          labDF56:
+0DF56H                  ld      a,3
+0DF58H                  out     (060H),a
+0DF5AH                  ld      bc,0100H
+0DF5DH                  call    0E909H
+0DF60H                  ld      bc,0201H
+0DF63H                  call    0E909H
+0DF66H                  ld      bc,0302H
+0DF69H                  call    0E909H
+0DF6CH                  ld      bc,5
+0DF6FH                  call    0E909H
+0DF72H                  ld      hl,0EE63H
+0DF75H                  ld      (0EEFFH),hl
+0DF78H                  ld      a,0EEH
+0DF7AH                  ld      i,a
+0DF7CH                  im      2
+0DF7EH                  pop     af
+0DF7FH                  ld      sp,0100H
+0DF82H                  ld      (labE6FF),a
+0DF85H                  ld      c,4
+0DF87H                  call    0E906H
+0DF8AH                  set     7,b
+0DF8CH                  call    0E909H
+0DF8FH                  call    0EA46H
+0DF92H                  ld      c,4
+0DF94H                  call    labE572
+0DF97H                  ld      hl,labDFA9
+0DF9AH                  call    0EA17H
+0DF9DH                  jp      0E9D6H
+0DFA0H                  nop
+0DFA1H                  nop
+0DFA2H                  nop
+0DFA3H                  nop
+0DFA4H                  nop
+0DFA5H                  nop
+0DFA6H                  nop
+0DFA7H                  nop
+0DFA8H                  nop
+0DFA9H          labDFA9:
+0DFA9H                  ld      (hl),034H
+0DFABH                  ld      c,e
+0DFACH                  jr      nz,labDFF5
+0DFAEH                  ld      (hl),d
+0DFAFH                  ld      h,c
+0DFB0H                  ld      (hl),b
+0DFB1H                  ld      l,b
+0DFB2H                  ld      l,c
+0DFB3H                  ld      h,e
+0DFB4H                  ld      (hl),e
+0DFB5H                  jr      nz,labDFFA
+0DFB7H                  ld      d,b
+0DFB8H                  cpl
+0DFB9H                  ld      c,l
+0DFBAH                  jr      nz,labDFEE
+0DFBCH                  ld      l,032H
+0DFBEH                  jr      nz,labDFDF+1
+0DFC0H                  ld      (hl),d
+0DFC1H                  ld      h,l
+0DFC2H                  halt
+0DFC3H                  jr      nz,labDFF6
+0DFC5H                  ld      l,032H
+0DFC7H                  ld      l,030H
+0DFC9H                  jr      nz,labE030+1
+0DFCBH                  ld      l,a
+0DFCCH                  ld      (hl),d
+0DFCDH                  jr      nz,labE00F+1
+0DFCFH                  ld      h,h
+0DFD0H                  halt
+0DFD1H                  ld      h,c
+0DFD2H                  ld      l,(hl)
+0DFD3H                  ld      (hl),h
+0DFD4H                  ld      h,c
+0DFD5H                  ld      h,a
+0DFD6H                  ld      h,l
+0DFD7H                  jr      nz,labE021
+0DFD9H                  ld      d,c
+0DFDAH                  jr      nz,labE043-1
+0DFDCH                  ld      (hl),d
+0DFDDH                  ld      l,a
+0DFDEH                  ld      l,l
+0DFDFH          labDFDF:
+0DFDFH                  jr      nz,labE02D+2
+0DFE1H                  ld      l,a
+0DFE2H                  ld      (hl),d
+0DFE3H                  ld      (hl),h
+0DFE4H                  ld      l,b
+0DFE5H                  jr      nz,labE039+1
+0DFE7H                  ld      (hl),h
+0DFE8H                  ld      h,c
+0DFE9H                  ld      (hl),d
+0DFEAH                  jr      nz,labE02D+2
+0DFECH                  ld      l,a
+0DFEDH                  ld      l,l
+0DFEEH          labDFEE:
+0DFEEH                  ld      (hl),b
+0DFEFH                  ld      (hl),l
+0DFF0H                  ld      (hl),h
+0DFF1H                  ld      h,l
+0DFF2H                  ld      (hl),d
+0DFF3H                  ld      (hl),e
+0DFF4H                  inc     l
+0DFF5H          labDFF5:
+0DFF5H                  ld      c,c
+0DFF6H          labDFF6:
+0DFF6H                  ld      l,(hl)
+0DFF7H                  ld      h,e
+0DFF8H                  ld      l,0DH
+0DFFAH          labDFFA:
+0DFFAH                  ld      a,(bc)
+0DFFBH                  ld      a,(bc)
+0DFFCH                  rrca
+0DFFDH                  inc     e
+0DFFEH                  add     a,b
+0DFFFH                  nop
+0E000H                  jp      0EE42H
+0E003H          labE003:
+0E003H                  jp      0E96EH
+0E006H                  jp      labE6FF+4
+0E009H          labE009:
+0E009H                  jp      labE6FF+7
+0E00CH                  jp      labE56D
+0E00FH          labE00F:
+0E00FH                  jp      0E70CH
+0E012H                  jp      0E70FH
+0E015H                  jp      0E712H
+0E018H                  jp      labE556
+0E01BH                  jp      labE3E2
+0E01EH                  jp      labE559
+0E021H          labE021:
+0E021H                  jp      labE55F
+0E024H                  jp      labE564
+0E027H                  jp      labE575
+0E02AH                  jp      labE583
+0E02DH          labE02D:
+0E02DH                  jp      0E715H
+0E030H          labE030:
+0E030H                  jp      labE56A
+0E033H          labE033:
+0E033H                  jp      labE347
+0E036H          labE036:
+0E036H                  ret
+0E037H                  nop
+0E038H                  nop
+0E039H          labE039:
+0E039H                  jp      labE039
+0E03CH                  jp      labE642
+0E03FH          labE03F:
+0E03FH                  ld      (0F07AH),sp
+0E043H          labE043:
+0E043H                  ld      sp,0F0B0H
+0E046H                  push    af
+0E047H                  push    hl
+0E048H                  push    de
+0E049H                  ld      a,5
+0E04BH                  bit     7,c
+0E04DH                  jp      z,labE115
+0E050H                  ld      a,c
+0E051H                  and     7
+0E053H                  ld      c,a
+0E054H                  cp      3
+0E056H                  jr      c,labE05B
+0E058H                  rla
+0E059H                  and     0CH
+0E05BH          labE05B:
+0E05BH                  or      080H
+0E05DH                  ld      l,a
+0E05EH                  ld      a,(labE6F5+1)
+0E061H                  and     l
+0E062H                  jr      z,labE075
+0E064H                  ld      e,028H
+0E066H                  ld      a,b
+0E067H                  add     a,a
+0E068H                  add     a,a
+0E069H                  add     a,a
+0E06AH                  add     a,a
+0E06BH                  or      d
+0E06CH                  ld      d,a
+0E06DH                  rr      b
+0E06FH                  jr      nc,labE08B
+0E071H                  set     6,l
+0E073H                  jr      labE08B
+0E075H          labE075:
+0E075H                  ld      e,014H
+0E077H                  ld      a,022H
+0E079H                  sub     b
+0E07AH                  jr      nc,labE081
+0E07CH                  add     a,023H
+0E07EH                  ld      b,a
+0E07FH                  set     6,l
+0E081H          labE081:
+0E081H                  ld      a,l
+0E082H                  and     040H
+0E084H                  or      b
+0E085H                  rrca
+0E086H                  rrca
+0E087H                  and     0F0H
+0E089H                  add     a,d
+0E08AH                  ld      d,a
+0E08BH          labE08B:
+0E08BH                  ld      a,d
+0E08CH                  ld      (0F078H),a
+0E08FH                  ld      a,e
+0E090H                  cp      b
+0E091H                  jr      nc,labE095
+0E093H                  set     5,l
+0E095H          labE095:
+0E095H                  ld      a,l
+0E096H                  ld      (0F074H),a
+0E099H                  di
+0E09AH                  ld      de,(0E912H)
+0E09EH          labE09E:
+0E09EH                  call    labE1FB
+0E0A1H                  ld      a,(labE6BC)
+0E0A4H                  and     07FH
+0E0A6H                  jr      nz,labE09E
+0E0A8H                  push    bc
+0E0A9H                  call    labE28A
+0E0ACH                  ld      a,(0F074H)
+0E0AFH                  out     (081H),a
+0E0B1H                  pop     bc
+0E0B2H                  pop     hl
+0E0B3H                  ld      a,l
+0E0B4H                  or      a
+0E0B5H                  jr      nz,labE0C0
+0E0B7H                  in      a,(0E0H)
+0E0B9H                  and     010H
+0E0BBH                  ld      a,6
+0E0BDH                  jp      nz,labE111
+0E0C0H          labE0C0:
+0E0C0H                  push    hl
+0E0C1H                  push    bc
+0E0C2H                  ld      hl,labE6E1
+0E0C5H                  ld      b,0
+0E0C7H                  add     hl,bc
+0E0C8H                  ld      (labE6E6),hl
+0E0CBH                  ld      a,(hl)
+0E0CCH                  xor     059H
+0E0CEH                  push    hl
+0E0CFH                  call    z,labE2F3
+0E0D2H                  pop     hl
+0E0D3H                  pop     af
+0E0D4H                  call    labE2FC
+0E0D7H                  ld      a,(0F074H)
+0E0DAH                  out     (081H),a
+0E0DCH                  call    labE2E1
+0E0DFH                  pop     bc
+0E0E0H                  pop     hl
+0E0E1H                  or      a
+0E0E2H          labE0E2:
+0E0E2H                  push    bc
+0E0E3H                  push    hl
+0E0E4H          labE0E4:
+0E0E4H                  call    nz,labE25F
+0E0E7H                  cp      b
+0E0E8H                  push    af
+0E0E9H                  in      a,(0E0H)
+0E0EBH                  and     048H
+0E0EDH                  jr      nz,labE0FC
+0E0EFH                  call    labE21F
+0E0F2H                  pop     af
+0E0F3H                  jr      nz,labE0E4
+0E0F5H                  dec     c
+0E0F6H                  jp      m,labE1AF
+0E0F9H                  jp      labE128
+0E0FCH          labE0FC:
+0E0FCH                  call    labE2A9
+0E0FFH                  pop     af
+0E100H                  inc     a
+0E101H                  jr      labE0E4
+0E103H          labE103:
+0E103H                  pop     bc
+0E104H                  inc     b
+0E105H                  ld      a,(0F078H)
+0E108H                  inc     a
+0E109H                  ld      (0F078H),a
+0E10CH                  pop     af
+0E10DH                  dec     a
+0E10EH                  push    af
+0E10FH                  jr      nz,labE0E2
+0E111H          labE111:
+0E111H                  ld      (0E912H),de
+0E115H          labE115:
+0E115H                  ld      sp,0F0AEH
+0E118H                  push    af
+0E119H                  ex      de,hl
+0E11AH                  call    labE33F
+0E11DH                  ex      de,hl
+0E11EH                  in      a,(082H)
+0E120H                  pop     af
+0E121H                  pop     bc
+0E122H                  or      a
+0E123H                  ld      sp,(0F07AH)
+0E127H                  ret
+0E128H          labE128:
+0E128H                  push    bc
+0E129H                  ld      hl,023H
+0E12CH                  call    labE207
+0E12FH                  ld      a,(labE6BF+2)
+0E132H                  and     0F7H
+0E134H                  out     (0F8H),a
+0E136H                  out     (082H),a
+0E138H                  ld      hl,9
+0E13BH                  call    labE207
+0E13EH                  ld      a,(labE6BF+2)
+0E141H                  out     (0F8H),a
+0E143H                  pop     bc
+0E144H                  dec     c
+0E145H                  ld      hl,labE171
+0E148H                  jr      nz,labE14D
+0E14AH                  ld      hl,labE191
+0E14DH          labE14D:
+0E14DH                  ex      (sp),hl
+0E14EH                  call    labE26C
+0E151H                  in      a,(081H)
+0E153H                  cp      0FBH
+0E155H                  jp      nz,labE285
+0E158H                  ld      a,(0F078H)
+0E15BH                  ld      b,a
+0E15CH                  in      a,(080H)
+0E15EH                  cp      b
+0E15FH                  ld      (0F079H),a
+0E162H                  ld      bc,0
+0E165H                  ret     z
+0E166H                  cp      0FBH
+0E168H                  ret     z
+0E169H                  ld      hl,(labE6E6)
+0E16CH                  ld      (hl),059H
+0E16EH                  jp      labE1AA
+0E171H          labE171:
+0E171H                  in      a,(080H)
+0E173H                  ld      (hl),a
+0E174H                  xor     c
+0E175H                  rlca
+0E176H                  ld      c,a
+0E177H                  call    labE1E1
+0E17AH                  in      a,(080H)
+0E17CH                  inc     hl
+0E17DH                  ld      (hl),a
+0E17EH                  inc     hl
+0E17FH                  xor     c
+0E180H                  rlca
+0E181H                  ld      c,a
+0E182H                  djnz    labE171
+0E184H          labE184:
+0E184H                  in      a,(080H)
+0E186H                  xor     c
+0E187H                  in      a,(082H)
+0E189H                  jp      z,labE103
+0E18CH                  ld      a,2
+0E18EH                  jp      labE111
+0E191H          labE191:
+0E191H                  in      a,(080H)
+0E193H                  cp      (hl)
+0E194H                  jr      nz,labE1AA
+0E196H                  xor     c
+0E197H                  rlca
+0E198H                  ld      c,a
+0E199H                  call    labE1E1
+0E19CH                  in      a,(080H)
+0E19EH                  inc     hl
+0E19FH                  cp      (hl)
+0E1A0H                  jr      nz,labE1AA
+0E1A2H                  xor     c
+0E1A3H                  rlca
+0E1A4H                  ld      c,a
+0E1A5H                  inc     hl
+0E1A6H                  djnz    labE191
+0E1A8H                  jr      labE184
+0E1AAH          labE1AA:
+0E1AAH                  ld      a,3
+0E1ACH                  jp      labE111
+0E1AFH          labE1AF:
+0E1AFH                  ld      bc,02200H
+0E1B2H                  out     (083H),a
+0E1B4H          labE1B4:
+0E1B4H                  xor     a
+0E1B5H                  out     (080H),a
+0E1B7H                  call    labE1E1
+0E1BAH                  djnz    labE1B4
+0E1BCH                  ld      a,0FBH
+0E1BEH                  out     (080H),a
+0E1C0H                  ex      (sp),hl
+0E1C1H                  ex      (sp),hl
+0E1C2H                  ld      a,(0F078H)
+0E1C5H                  out     (080H),a
+0E1C7H                  pop     hl
+0E1C8H          labE1C8:
+0E1C8H                  ld      a,(hl)
+0E1C9H                  inc     hl
+0E1CAH                  out     (080H),a
+0E1CCH                  xor     c
+0E1CDH                  rlca
+0E1CEH                  ld      c,a
+0E1CFH                  call    labE1E1
+0E1D2H                  ld      a,(hl)
+0E1D3H                  out     (080H),a
+0E1D5H                  inc     hl
+0E1D6H                  xor     c
+0E1D7H                  rlca
+0E1D8H                  ld      c,a
+0E1D9H                  djnz    labE1C8
+0E1DBH                  ld      a,c
+0E1DCH                  out     (080H),a
+0E1DEH                  jp      labE103
+0E1E1H          labE1E1:
+0E1E1H                  in      a,(0E0H)
+0E1E3H                  and     0
+0E1E5H                  ret     z
+0E1E6H                  in      a,(0)
+0E1E8H                  ld      (de),a
+0E1E9H                  inc     de
+0E1EAH                  ret
+0E1EBH                  push    af
+0E1ECH                  push    de
+0E1EDH                  ld      de,(0E912H)
+0E1F1H                  call    labE1E1
+0E1F4H                  ld      (0E912H),de
+0E1F8H                  pop     de
+0E1F9H                  pop     af
+0E1FAH                  ret
+0E1FBH          labE1FB:
+0E1FBH                  ld      (0E912H),de
+0E1FFH                  ret
+0E200H                  ld      (hl),c
+0E201H                  xor     0EDH
+0E203H                  ld      e,e
+0E204H                  ld      (de),a
+0E205H                  jp      (hl)
+0E206H                  ret
+0E207H          labE207:
+0E207H                  ld      bc,0FFFFH
+0E20AH          labE20A:
+0E20AH                  in      a,(0E0H)
+0E20CH                  and     0
+0E20EH                  jp      z,labE21A
+0E211H                  add     hl,bc
+0E212H                  jp      nc,labE21E
+0E215H                  in      a,(0)
+0E217H                  ld      (de),a
+0E218H                  inc     de
+0E219H                  or      a
+0E21AH          labE21A:
+0E21AH                  add     hl,bc
+0E21BH                  jp      c,labE20A
+0E21EH          labE21E:
+0E21EH                  ret
+0E21FH          labE21F:
+0E21FH                  ld      hl,0198H
+0E222H          labE222:
+0E222H                  in      a,(0E0H)
+0E224H                  and     040H
+0E226H                  ret     nz
+0E227H                  in      a,(0E0H)
+0E229H                  and     0
+0E22BH                  jp      z,labE237
+0E22EH                  in      a,(0E0H)
+0E230H                  and     040H
+0E232H                  ret     nz
+0E233H                  in      a,(0)
+0E235H                  ld      (de),a
+0E236H                  inc     de
+0E237H          labE237:
+0E237H                  in      a,(0E0H)
+0E239H                  and     040H
+0E23BH                  ret     nz
+0E23CH                  dec     hl
+0E23DH                  ld      a,h
+0E23EH                  or      l
+0E23FH                  jp      nz,labE222
+0E242H          labE242:
+0E242H                  ld      (labE6E1),a
+0E245H                  ld      a,4
+0E247H                  jp      labE111
+0E24AH          labE24A:
+0E24AH                  ld      hl,04EFH
+0E24DH          labE24D:
+0E24DH                  call    labE1E1
+0E250H                  in      a,(0E0H)
+0E252H                  and     040H
+0E254H                  ret     z
+0E255H                  dec     hl
+0E256H                  ld      a,h
+0E257H                  or      l
+0E258H                  jr      nz,labE24D
+0E25AH                  jr      labE242
+0E25CH          labE25C:
+0E25CH                  call    labE21F
+0E25FH          labE25F:
+0E25FH                  call    labE1FB
+0E262H                  call    labE24A
+0E265H                  call    labE2D6
+0E268H                  inc     a
+0E269H                  and     0FH
+0E26BH                  ret
+0E26CH          labE26C:
+0E26CH                  ld      bc,035E0H
+0E26FH          labE26F:
+0E26FH                  in      f,(c)
+0E271H                  ret     m
+0E272H                  in      a,(0E0H)
+0E274H                  and     0
+0E276H                  jp      z,labE280
+0E279H                  in      f,(c)
+0E27BH                  ret     m
+0E27CH                  in      a,(0)
+0E27EH                  ld      (de),a
+0E27FH                  inc     de
+0E280H          labE280:
+0E280H                  in      f,(c)
+0E282H                  ret     m
+0E283H                  djnz    labE26F
+0E285H          labE285:
+0E285H                  ld      a,1
+0E287H                  jp      labE111
+0E28AH          labE28A:
+0E28AH                  call    labE2A9
+0E28DH                  cp      0EH
+0E28FH                  ret     nz
+0E290H                  xor     a
+0E291H                  ld      (labE6E1),a
+0E294H                  call    labE2AF
+0E297H                  ld      b,064H
+0E299H          labE299:
+0E299H                  push    hl
+0E29AH          labE29A:
+0E29AH                  push    bc
+0E29BH                  call    labE1FB
+0E29EH                  ld      hl,0196H
+0E2A1H                  call    labE207
+0E2A4H                  pop     bc
+0E2A5H                  djnz    labE29A
+0E2A7H                  pop     hl
+0E2A8H                  ret
+0E2A9H          labE2A9:
+0E2A9H                  call    labE2B4
+0E2ACH                  cp      0EH
+0E2AEH                  ret     z
+0E2AFH          labE2AF:
+0E2AFH                  ld      h,5
+0E2B1H                  call    labE2B6
+0E2B4H          labE2B4:
+0E2B4H                  ld      h,0
+0E2B6H          labE2B6:
+0E2B6H                  call    labE1E1
+0E2B9H                  ld      a,(labE6BF+2)
+0E2BCH                  ld      l,a
+0E2BDH                  and     0F8H
+0E2BFH                  or      h
+0E2C0H                  ld      h,a
+0E2C1H                  cp      l
+0E2C2H                  jr      z,labE2D6
+0E2C4H                  in      a,(0D0H)
+0E2C6H                  ld      l,a
+0E2C7H                  ld      a,h
+0E2C8H                  out     (0F8H),a
+0E2CAH                  ld      (labE6BF+2),a
+0E2CDH          labE2CD:
+0E2CDH                  call    labE1E1
+0E2D0H                  in      a,(0D0H)
+0E2D2H                  xor     l
+0E2D3H                  jp      p,labE2CD
+0E2D6H          labE2D6:
+0E2D6H                  ld      l,080H
+0E2D8H          labE2D8:
+0E2D8H                  in      a,(0D0H)
+0E2DAH                  and     0FH
+0E2DCH                  cp      l
+0E2DDH                  ret     z
+0E2DEH                  ld      l,a
+0E2DFH                  jr      labE2D8
+0E2E1H          labE2E1:
+0E2E1H                  ld      hl,labE6E1
+0E2E4H                  ld      a,(hl)
+0E2E5H                  ld      (hl),c
+0E2E6H                  cp      c
+0E2E7H                  ret     z
+0E2E8H                  ld      b,0CH
+0E2EAH                  call    labE299
+0E2EDH          labE2ED:
+0E2EDH                  call    labE25C
+0E2F0H                  ret     z
+0E2F1H                  jr      labE2ED
+0E2F3H          labE2F3:
+0E2F3H                  push    hl
+0E2F4H                  call    labE2E1
+0E2F7H                  call    labE21F
+0E2FAH                  pop     hl
+0E2FBH                  xor     a
+0E2FCH          labE2FC:
+0E2FCH                  ld      b,a
+0E2FDH                  sub     (hl)
+0E2FEH                  ld      (hl),b
+0E2FFH                  ret     z
+0E300H                  ld      l,020H
+0E302H                  ld      h,a
+0E303H                  jp      p,labE310
+0E306H                  cpl
+0E307H                  inc     a
+0E308H                  ld      h,a
+0E309H                  in      a,(0E0H)
+0E30BH                  and     020H
+0E30DH                  ret     nz
+0E30EH                  ld      l,0
+0E310H          labE310:
+0E310H                  ld      a,(0F074H)
+0E313H                  and     0CFH
+0E315H                  or      l
+0E316H                  ld      l,a
+0E317H          labE317:
+0E317H                  ld      a,l
+0E318H                  out     (081H),a
+0E31AH                  or      010H
+0E31CH                  out     (081H),a
+0E31EH                  xor     010H
+0E320H                  out     (081H),a
+0E322H                  ld      a,(labE6F8)
+0E325H                  and     l
+0E326H                  and     0FH
+0E328H                  ld      b,1
+0E32AH                  jr      nz,labE32E
+0E32CH                  ld      b,5
+0E32EH          labE32E:
+0E32EH                  call    labE299
+0E331H                  in      a,(0E0H)
+0E333H                  and     020H
+0E335H                  jr      nz,labE33A
+0E337H                  dec     h
+0E338H                  jr      nz,labE317
+0E33AH          labE33A:
+0E33AH                  ld      b,3
+0E33CH                  jp      labE299
+0E33FH          labE33F:
+0E33FH                  ld      hl,labE6FF
+0E342H                  bit     3,(hl)
+0E344H                  ret     z
+0E345H                  ei
+0E346H                  ret
+0E347H          labE347:
+0E347H                  ld      (0F076H),a
+0E34AH          labE34A:
+0E34AH                  ld      a,(labE6E9)
+0E34DH          labE34D:
+0E34DH                  ld      (0F077H),a
+0E350H                  push    hl
+0E351H                  push    de
+0E352H                  push    bc
+0E353H                  ld      a,(0F076H)
+0E356H                  and     0FH
+0E358H                  call    labE03F
+0E35BH                  pop     bc
+0E35CH                  pop     de
+0E35DH                  pop     hl
+0E35EH                  jr      nz,labE372
+0E360H                  ld      a,e
+0E361H                  or      a
+0E362H                  jr      nz,labE370
+0E364H                  ld      a,(labE6FF)
+0E367H                  and     040H
+0E369H                  ld      e,2
+0E36BH                  jr      nz,labE34A
+0E36DH                  call    labE25C
+0E370H          labE370:
+0E370H                  xor     a
+0E371H                  ret
+0E372H          labE372:
+0E372H                  ld      (labE3D2+1),a
+0E375H                  cp      4
+0E377H                  jr      nc,labE37F
+0E379H                  ld      a,(0F077H)
+0E37CH                  dec     a
+0E37DH                  jr      nz,labE34D
+0E37FH          labE37F:
+0E37FH                  ld      a,c
+0E380H                  and     0FH
+0E382H                  ld      (labE3D6+1),a
+0E385H                  ld      a,b
+0E386H                  push    hl
+0E387H                  push    de
+0E388H                  push    bc
+0E389H                  ld      hl,labE3DE
+0E38CH                  ld      (hl),d
+0E38DH                  dec     hl
+0E38EH                  call    labE3A8
+0E391H                  ld      a,c
+0E392H                  call    labE3A8
+0E395H                  ld      (hl),c
+0E396H                  ld      hl,labE3CF
+0E399H                  ld      a,(labE3D2+1)
+0E39CH                  call    labE3B4
+0E39FH                  pop     bc
+0E3A0H                  pop     de
+0E3A1H                  pop     hl
+0E3A2H                  jp      nz,labE34A
+0E3A5H                  xor     a
+0E3A6H                  scf
+0E3A7H                  ret
+0E3A8H          labE3A8:
+0E3A8H                  ld      c,0FFH
+0E3AAH          labE3AA:
+0E3AAH                  sub     0AH
+0E3ACH                  inc     c
+0E3ADH                  jr      nc,labE3AA
+0E3AFH                  add     a,0AH
+0E3B1H                  ld      (hl),a
+0E3B2H                  dec     hl
+0E3B3H                  ret
+0E3B4H          labE3B4:
+0E3B4H                  or      a
+0E3B5H                  call    labE6EA
+0E3B8H                  or      a
+0E3B9H                  call    nz,0EA17H
+0E3BCH                  xor     a
+0E3BDH                  call    labE6EA
+0E3C0H                  or      a
+0E3C1H                  call    z,labE009
+0E3C4H                  cp      3
+0E3C6H                  jp      z,labE003
+0E3C9H                  ld      b,a
+0E3CAH                  ld      a,(labE6F9)
+0E3CDH                  cp      b
+0E3CEH                  ret
+0E3CFH          labE3CF:
+0E3CFH                  dec     c
+0E3D0H                  ld      a,(bc)
+0E3D1H                  ld      d,h
+0E3D2H          labE3D2:
+0E3D2H                  jr      nz,labE3F3+1
+0E3D4H                  jr      nz,labE41A
+0E3D6H          labE3D6:
+0E3D6H                  jr      nz,labE3F7+1
+0E3D8H                  jr      nz,labE42C+1
+0E3DAH                  jr      nz,labE3FC
+0E3DCH                  jr      nz,labE3FD+1
+0E3DEH          labE3DE:
+0E3DEH                  nop
+0E3DFH                  dec     c
+0E3E0H                  ld      a,(bc)
+0E3E1H                  add     a,b
+0E3E2H          labE3E2:
+0E3E2H                  ld      l,c
+0E3E3H                  ld      h,0
+0E3E5H                  xor     a
+0E3E6H                  call    labE036
+0E3E9H                  ld      (0F06EH),hl
+0E3ECH                  ex      de,hl
+0E3EDH                  or      a
+0E3EEH                  ld      (0F06AH),a
+0E3F1H                  ret     nz
+0E3F2H                  dec     a
+0E3F3H          labE3F3:
+0E3F3H                  ld      (0F073H),a
+0E3F6H                  ld      a,e
+0E3F7H          labE3F7:
+0E3F7H                  cp      4
+0E3F9H                  jp      nc,labE487
+0E3FCH          labE3FC:
+0E3FCH                  ld      a,l
+0E3FDH          labE3FD:
+0E3FDH                  and     1
+0E3FFH                  jp      nz,labE473
+0E402H                  call    labE642
+0E405H                  ld      a,0FFH
+0E407H                  ld      (0F068H),a
+0E40AH                  ld      a,(0F06EH)
+0E40DH                  call    labE48F
+0E410H                  or      080H
+0E412H                  ld      c,a
+0E413H          labE413:
+0E413H                  ld      b,0
+0E415H                  ld      de,1
+0E418H                  ld      a,1
+0E41AH          labE41A:
+0E41AH                  ld      hl,0F100H
+0E41DH                  call    labE033
+0E420H                  jr      c,labE413
+0E422H                  ld      b,090H
+0E424H                  res     7,c
+0E426H                  ld      hl,0F15CH
+0E429H                  ld      a,(hl)
+0E42AH                  and     010H
+0E42CH          labE42C:
+0E42CH                  ld      de,labE516
+0E42FH                  jr      z,labE453
+0E431H                  ld      b,(hl)
+0E432H                  ld      a,b
+0E433H                  and     040H
+0E435H                  jr      z,labE445
+0E437H                  ld      a,(labE6F8)
+0E43AH                  push    bc
+0E43BH          labE43B:
+0E43BH                  rlca
+0E43CH                  dec     c
+0E43DH                  jr      nz,labE43B
+0E43FH                  pop     bc
+0E440H                  ld      de,labE536
+0E443H                  jr      c,labE453
+0E445H          labE445:
+0E445H                  ld      a,0BFH
+0E447H                  and     b
+0E448H                  ld      b,a
+0E449H                  ld      de,labE526
+0E44CH                  and     020H
+0E44EH                  jr      nz,labE453
+0E450H                  ld      de,labE516
+0E453H          labE453:
+0E453H                  ld      a,(labE6F5+1)
+0E456H                  ld      a,b
+0E457H                  ld      hl,(0F06EH)
+0E45AH                  ld      bc,labE6F9+1
+0E45DH                  add     hl,bc
+0E45EH                  ld      (hl),a
+0E45FH                  and     0CH
+0E461H                  ld      hl,0
+0E464H                  ret     nz
+0E465H                  call    labE473
+0E468H                  dec     hl
+0E469H                  ld      a,(de)
+0E46AH                  ld      (hl),a
+0E46BH                  inc     de
+0E46CH                  ld      bc,0BH
+0E46FH                  add     hl,bc
+0E470H                  ld      (hl),e
+0E471H                  inc     hl
+0E472H                  ld      (hl),d
+0E473H          labE473:
+0E473H                  ld      a,(0F06EH)
+0E476H                  ld      hl,labE4C1
+0E479H                  ld      bc,011H
+0E47CH                  inc     a
+0E47DH          labE47D:
+0E47DH                  add     hl,bc
+0E47EH                  dec     a
+0E47FH                  jr      nz,labE47D
+0E481H                  ld      a,(hl)
+0E482H                  ld      (0F06AH),a
+0E485H                  inc     hl
+0E486H                  ret
+0E487H          labE487:
+0E487H                  ld      hl,0
+0E48AH                  xor     a
+0E48BH                  ld      (4),a
+0E48EH                  ret
+0E48FH          labE48F:
+0E48FH                  dec     a
+0E490H                  ld      hl,labE6E6+2
+0E493H                  cp      (hl)
+0E494H                  inc     a
+0E495H                  jr      c,labE4AA
+0E497H                  ld      hl,labE4B3+1
+0E49AH                  add     a,041H
+0E49CH                  cp      (hl)
+0E49DH                  jr      z,labE4A9
+0E49FH                  ld      (hl),a
+0E4A0H                  ld      hl,labE4AC
+0E4A3H                  call    0EA17H
+0E4A6H                  call    labE009
+0E4A9H          labE4A9:
+0E4A9H                  xor     a
+0E4AAH          labE4AA:
+0E4AAH                  inc     a
+0E4ABH                  ret
+0E4ACH          labE4AC:
+0E4ACH                  dec     c
+0E4ADH                  ld      a,(bc)
+0E4AEH                  ld      c,l
+0E4AFH                  ld      c,a
+0E4B0H                  ld      d,l
+0E4B1H                  ld      c,(hl)
+0E4B2H                  ld      d,h
+0E4B3H          labE4B3:
+0E4B3H                  jr      nz,labE4F6
+0E4B5H                  ld      a,(04920H)
+0E4B8H                  ld      c,(hl)
+0E4B9H                  jr      nz,labE4FD+2
+0E4BBH                  ld      d,d
+0E4BCH                  ld      c,c
+0E4BDH                  ld      d,(hl)
+0E4BEH                  ld      b,l
+0E4BFH                  jr      nz,labE4F2
+0E4C1H          labE4C1:
+0E4C1H                  inc     l
+0E4C2H                  jr      nz,labE517+1
+0E4C4H                  ld      e,c
+0E4C5H                  ld      d,b
+0E4C6H                  ld      b,l
+0E4C7H                  jr      nz,labE50A
+0E4C9H                  ld      c,(hl)
+0E4CAH                  ld      e,c
+0E4CBH                  jr      nz,labE517+1
+0E4CDH                  ld      b,l
+0E4CEH                  ld      e,c
+0E4CFH                  dec     c
+0E4D0H                  ld      a,(bc)
+0E4D1H                  add     a,b
+0E4D2H                  nop
+0E4D3H                  nop
+0E4D4H                  nop
+0E4D5H                  nop
+0E4D6H                  nop
+0E4D7H                  nop
+0E4D8H                  nop
+0E4D9H                  nop
+0E4DAH                  nop
+0E4DBH                  ld      bc,026EFH
+0E4DEH                  push    hl
+0E4DFH                  sbc     a,d
+0E4E0H                  rst     028H
+0E4E1H                  add     a,c
+0E4E2H                  rst     028H
+0E4E3H                  nop
+0E4E4H                  nop
+0E4E5H                  nop
+0E4E6H                  nop
+0E4E7H                  nop
+0E4E8H                  nop
+0E4E9H                  nop
+0E4EAH                  nop
+0E4EBH                  nop
+0E4ECH                  ld      bc,026EFH
+0E4EFH                  push    hl
+0E4F0H                  out     (0EFH),a
+0E4F2H          labE4F2:
+0E4F2H                  cp      d
+0E4F3H                  rst     028H
+0E4F4H                  nop
+0E4F5H                  nop
+0E4F6H          labE4F6:
+0E4F6H                  nop
+0E4F7H                  nop
+0E4F8H                  nop
+0E4F9H                  nop
+0E4FAH                  nop
+0E4FBH                  nop
+0E4FCH                  nop
+0E4FDH          labE4FD:
+0E4FDH                  ld      bc,026EFH
+0E500H                  push    hl
+0E501H                  inc     c
+0E502H                  ret     p
+0E503H                  di
+0E504H                  rst     028H
+0E505H                  nop
+0E506H                  nop
+0E507H                  nop
+0E508H                  nop
+0E509H                  nop
+0E50AH          labE50A:
+0E50AH                  nop
+0E50BH                  nop
+0E50CH                  nop
+0E50DH                  nop
+0E50EH                  ld      bc,026EFH
+0E511H                  push    hl
+0E512H                  ld      b,l
+0E513H                  ret     p
+0E514H                  inc     l
+0E515H                  ret     p
+0E516H          labE516:
+0E516H                  ex      af,af'
+0E517H          labE517:
+0E517H                  jr      z,labE519
+0E519H          labE519:
+0E519H                  inc     bc
+0E51AH                  rlca
+0E51BH                  nop
+0E51CH                  and     h
+0E51DH                  nop
+0E51EH                  ccf
+0E51FH                  nop
+0E520H                  ret     nz
+0E521H                  nop
+0E522H                  djnz    labE524
+0E524H          labE524:
+0E524H                  ld      (bc),a
+0E525H                  nop
+0E526H          labE526:
+0E526H                  djnz    labE550
+0E528H                  nop
+0E529H                  inc     b
+0E52AH                  rrca
+0E52BH                  ld      bc,051H
+0E52EH                  ccf
+0E52FH                  nop
+0E530H                  add     a,b
+0E531H                  nop
+0E532H                  djnz    labE534
+0E534H          labE534:
+0E534H                  ld      (bc),a
+0E535H                  nop
+0E536H          labE536:
+0E536H                  djnz    labE560
+0E538H                  nop
+0E539H                  inc     b
+0E53AH                  rrca
+0E53BH                  ld      bc,0A9H
+0E53EH                  ccf
+0E53FH                  nop
+0E540H                  add     a,b
+0E541H                  nop
+0E542H                  djnz    labE544
+0E544H          labE544:
+0E544H                  ld      (bc),a
+0E545H                  nop
+0E546H                  jr      nz,labE56E+2
+0E548H                  nop
+0E549H                  dec     b
+0E54AH                  rra
+0E54BH                  inc     bc
+0E54CH                  call    nz,07F00H
+0E54FH                  nop
+0E550H          labE550:
+0E550H                  add     a,b
+0E551H                  nop
+0E552H                  jr      nz,labE554
+0E554H          labE554:
+0E554H                  ld      (bc),a
+0E555H                  nop
+0E556H          labE556:
+0E556H                  ld      bc,0
+0E559H          labE559:
+0E559H                  ld      h,b
+0E55AH                  ld      l,c
+0E55BH                  ld      (0F06BH),hl
+0E55EH                  ret
+0E55FH          labE55F:
+0E55FH                  ld      a,c
+0E560H          labE560:
+0E560H                  ld      (0F06DH),a
+0E563H                  ret
+0E564H          labE564:
+0E564H                  ld      h,b
+0E565H                  ld      l,c
+0E566H                  ld      (0F070H),hl
+0E569H                  ret
+0E56AH          labE56A:
+0E56AH                  ld      l,c
+0E56BH                  ld      h,b
+0E56CH                  ret
+0E56DH          labE56D:
+0E56DH                  push    bc
+0E56EH          labE56E:
+0E56EH                  call    labE642
+0E571H                  pop     bc
+0E572H          labE572:
+0E572H                  jp      0E709H
+0E575H          labE575:
+0E575H                  call    labE642
+0E578H                  ld      a,1
+0E57AH                  ld      (0F069H),a
+0E57DH                  xor     a
+0E57EH                  ld      (0F072H),a
+0E581H                  jr      labE5C9
+0E583H          labE583:
+0E583H                  xor     a
+0E584H                  ld      (0F069H),a
+0E587H                  ld      hl,0F072H
+0E58AH                  dec     c
+0E58BH                  jp      m,labE59A
+0E58EH                  jr      z,labE596
+0E590H                  ld      a,(0F06AH)
+0E593H                  ld      (hl),a
+0E594H                  jr      labE5C9
+0E596H          labE596:
+0E596H                  ld      (hl),080H
+0E598H                  jr      labE5C9
+0E59AH          labE59A:
+0E59AH                  or      (hl)
+0E59BH                  jr      z,labE5C9
+0E59DH                  dec     (hl)
+0E59EH                  ld      hl,(0F065H)
+0E5A1H                  ex      de,hl
+0E5A2H                  ld      hl,(0F067H)
+0E5A5H                  or      h
+0E5A6H                  ld      a,028H
+0E5A8H                  jp      p,labE5AD
+0E5ABH                  ld      a,040H
+0E5ADH          labE5AD:
+0E5ADH                  inc     l
+0E5AEH                  sub     l
+0E5AFH                  jr      nz,labE5B3
+0E5B1H                  ld      l,a
+0E5B2H                  inc     de
+0E5B3H          labE5B3:
+0E5B3H                  push    hl
+0E5B4H                  ld      hl,(0F06BH)
+0E5B7H                  call    labE63A
+0E5BAH                  pop     de
+0E5BBH                  jr      nz,labE5C5
+0E5BDH                  ld      hl,(0F06DH)
+0E5C0H                  call    labE63A
+0E5C3H                  jr      z,labE5C9
+0E5C5H          labE5C5:
+0E5C5H                  xor     a
+0E5C6H                  ld      (0F072H),a
+0E5C9H          labE5C9:
+0E5C9H                  ld      hl,(0F06BH)
+0E5CCH                  ex      de,hl
+0E5CDH                  ld      hl,(0F065H)
+0E5D0H                  call    labE63A
+0E5D3H                  jr      nz,labE5E3
+0E5D5H                  ld      hl,(0F06DH)
+0E5D8H                  ex      de,hl
+0E5D9H                  ld      hl,(0F067H)
+0E5DCH                  call    labE63A
+0E5DFH                  and     0FCH
+0E5E1H                  jr      z,labE5F1
+0E5E3H          labE5E3:
+0E5E3H                  call    labE642
+0E5E6H                  ld      a,(0F072H)
+0E5E9H                  and     07FH
+0E5EBH                  ld      a,0
+0E5EDH                  jr      nz,labE5F0
+0E5EFH                  inc     a
+0E5F0H          labE5F0:
+0E5F0H                  or      a
+0E5F1H          labE5F1:
+0E5F1H                  ld      hl,(0F06BH)
+0E5F4H                  ld      (0F065H),hl
+0E5F7H                  ld      hl,(0F06DH)
+0E5FAH                  ld      (0F067H),hl
+0E5FDH                  ld      b,1
+0E5FFH                  call    nz,labE64C
+0E602H                  ld      a,(0F067H)
+0E605H                  and     3
+0E607H                  rra
+0E608H                  ld      h,a
+0E609H                  rra
+0E60AH                  ld      l,a
+0E60BH                  ld      de,0F100H
+0E60EH                  add     hl,de
+0E60FH                  ld      de,(0F070H)
+0E613H                  ld      a,(0F069H)
+0E616H                  dec     a
+0E617H                  push    af
+0E618H                  jr      z,labE61E
+0E61AH                  ld      (labE6F3),a
+0E61DH                  ex      de,hl
+0E61EH          labE61E:
+0E61EH                  ld      bc,080H
+0E621H                  ldir
+0E623H                  pop     af
+0E624H                  ret     z
+0E625H                  ld      hl,0F072H
+0E628H                  ld      a,(hl)
+0E629H                  or      a
+0E62AH                  jp      p,labE631
+0E62DH                  xor     a
+0E62EH                  ld      (hl),a
+0E62FH                  jr      labE635
+0E631H          labE631:
+0E631H                  ld      hl,0F073H
+0E634H                  inc     (hl)
+0E635H          labE635:
+0E635H                  call    z,labE642
+0E638H                  xor     a
+0E639H                  ret
+0E63AH          labE63A:
+0E63AH                  ld      a,d
+0E63BH                  xor     h
+0E63CH                  ld      a,0FFH
+0E63EH                  ret     nz
+0E63FH                  ld      a,e
+0E640H                  xor     l
+0E641H                  ret
+0E642H          labE642:
+0E642H                  ld      a,(labE6F3)
+0E645H                  or      a
+0E646H                  ret     z
+0E647H                  xor     a
+0E648H                  ld      (labE6F3),a
+0E64BH                  ld      b,a
+0E64CH          labE64C:
+0E64CH                  ld      a,(0F067H)
+0E64FH                  and     0FCH
+0E651H                  rrca
+0E652H                  rrca
+0E653H                  ld      c,a
+0E654H                  ld      d,0F1H
+0E656H                  ld      hl,(0F065H)
+0E659H                  ld      a,(0F068H)
+0E65CH                  or      a
+0E65DH                  jp      m,labE039
+0E660H                  push    hl
+0E661H                  push    bc
+0E662H                  call    labE48F
+0E665H                  pop     bc
+0E666H                  ld      hl,(0F068H)
+0E669H                  ld      h,0
+0E66BH                  ld      de,labE6F9+1
+0E66EH                  add     hl,de
+0E66FH                  ld      e,b
+0E670H                  ld      d,c
+0E671H                  or      080H
+0E673H                  ld      c,a
+0E674H                  ld      a,(hl)
+0E675H                  rra
+0E676H                  jr      nc,labE68A
+0E678H                  ld      a,e
+0E679H                  or      a
+0E67AH                  jp      z,labE69F
+0E67DH                  ex      (sp),hl
+0E67EH                  ld      a,l
+0E67FH                  cp      023H
+0E681H                  jr      c,labE686
+0E683H                  ld      a,085H
+0E685H                  sub     l
+0E686H          labE686:
+0E686H                  rlca
+0E687H                  rlca
+0E688H                  ld      l,a
+0E689H                  ex      (sp),hl
+0E68AH          labE68A:
+0E68AH                  xor     a
+0E68BH                  ld      a,d
+0E68CH                  rra
+0E68DH                  jr      nc,labE691
+0E68FH                  add     a,5
+0E691H          labE691:
+0E691H                  ld      d,a
+0E692H                  ld      a,(hl)
+0E693H                  pop     hl
+0E694H                  ld      h,1
+0E696H                  and     041H
+0E698H                  jr      nz,labE6A8
+0E69AH                  ld      a,l
+0E69BH                  cp      023H
+0E69DH                  jr      c,labE6A8
+0E69FH          labE69F:
+0E69FH                  ld      hl,0E9ECH
+0E6A2H                  call    0EA17H
+0E6A5H                  jp      labE003
+0E6A8H          labE6A8:
+0E6A8H                  ld      a,h
+0E6A9H                  ld      b,l
+0E6AAH                  ld      hl,0F100H
+0E6ADH                  jp      labE033
+0E6B0H                  ld      (0C208H),sp
+0E6B4H                  ld      sp,0C208H
+0E6B7H                  push    hl
+0E6B8H                  push    de
+0E6B9H                  push    bc
+0E6BAH                  push    af
+0E6BBH                  halt
+0E6BCH          labE6BC:
+0E6BCH                  nop
+0E6BDH                  nop
+0E6BEH                  nop
+0E6BFH          labE6BF:
+0E6BFH                  call    m,03D00H
+0E6C2H                  nop
+0E6C3H                  and     b
+0E6C4H                  and     c
+0E6C5H                  and     d
+0E6C6H                  and     e
+0E6C7H                  ret     m
+0E6C8H                  sub     b
+0E6C9H                  nop
+0E6CAH                  nop
+0E6CBH                  nop
+0E6CCH                  nop
+0E6CDH                  nop
+0E6CEH                  nop
+0E6CFH                  nop
+0E6D0H                  nop
+0E6D1H                  nop
+0E6D2H                  nop
+0E6D3H                  nop
+0E6D4H                  nop
+0E6D5H                  nop
+0E6D6H                  nop
+0E6D7H                  nop
+0E6D8H                  nop
+0E6D9H                  nop
+0E6DAH                  nop
+0E6DBH                  nop
+0E6DCH                  nop
+0E6DDH                  nop
+0E6DEH                  nop
+0E6DFH                  nop
+0E6E0H                  nop
+0E6E1H          labE6E1:
+0E6E1H                  ld      bc,05900H
+0E6E4H                  ld      e,c
+0E6E5H                  ld      e,c
+0E6E6H          labE6E6:
+0E6E6H                  jp      po,01E6H
+0E6E9H          labE6E9:
+0E6E9H                  ld      a,(bc)
+0E6EAH          labE6EA:
+0E6EAH                  ret
+0E6EBH                  nop
+0E6ECH                  nop
+0E6EDH                  ret
+0E6EEH                  nop
+0E6EFH                  nop
+0E6F0H                  ret
+0E6F1H                  nop
+0E6F2H                  nop
+0E6F3H          labE6F3:
+0E6F3H                  nop
+0E6F4H                  nop
+0E6F5H          labE6F5:
+0E6F5H                  jp      z,0F300H
+0E6F8H          labE6F8:
+0E6F8H                  rst     038H
+0E6F9H          labE6F9:
+0E6F9H                  ld      bc,0
+0E6FCH                  nop
+0E6FDH                  nop
+0E6FEH                  db      1
+0E6FFH          labE6FF:
+0E6FFH                  db      010H
+; vim: ts=8 sts=8 sw=8 noet
