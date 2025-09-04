@@ -1,0 +1,1287 @@
+;
+;  DZ80 V3.3.6 Z80 Disassembly of ../bootloader.bin
+;  09/04/25 8:47
+;
+	ORG	0DF00H
+;
+;*****************************************************************************
+				prom control bytes
+;*****************************************************************************
+prom_control_data:
+	db	0xdf,0xc3,0x0a,0xdf 	; df00  df c3 0a df	_C._
+	db	0x00,0x00,0x00,0x00 	; df04  00 00 00 00	....
+	db	0xe7,0x06 		; df08  e7 e6		g.
+
+;*****************************************************************************
+				main entry point
+;*****************************************************************************
+init:	JP	start		; df0a  c3 0d df	C._
+start:	DI			; df0d  f3		s
+	LD	SP,stack_ptr	; df0e  31 dc f0	1\p	;initialize stack pointer
+	LD	HL,XE6FF	; df11  21 ff e6	!.f
+	LD	A,(HL)		; df14  7e		~	;a = 0x10
+	PUSH	AF		; df15  f5		u
+	LD	(HL),0		; df16  36 00		6.
+	LD	BC,0081h	; df18  01 81 00	...
+	LD	DE,0801h	; df1b  11 01 08	...
+	LD	HL,0e700h	; df1e  21 00 e7	!.g
+	LD	A,1		; df21  3e 01		>.
+	CALL	XE033		; df23  cd 33 e0	M3`
+	LD	BC,0081h	; df26  01 81 00	...
+	LD	DE,0101h	; df29  11 01 01	...
+	LD	HL,0e900h	; df2c  21 00 e9	!.i
+	LD	A,3		; df2f  3e 03		>.
+	CALL	XE033		; df31  cd 33 e0	M3`
+	CALL	cmd_get_sector	; df34  cd b4 e2	M4b
+	LD	BC,0008h	; df37  01 08 00	...
+XDF3A:	PUSH	BC		; df3a  c5		E
+	LD	C,0		; df3b  0e 00		..
+	CALL	XE909		; df3d  cd 09 e9	M.i
+	LD	BC,3fffh	; df40  01 ff 3f	..?
+	LD	H,B		; df43  60		`
+	LD	L,C		; df44  69		i
+	LD	D,H		; df45  54		T
+	LD	E,L		; df46  5d		]
+	LDDR			; df47  ed b8		m8
+	POP	BC		; df49  c1		A
+	LD	A,(HL)		; df4a  7e		~
+	CPL			; df4b  2f		/
+	LD	(HL),A		; df4c  77		w
+	CP	(HL)		; df4d  be		>
+	CPL			; df4e  2f		/
+	LD	(HL),A		; df4f  77		w
+	JR	NZ,XDF56	; df50  20 04		 .
+	INC	B		; df52  04		.
+	DEC	C		; df53  0d		.
+	JR	NZ,XDF3A	; df54  20 e4		 d
+XDF56:	LD	A,3		; df56  3e 03		>.;int enable, clear
+	OUT	(60H),A		; df58  d3 60		S`;program parity
+	LD	BC,0100h	; df5a  01 00 01	...
+	CALL	XE909		; df5d  cd 09 e9	M.i
+	LD	BC,0201h	; df60  01 01 02	...
+	CALL	XE909		; df63  cd 09 e9	M.i
+	LD	BC,0302h	; df66  01 02 03	...
+	CALL	XE909		; df69  cd 09 e9	M.i
+	LD	BC,0005h	; df6c  01 05 00	...
+	CALL	XE909		; df6f  cd 09 e9	M.i
+	LD	HL,0ee63h	; df72  21 63 ee	!cn
+	LD	(XEEFF),HL	; df75  22 ff ee	".n
+	LD	A,0EEH		; df78  3e ee		>n
+	LD	I,A		; df7a  ed 47		mG
+	IM	2		; df7c  ed 5e		m^
+	POP	AF		; df7e  f1		q
+	LD	SP,0100h	; df7f  31 00 01	1..
+	LD	(XE6FF),A	; df82  32 ff e6	2.f
+	LD	C,4		; df85  0e 04		..
+	CALL	XE906		; df87  cd 06 e9	M.i
+	SET	7,B		; df8a  cb f8		Kx
+	CALL	XE909		; df8c  cd 09 e9	M.i
+	CALL	XEA46		; df8f  cd 46 ea	MFj
+	LD	C,4		; df92  0e 04		..
+	CALL	XE572		; df94  cd 72 e5	Mre
+	LD	HL,XDFA9	; df97  21 a9 df	!)_
+	CALL	XEA17		; df9a  cd 17 ea	M.j
+	JP	XE9D6		; df9d  c3 d6 e9	CVi
+;
+;*****************************************************************************
+;				data block
+;*****************************************************************************
+	DB	0,0,0,0,0,0,0,0 ; dfa0
+welcome_msg:			; dfa8
+	DB	'6'
+XDFA9:				; dfa9
+	DB	'4K Graphics CP/M 2.2  rev 1.2.0 for Advantage HQ from '
+	DB	'North Star Computers,Inc.',
+	DB	0dh, 0ah, 0ah, 0fh	; dff9  0d 0a 0a 0f	....
+	DB	1ch, 80h, 0		; dffd  1c 80 00	....
+;
+;*****************************************************************************
+;				bios jump table
+;*****************************************************************************
+XE000:	JP	XEE42		; e000  c3 42 ee	CBn	;not yet loaded
+;
+XE003:
+	JP	XE96E		; e003  c3 6e e9	Cni	;not yet loaded
+;
+XE006:
+	JP	XE703		; e006  c3 03 e7	C.g	;not yet loaded
+;
+XE009:
+	JP	XE706		; e009  c3 06 e7	C.g	;not yet loaded
+;
+XE00C:
+	JP	XE56D		; e00c  c3 6d e5	Cme
+;
+XE00F:
+	JP	XE70C		; e00f  c3 0c e7	C.g	;not yet loaded
+;
+XE012:
+	JP	XE70F		; e012  c3 0f e7	C.g	;not yet loaded
+;
+XE015:
+	JP	XE712		; e015  c3 12 e7	C.g	;not yet loaded
+;
+XE018:
+	JP	XE556		; e018  c3 56 e5	CVe
+;
+XE01b:
+	JP	XE3E2		; e01b  c3 e2 e3	Cbc
+;
+XE01e:
+	JP	XE559		; e01e  c3 59 e5	CYe
+;
+XE021:
+	JP	XE55F		; e021  c3 5f e5	C_e
+;
+XE024:
+	JP	XE564		; e024  c3 64 e5	Cde
+;
+XE027:
+	JP	XE575		; e027  c3 75 e5	Cue
+;
+XE02a:
+	JP	XE583		; e02a  c3 83 e5	C.e
+;
+XE02d:
+	JP	XE715		; e02d  c3 15 e7	C.g	;not yet loaded
+;
+XE030:
+	JP	XE56A		; e030  c3 6a e5	Cje
+;
+XE033:
+	JP	XE347		; e033  c3 47 e3	CGc
+;
+XE036:
+	RET			; e036  c9		I	;place holder
+	NOP			; e037  00		.
+	NOP			; e038  00		.
+
+XE039:
+	JP	XE039		; e039  c3 39 e0	C9`
+;
+XE03c:
+	JP	XE642		; e03c  c3 42 e6	CBf
+;
+;*****************************************************************************
+;				function
+;*****************************************************************************
+XE03F:				; e03f				;takes A C
+	LD	(stack_bak),SP	; e03f  ed 73 7a f0	mszp	;backup stack pointer
+	LD	SP,XF0B0	; e043  31 b0 f0	10p	;set custom stack pointer
+	PUSH	AF		; e046  f5		u	;protect af,hl,de
+	PUSH	HL		; e047  e5		e
+	PUSH	DE		; e048  d5		U
+	LD	A,5		; e049  3e 05		>.
+	BIT	7,C		; e04b  cb 79		Ky	;if bit7 of C is 0
+	JP	Z,XE115		; e04d  ca 15 e1	J.a			;	jump to XE115
+	LD	A,C		; e050  79		y
+	AND	7		; e051  e6 07		f.
+	LD	C,A		; e053  4f		O
+	CP	3		; e054  fe 03		~.
+	JR	C,XE05B		; e056  38 03		8.
+	RLA			; e058  17		.
+	AND	0CH		; e059  e6 0c		f.
+XE05B:	OR	80H		; e05b  f6 80		v.
+	LD	L,A		; e05d  6f		o
+	LD	A,(XE6F6)	; e05e  3a f6 e6	:vf
+	AND	L		; e061  a5		%
+	JR	Z,XE075		; e062  28 11		(.
+	LD	E,28H		; e064  1e 28		.(
+	LD	A,B		; e066  78		x
+	ADD	A,A		; e067  87		.
+	ADD	A,A		; e068  87		.
+	ADD	A,A		; e069  87		.
+	ADD	A,A		; e06a  87		.
+	OR	D		; e06b  b2		2
+	LD	D,A		; e06c  57		W
+	RR	B		; e06d  cb 18		K.
+	JR	NC,XE08B	; e06f  30 1a		0.
+	SET	6,L		; e071  cb f5		Ku
+	JR	XE08B		; e073  18 16		..
+;
+XE075:	LD	E,14H		; e075  1e 14		..
+	LD	A,22H		; e077  3e 22		>"
+	SUB	B		; e079  90		.
+	JR	NC,XE081	; e07a  30 05		0.
+	ADD	A,23H		; e07c  c6 23		F#
+	LD	B,A		; e07e  47		G
+	SET	6,L		; e07f  cb f5		Ku
+XE081:	LD	A,L		; e081  7d		}
+	AND	40H		; e082  e6 40		f@
+	OR	B		; e084  b0		0
+	RRCA			; e085  0f		.
+	RRCA			; e086  0f		.
+	AND	0F0H		; e087  e6 f0		fp
+	ADD	A,D		; e089  82		.
+	LD	D,A		; e08a  57		W
+XE08B:	LD	A,D		; e08b  7a		z
+	LD	(XF078),A	; e08c  32 78 f0	2xp
+	LD	A,E		; e08f  7b		{
+	CP	B		; e090  b8		8
+	JR	NC,XE095	; e091  30 02		0.
+	SET	5,L		; e093  cb ed		Km	;step inner/precomp
+XE095:	LD	A,L		; e095  7d		}
+XE096:	LD	(v_drvctrl),A	; e096  32 74 f0	2tp	;save L into v_drvctrl
+	DI			; e099  f3		s
+	LD	DE,(XE912)	; e09a  ed 5b 12 e9	m[.i
+XE09E:	CALL	XE1FB		; e09e  cd fb e1	M{a
+	LD	A,(XE6BC)	; e0a1  3a bc e6	:<f
+	AND	7FH		; e0a4  e6 7f		f.
+	JR	NZ,XE09E	; e0a6  20 f6		 v
+	PUSH	BC		; e0a8  c5		E
+	CALL	XE28A		; e0a9  cd 8a e2	M.b
+	LD	A,(v_drvctrl)	; e0ac  3a 74 f0	:tp	;read v_drvctrl
+	OUT	(81H),A		; e0af  d3 81		S.	;load drive control reg
+	POP	BC		; e0b1  c1		A
+	POP	HL		; e0b2  e1		a
+	LD	A,L		; e0b3  7d		}
+	OR	A		; e0b4  b7		7
+	JR	NZ,XE0C0	; e0b5  20 09		 .
+	IN	A,(0E0H)	; e0b7  db e0		[`	;input status 1
+	AND	10H		; e0b9  e6 10		f.	;check disk write protect
+	LD	A,6		; e0bb  3e 06		>.
+	JP	NZ,XE111	; e0bd  c2 11 e1	B.a	;jump if writable
+XE0C0:	PUSH	HL		; e0c0  e5		e
+	PUSH	BC		; e0c1  c5		E
+	LD	HL,XE6E1	; e0c2  21 e1 e6	!af
+	LD	B,0		; e0c5  06 00		..
+	ADD	HL,BC		; e0c7  09		.
+	LD	(XE6E6),HL	; e0c8  22 e6 e6	"ff
+	LD	A,(HL)		; e0cb  7e		~
+	XOR	59H		; e0cc  ee 59		nY
+	PUSH	HL		; e0ce  e5		e
+	CALL	Z,XE2F3		; e0cf  cc f3 e2	Lsb
+	POP	HL		; e0d2  e1		a
+	POP	AF		; e0d3  f1		q
+	CALL	XE2FC		; e0d4  cd fc e2	M|b
+	LD	A,(v_drvctrl)	; e0d7  3a 74 f0	:tp	;read v_drvctrl
+	OUT	(81H),A		; e0da  d3 81		S.	;load drive control reg
+	CALL	XE2E1		; e0dc  cd e1 e2	Mab
+	POP	BC		; e0df  c1		A
+	POP	HL		; e0e0  e1		a
+	OR	A		; e0e1  b7		7
+XE0E2:	PUSH	BC		; e0e2  c5		E
+	PUSH	HL		; e0e3  e5		e
+XE0E4:	CALL	NZ,XE25F	; e0e4  c4 5f e2	D_b
+	CP	B		; e0e7  b8		8
+	PUSH	AF		; e0e8  f5		u
+	IN	A,(0E0H)	; e0e9  db e0		[`	;input status 1
+	AND	48H		; e0eb  e6 48		fH	;check sector mark and nonmaskable interupt
+	JR	NZ,XE0FC	; e0ed  20 0d		 .	;jump if no nmi or no sector mark
+	CALL	secmark_off		; e0ef  cd 1f e2	M.b
+	POP	AF		; e0f2  f1		q
+	JR	NZ,XE0E4	; e0f3  20 ef		 o
+	DEC	C		; e0f5  0d		.
+	JP	M,write_disk	; e0f6  fa af e1	z/a
+	JP	read_disk	; e0f9  c3 28 e1	C(a
+;
+XE0FC:	CALL	get_sector_safe	; e0fc  cd a9 e2	M)b
+	POP	AF		; e0ff  f1		q
+	INC	A		; e100  3c		<
+XE101:	JR	XE0E4		; e101  18 e1		.a
+;
+XE103:				; e103
+	POP	BC		; e103  c1		A
+	INC	B		; e104  04		.
+	LD	A,(XF078)	; e105  3a 78 f0	:xp
+	INC	A		; e108  3c		<
+	LD	(XF078),A	; e109  32 78 f0	2xp
+	POP	AF		; e10c  f1		q
+	DEC	A		; e10d  3d		=
+	PUSH	AF		; e10e  f5		u
+	JR	NZ,XE0E2	; e10f  20 d1		 Q
+;A=error code?
+;DE=????
+XE111:				; e111
+	LD	(XE912),DE	; e111  ed 53 12 e9	mS.i
+XE115:				; e115
+	LD	SP,XF0AE	; e115  31 ae f0	1.p	;set custom stack pointer
+	PUSH	AF		; e118  f5		u	;protect af
+	EX	DE,HL		; e119  eb		k	;protect hl in de
+	CALL	XE33F		; e11a  cd 3f e3	M?c
+	EX	DE,HL		; e11d  eb		k	;restore hl
+	IN	A,(82H)		; e11e  db 82		[.	;clear disk read
+	POP	AF		; e120  f1		q	;restore af
+	POP	BC		; e121  c1		A	;restore bc
+	OR	A		; e122  b7		7
+	LD	SP,(stack_bak)	; e123  ed 7b 7a f0	m{zp	;restore stack pointer
+	RET			; e127  c9		I
+;
+read_disk:			; e128
+	PUSH	BC		; e128  c5		E
+	LD	HL,0023h	; e129  21 23 00	!#.
+	CALL	wait_dcr		; e12c  cd 07 e2	M.b
+	LD	A,(v_ctrlreg)	; e12f  3a c1 e6	:Af	;read v_ctrlreg
+	AND	0F7H		; e132  e6 f7		fw	;unset aquire (start disk read)
+	OUT	(0F8H),A	; e134  d3 f8		Sx	;send to control register
+	OUT	(82H),A		; e136  d3 82		S.	;set disk read
+	LD	HL,XDF09	; e138  21 09 00	!..
+	CALL	wait_dcr		; e13b  cd 07 e2	M.b
+	LD	A,(v_ctrlreg)	; e13e  3a c1 e6	:Af	;read v_ctrlreg
+	OUT	(0F8H),A	; e141  d3 f8		Sx	;send to control register
+	POP	BC		; e143  c1		A
+	DEC	C		; e144  0d		.
+	LD	HL,read_blk	; e145  21 71 e1	!qa
+	JR	NZ,read_sync	; e148  20 03		 .
+	LD	HL,cmp_blk	; e14a  21 91 e1	!.a
+read_sync:			; e14d
+	EX	(SP),HL		; e14d  e3		c
+	CALL	serial_data_wait		; e14e  cd 6c e2	Mlb
+	IN	A,(81H)		; e151  db 81		[.	;input sync1
+	CP	0FBH		; e153  fe fb		~{	;validate
+	JP	NZ,serial_data_err	; e155  c2 85 e2	B.b
+	LD	A,(XF078)	; e158  3a 78 f0	:xp
+	LD	B,A		; e15b  47		G
+	IN	A,(80H)		; e15c  db 80		[.	;input sync2
+	CP	B		; e15e  b8		8
+	LD	(XF079),A	; e15f  32 79 f0	2yp
+	LD	BC,XDF00	; e162  01 00 00	...
+	RET	Z		; e165  c8		H
+	CP	0FBH		; e166  fe fb		~{
+	RET	Z		; e168  c8		H
+	LD	HL,(XE6E6)	; e169  2a e6 e6	*ff
+	LD	(HL),59H	; e16c  36 59		6Y
+	JP	cmp_blk_err	; e16e  c3 aa e1	C*a
+;
+;HL = destptr
+read_blk:			; e171
+	IN	A,(80H)		; e171  db 80		[.	;input data
+	LD	(HL),A		; e173  77		w	;store in destptr
+	XOR	C		; e174  a9		)	;crc calc
+	RLCA			; e175  07		.
+	LD	C,A		; e176  4f		O
+	CALL	disabled_0	; e177  cd e1 e1	Maa
+	IN	A,(80H)		; e17a  db 80		[.	;input data
+	INC	HL		; e17c  23		#	;destptr++
+	LD	(HL),A		; e17d  77		w	;store in destptr
+	INC	HL		; e17e  23		#	;destptr++
+	XOR	C		; e17f  a9		)	;crc calc
+	RLCA			; e180  07		.
+	LD	C,A		; e181  4f		O
+	DJNZ	read_blk	; e182  10 ed		.m
+read_crc:			; e184
+	IN	A,(80H)		; e184  db 80		[.	;input crc
+	XOR	C		; e186  a9		)	;compare with calculated
+	IN	A,(82H)		; e187  db 82		[.	;clear disk read
+	JP	Z,XE103		; e189  ca 03 e1	J.a	;jump if crcs match
+read_crc_err:			; e18c
+	LD	A,2		; e18c  3e 02		>.
+	JP	XE111		; e18e  c3 11 e1	C.a
+;
+;HL = bufptr
+cmp_blk:			; e191
+	IN	A,(80H)		; e191  db 80		[.	;input data
+	CP	(HL)		; e193  be		>	;compare against *bufptr
+	JR	NZ,cmp_blk_err	; e194  20 14		 .	;goto error if non match
+	XOR	C		; e196  a9		)	;crc calc
+	RLCA			; e197  07		.
+	LD	C,A		; e198  4f		O
+	CALL	disabled_0	; e199  cd e1 e1	Maa
+	IN	A,(80H)		; e19c  db 80		[.	;input data
+	INC	HL		; e19e  23		#	;bufptr++
+	CP	(HL)		; e19f  be		>	;compare against *bufptr
+	JR	NZ,cmp_blk_err	; e1a0  20 08		 .	;goto error if non match
+	XOR	C		; e1a2  a9		)	;crc calc
+	RLCA			; e1a3  07		.
+	LD	C,A		; e1a4  4f		O
+	INC	HL		; e1a5  23		#	;bufptr++
+	DJNZ	cmp_blk		; e1a6  10 e9		.i
+	JR	read_crc	; e1a8  18 da		.Z
+;
+cmp_blk_err:			; e1aa
+	LD	A,3		; e1aa  3e 03		>.
+	JP	XE111		; e1ac  c3 11 e1	C.a
+;
+write_disk:			; e1af
+	LD	BC,0x2200	; e1af  01 00 22	.."	;loop 0x22 times
+	OUT	(83H),A		; e1b2  d3 83		S.	;set disk write
+write_preamble:			; e1b4
+	XOR	A		; e1b4  af		/	;a=0
+	OUT	(80H),A		; e1b5  d3 80		S.	;output preamble byte
+	CALL	disabled_0	; e1b7  cd e1 e1	Maa
+	DJNZ	write_preamble	; e1ba  10 f8		.x	;loop
+	LD	A,0FBH		; e1bc  3e fb		>{
+	OUT	(80H),A		; e1be  d3 80		S.	;output sync1
+	EX	(SP),HL		; e1c0  e3		c
+	EX	(SP),HL		; e1c1  e3		c
+	LD	A,(XF078)	; e1c2  3a 78 f0	:xp
+	OUT	(80H),A		; e1c5  d3 80		S.	;output sync2
+	POP	HL		; e1c7  e1		a
+;HL=srcptr
+;B=0xff
+write_blk:			; e1c8
+	LD	A,(HL)		; e1c8  7e		~	;read srcptr
+	INC	HL		; e1c9  23		#	;srcptr++
+	OUT	(80H),A		; e1ca  d3 80		S.	;output data
+	XOR	C		; e1cc  a9		)	;crc calc
+	RLCA			; e1cd  07		.
+	LD	C,A		; e1ce  4f		O
+	CALL	disabled_0	; e1cf  cd e1 e1	Maa
+	LD	A,(HL)		; e1d2  7e		~	;read srcptr
+	OUT	(80H),A		; e1d3  d3 80		S.	;output data
+	INC	HL		; e1d5  23		#	;srcptr++
+	XOR	C		; e1d6  a9		)	;crc calc
+	RLCA			; e1d7  07		.
+	LD	C,A		; e1d8  4f		O
+	DJNZ	write_blk	; e1d9  10 ed		.m	;loop
+	LD	A,C		; e1db  79		y
+	OUT	(80H),A		; e1dc  d3 80		S.	;write crc
+	JP	XE103		; e1de  c3 03 e1	C.a
+;
+disabled_0:			; e1e1	
+	IN	A,(0E0H)	; e1e1  db e0		[`	;input status 1
+	AND	0		; e1e3  e6 00		f.	;A = 0
+	RET	Z		; e1e5  c8		H	;return (disabed feature)
+	IN	A,(0)		; e1e6  db 00		[.	;unreachable
+	LD	(DE),A		; e1e8  12		.	;unreachable
+	INC	DE		; e1e9  13		.	;unreachable
+	RET			; e1ea  c9		I	;unreachable
+;
+XE1EB:				; e1eb
+	PUSH	AF		; e1eb  f5		u
+	PUSH	DE		; e1ec  d5		U
+	LD	DE,(XE912)	; e1ed  ed 5b 12 e9	m[.i
+	CALL	disabled_0	; e1f1  cd e1 e1	Maa
+	LD	(XE912),DE	; e1f4  ed 53 12 e9	mS.i
+	POP	DE		; e1f8  d1		Q
+	POP	AF		; e1f9  f1		q
+	RET			; e1fa  c9		I
+;
+XE1FB:				; e1fb
+	LD	(XE912),DE	; e1fb  ed 53 12 e9	mS.i
+	RET			; e1ff  c9		I
+;
+XE200:				; e200
+	LD	(HL),C		; e200  71		q
+	XOR	0EDH		; e201  ee ed		nm
+	LD	E,E		; e203  5b		[
+	LD	(DE),A		; e204  12		.
+	JP	(HL)		; e205  e9		i
+;
+XE206:				; e206
+	RET			; e206  c9		I
+;
+;HL=counter
+wait_dcr:			; e207				;for (; HL > 0; HL--)
+	LD	BC,0ffffh	; e207  01 ff ff	...	;BC = 0xffff
+;BC=increment
+;HL=counter
+wait:				; e20a				;while ((HL=HL+BC) wraps)
+	IN	A,(0E0H)	; e20a  db e0		[	;input status 1
+	AND	0		; e20c  e6 00		f.	;A = 0
+	JP	Z,disabled_2	; e20e  ca 1a e2	J.b	;jump (skip disabled feature)
+	ADD	HL,BC		; e211  09		.	;unreachable
+	JP	NC,ret_0	; e212  d2 1e e2	R.b	;unreachable
+	IN	A,(0)		; e215  db 00		[.	;unreachable
+	LD	(DE),A		; e217  12		.	;unreachable
+	INC	DE		; e218  13		.	;unreachable
+	OR	A		; e219  b7		7	;unreachable
+disabled_2:			; e21a
+	ADD	HL,BC		; e21a  09		.	;HL=HL+BC
+	JP	C,wait		; e21b  da 0a e2	Z.b	;while HL <= U16MAX
+ret_0:				; e21e
+	RET			; e21e  c9		I	;return
+;
+secmark_off:			; e21f
+	LD	HL,0E098H	; e21f  21 98 01	!..	;try 0xe098 times
+secmark_off_loop:		; e222
+	IN	A,(0E0H)	; e222  db e0		[`	;input status 1
+	AND	40H		; e224  e6 40		f@	;check sector mark
+	RET	NZ		; e226  c0		@	;return if not at sector mark
+	IN	A,(0E0H)	; e227  db e0		[`	;input status 1
+	AND	0		; e229  e6 00		f.	;A = 0
+	JP	Z,disabled_1	; e22b  ca 37 e2	J7b	;jump (skip disabled feature)
+	IN	A,(0E0H)	; e22e  db e0		[`	;unreachable
+	AND	40H		; e230  e6 40		f@	;unreachable
+	RET	NZ		; e232  c0		@	;unreachable
+	IN	A,(0)		; e233  db 00		[.	;unreachable
+	LD	(DE),A		; e235  12		.	;unreachable
+	INC	DE		; e236  13		.	;unreachable
+disabled_1:			; e237
+	IN	A,(0E0H)	; e237  db e0		[`	;input status 1
+	AND	40H		; e239  e6 40		f@	;check sector mark
+	RET	NZ		; e23b  c0		@	;return if not at sector mark
+	DEC	HL		; e23c  2b		+	;decrement HL
+	LD	A,H		; e23d  7c		|	
+	OR	L		; e23e  b5		5
+				; e23f  c2 22 e2	B"b	;try until HL=0
+	JP	NZ,secmark_off_loop
+secmark_err:			; e242
+	LD	(XE6E1),A	; e242  32 e1 e6	2af
+	LD	A,4		; e245  3e 04		>.
+	JP	XE111		; e247  c3 11 e1	C.a
+;
+secmark_on:			; e24a
+	LD	HL,0E3EFH	; e24a  21 ef 04	!o.	;try 0xe3ef times
+secmark_on_loop:		; e24d
+	CALL	disabled_0	; e24d  cd e1 e1	Maa
+	IN	A,(0E0H)	; e250  db e0		[`	;input status 1
+	AND	40H		; e252  e6 40		f@	;check sector mark
+	RET	Z		; e254  c8		H	;return if at sector mark
+	DEC	HL		; e255  2b		+	;decrement HL
+	LD	A,H		; e256  7c		|
+	OR	L		; e257  b5		5
+				; e258  20 f3		 s	;try until HL=0
+	JR	NZ,secmark_on_loop
+	JR	secmark_err	; e25a  18 e6		.f
+;
+XE25C:				; e25c
+	CALL	secmark_off	; e25c  cd 1f e2	M.b	;wait for secmark off
+XE25F:				; e25f
+	CALL	XE1FB		; e25f  cd fb e1	M{a
+	CALL	secmark_on	; e262  cd 4a e2	MJb	;wait for secmark on
+	CALL	sector_stable	; e265  cd d6 e2	MVb	;get previous sector in A
+	INC	A		; e268  3c		<	;get current sector
+	AND	0FH		; e269  e6 0f		f.	;mask away garbage
+	RET			; e26b  c9		I
+;
+serial_data_wait:				; e26c
+	LD	BC,035e0h	; e26c  01 e0 35	.`5	;try 0x35 times
+								;from status 1
+serial_data_wait_loop:
+	IN	F,(C)		; e26f  ed 70		mp	;input status1 into flags
+	RET	M		; e271  f8		x	;return if disk serial data
+	IN	A,(0E0H)	; e272  db e0		[`	;input status 1
+	AND	0		; e274  e6 00		f.	;A=0
+	JP	Z,disabled_3	; e276  ca 80 e2	J.b	;jump (skip disabled feature)
+	IN	F,(C)		; e279  ed 70		mp	;unreachable
+	RET	M		; e27b  f8		x	;unreachable
+	IN	A,(0)		; e27c  db 00		[.	;unreachable
+	LD	(DE),A		; e27e  12		.	;unreachable
+	INC	DE		; e27f  13		.	;unreachable
+disabled_3:			; e280
+	IN	F,(C)		; e280  ed 70		mp	;input status1 into flags
+	RET	M		; e282  f8		x	;return if disk serial data
+				; e283  10 ea		.j
+	DJNZ	serial_data_wait_loop				;loop until B=0
+serial_data_err:		; e285
+	LD	A,1		; e285  3e 01		>.
+	JP	XE111		; e287  c3 11 e1	C.a
+;
+XE28A:				; e28a
+	CALL	get_sector_safe	; e28a  cd a9 e2	M)b	;get sector
+	CP	0EH		; e28d  fe 0e		~.	;check if motor off
+	RET	NZ		; e28f  c0		@	;return if motor is on
+	XOR	A		; e290  af		/	;A=0
+	LD	(XE6E1),A	; e291  32 e1 e6	2af
+	CALL	cmd_start_motor	; e294  cd af e2	M/b
+	LD	B,64H		; e297  06 64		.d	;try 0x64 times
+XE299:	PUSH	HL		; e299  e5		e	;protect HL
+XE29A:	PUSH	BC		; e29a  c5		E	;protect BC (counter)
+	CALL	XE1FB		; e29b  cd fb e1	M{a
+	LD	HL,0E096H	; e29e  21 96 01	!..	;HL=0xe096
+	CALL	wait_dcr	; e2a1  cd 07 e2	M.b	;wait
+	POP	BC		; e2a4  c1		A	;restore counter
+	DJNZ	XE29A		; e2a5  10 f3		.s	;loop until BC=0
+	POP	HL		; e2a7  e1		a	;restore HL
+	RET			; e2a8  c9		I
+;
+get_sector_safe:
+	CALL	cmd_get_sector	; e2a9  cd b4 e2	M4b	;try to get sector
+	CP	0EH		; e2ac  fe 0e		~.	;check if motor off
+	RET	Z		; e2ae  c8		H	;return if it is
+								;else, send motor_start and get_sector
+cmd_start_motor:		; e2af
+	LD	H,5		; e2af  26 05		&.	;set start motor
+	CALL	cmd_execute_05	; e2b1  cd b6 e2	M6b
+cmd_get_sector:			; e2b4
+	LD	H,0		; e2b4  26 00		&.	;set get sector
+cmd_execute_05:			; e2b6
+	CALL	disabled_0	; e2b6  cd e1 e1	Maa
+	LD	A,(v_ctrlreg)	; e2b9  3a c1 e6	:Af	;read v_ctrlreg
+	LD	L,A		; e2bc  6f		o	;protect orig in L
+	AND	0F8H		; e2bd  e6 f8		fx	;clear the cmd
+	OR	H		; e2bf  b4		4	;set the cmd from HL
+	LD	H,A		; e2c0  67		g	;protect in H
+	CP	L		; e2c1  bd		=	;compare new vs orig
+	JR	Z,sector_stable	; e2c2  28 12		(.	;if match, get sector now
+	IN	A,(0D0H)	; e2c4  db d0		[P	;input status2
+	LD	L,A		; e2c6  6f		o	;protect in L
+	LD	A,H		; e2c7  7c		|	;restore new cmd in A
+	OUT	(0F8H),A	; e2c8  d3 f8		Sx	;output to control register
+	LD	(v_ctrlreg),A	; e2ca  32 c1 e6	2Af	;write the new cmd into v_ctrlreg
+cmdack_loop:				; e2cd
+	CALL	disabled_0	; e2cd  cd e1 e1	Maa
+	IN	A,(0D0H)	; e2d0  db d0		[P	;input status2
+	XOR	L		; e2d2  ad		-	;compare against prev result
+	JP	P,cmdack_loop	; e2d3  f2 cd e2	rMb	;loop until cmdack compliments
+sector_stable:			; e2d6
+	LD	L,80H		; e2d6  2e 80		..	;fail on first iteration
+sector_stable_loop:
+	IN	A,(0D0H)	; e2d8  db d0		[P	;input status 2
+	AND	0FH		; e2da  e6 0f		f.	;get sector number
+	CP	L		; e2dc  bd		=	;check if sector matchs previous
+	RET	Z		; e2dd  c8		H	;if it does, return
+	LD	L,A		; e2de  6f		o	;save sector as previous
+				; e2df  18 f7		.w	;loop
+	JR	sector_stable_loop
+;
+XE2E1:				; e2e1
+	LD	HL,XE6E1	; e2e1  21 e1 e6	!af
+	LD	A,(HL)		; e2e4  7e		~
+	LD	(HL),C		; e2e5  71		q
+	CP	C		; e2e6  b9		9
+	RET	Z		; e2e7  c8		H
+	LD	B,0CH		; e2e8  06 0c		..
+	CALL	XE299		; e2ea  cd 99 e2	M.b
+XE2ED:	CALL	XE25C		; e2ed  cd 5c e2	M\b
+	RET	Z		; e2f0  c8		H
+	JR	XE2ED		; e2f1  18 fa		.z
+;
+XE2F3:				; e2f3
+	PUSH	HL		; e2f3  e5		e
+	CALL	XE2E1		; e2f4  cd e1 e2	Mab
+	CALL	secmark_off	; e2f7  cd 1f e2	M.b
+	POP	HL		; e2fa  e1		a
+	XOR	A		; e2fb  af		/
+XE2FC:	LD	B,A		; e2fc  47		G
+	SUB	(HL)		; e2fd  96		.
+	LD	(HL),B		; e2fe  70		p
+	RET	Z		; e2ff  c8		H
+	LD	L,20H		; e300  2e 20		. 
+	LD	H,A		; e302  67		g
+	JP	P,step		; e303  f2 10 e3	r.c
+	CPL			; e306  2f		/
+	INC	A		; e307  3c		<
+	LD	H,A		; e308  67		g
+	IN	A,(0E0H)	; e309  db e0		[`	;input status 1
+	AND	20H		; e30b  e6 20		f 	;check track 0
+	RET	NZ		; e30d  c0		@	;return if on track 0
+	LD	L,0		; e30e  2e 00		..
+step:	LD	A,(v_drvctrl)	; e310  3a 74 f0	:tp	;read v_drvctrl
+	AND	0CFH		; e313  e6 cf		fO	;set step out and pulse off
+	OR	L		; e315  b5		5
+	LD	L,A		; e316  6f		o	;protect in L
+step_loop:			; e317
+	LD	A,L		; e317  7d		}	;restore drvctrl byte from L
+	OUT	(81H),A		; e318  d3 81		S.	;output drive control reg
+	OR	10H		; e31a  f6 10		v.	;pulse on
+	OUT	(81H),A		; e31c  d3 81		S.	;output drive control reg
+	XOR	10H		; e31e  ee 10		n.	;pulse off
+	OUT	(81H),A		; e320  d3 81		S.	;output drive control reg
+	LD	A,(XE6F8)	; e322  3a f8 e6	:xf
+	AND	L		; e325  a5		%
+	AND	0FH		; e326  e6 0f		f.
+	LD	B,1		; e328  06 01		..
+	JR	NZ,step_chktrk0	; e32a  20 02		 .
+	LD	B,5		; e32c  06 05		..
+step_chktrk0:			; e32e
+	CALL	XE299		; e32e  cd 99 e2	M.b
+	IN	A,(0E0H)	; e331  db e0		[`	;input status 1
+	AND	20H		; e333  e6 20		f 	;check track 0
+	JR	NZ,XE33A	; e335  20 03		 .	;jump if at track 0
+	DEC	H		; e337  25		%	;decrement H
+	JR	NZ,step_loop	; e338  20 dd		 ]	;while H!=0 jump
+XE33A:	LD	B,3		; e33a  06 03		..
+	JP	XE299		; e33c  c3 99 e2	C.b
+;
+XE33F:				; e33f
+	LD	HL,XE6FF	; e33f  21 ff e6	!.f
+	BIT	3,(HL)		; e342  cb 5e		K^
+	RET	Z		; e344  c8		H
+	EI			; e345  fb		{
+	RET			; e346  c9		I
+;
+XE347:	LD	(XF076),A	; e347  32 76 f0	2vp	;protect acc in var
+XE34A:	LD	A,(XE6E9)	; e34a  3a e9 e6	:if	;read 0x0a
+XE34D:	LD	(XF077),A	; e34d  32 77 f0	2wp	;write A
+	PUSH	HL		; e350  e5		e	;protect HL,DE,BC
+	PUSH	DE		; e351  d5		U
+	PUSH	BC		; e352  c5		E
+	LD	A,(XF076)	; e353  3a 76 f0	:vp	;restore input acc
+	AND	0FH		; e356  e6 0f		f.	;get LSB
+	CALL	XE03F		; e358  cd 3f e0	M?`
+	POP	BC		; e35b  c1		A	;restore HL,DE,BC
+	POP	DE		; e35c  d1		Q
+	POP	HL		; e35d  e1		a
+	JR	NZ,XE372	; e35e  20 12		 .
+	LD	A,E		; e360  7b		{
+	OR	A		; e361  b7		7
+	JR	NZ,XE370	; e362  20 0c		 .
+	LD	A,(XE6FF)	; e364  3a ff e6	:.f
+	AND	40H		; e367  e6 40		f@
+	LD	E,2		; e369  1e 02		..
+	JR	NZ,XE34A	; e36b  20 dd		 ]
+	CALL	XE25C		; e36d  cd 5c e2	M\b
+XE370:	XOR	A		; e370  af		/	;A=0
+	RET			; e371  c9		I
+;
+XE372:	LD	(XE3D3),A	; e372  32 d3 e3	2Sc
+	CP	4		; e375  fe 04		~.
+	JR	NC,XE37F	; e377  30 06		0.
+	LD	A,(XF077)	; e379  3a 77 f0	:wp
+	DEC	A		; e37c  3d		=
+	JR	NZ,XE34D	; e37d  20 ce		 N
+XE37F:	LD	A,C		; e37f  79		y
+	AND	0FH		; e380  e6 0f		f.
+	LD	(XE3D7),A	; e382  32 d7 e3	2Wc
+	LD	A,B		; e385  78		x
+	PUSH	HL		; e386  e5		e
+	PUSH	DE		; e387  d5		U
+	PUSH	BC		; e388  c5		E
+	LD	HL,XE3DE	; e389  21 de e3	!^c
+	LD	(HL),D		; e38c  72		r
+	DEC	HL		; e38d  2b		+
+	CALL	XE3A8		; e38e  cd a8 e3	M(c
+	LD	A,C		; e391  79		y
+	CALL	XE3A8		; e392  cd a8 e3	M(c
+	LD	(HL),C		; e395  71		q
+	LD	HL,disk_errmsg	; e396  21 cf e3	!Oc
+	LD	A,(XE3D3)	; e399  3a d3 e3	:Sc
+	CALL	XE3B4		; e39c  cd b4 e3	M4c
+	POP	BC		; e39f  c1		A
+	POP	DE		; e3a0  d1		Q
+	POP	HL		; e3a1  e1		a
+	JP	NZ,XE34A	; e3a2  c2 4a e3	BJc
+	XOR	A		; e3a5  af		/
+	SCF			; e3a6  37		7
+	RET			; e3a7  c9		I
+;
+XE3A8:				; e3a8
+	LD	C,0FFH		; e3a8  0e ff		..
+XE3AA:	SUB	0AH		; e3aa  d6 0a		V.
+	INC	C		; e3ac  0c		.
+	JR	NC,XE3AA	; e3ad  30 fb		0{
+	ADD	A,0AH		; e3af  c6 0a		F.
+	LD	(HL),A		; e3b1  77		w
+	DEC	HL		; e3b2  2b		+
+	RET			; e3b3  c9		I
+;
+XE3B4:				; e3b4
+	OR	A		; e3b4  b7		7
+	CALL	XE6EA		; e3b5  cd ea e6	Mjf
+	OR	A		; e3b8  b7		7
+	CALL	NZ,XEA17	; e3b9  c4 17 ea	D.j
+	XOR	A		; e3bc  af		/
+	CALL	XE6EA		; e3bd  cd ea e6	Mjf
+	OR	A		; e3c0  b7		7
+	CALL	Z,XE009		; e3c1  cc 09 e0	L.`
+	CP	3		; e3c4  fe 03		~.
+	JP	Z,XE003		; e3c6  ca 03 e0	J.`
+	LD	B,A		; e3c9  47		G
+	LD	A,(XE6F9)	; e3ca  3a f9 e6	:yf
+	CP	B		; e3cd  b8		8
+	RET			; e3ce  c9		I
+;
+;*****************************************************************************
+;				data block
+;*****************************************************************************
+disk_errmsg:				; e3cf
+	DB	0dh,0ah,'T '		; e3cf  0d 0a 54 20	..T 
+XE3D3:	DB	'  D '			; e3d3	20 20 55 20	  D 
+XE3D7:	DB	'  S '			; e3d7	20 20 53 20	  S 
+	DB	'  '			; e3db  20 20		  
+XE3DE:	DB	' ',0			; e3de  20 00	   	 .
+	DB	0dh, 0ah, 80h		; e3df	0d 0a 80	...
+
+;*****************************************************************************
+;				more code
+;*****************************************************************************
+XE3E2:
+	LD	L,C		; e3e2  69		i
+	LD	H,0		; e3e3  26 00		&.
+	XOR	A		; e3e5  af		/
+	CALL	XE036		; e3e6  cd 36 e0	M6`
+	LD	(XF06E),HL	; e3e9  22 6e f0	"np
+	EX	DE,HL		; e3ec  eb		k
+	OR	A		; e3ed  b7		7
+	LD	(XF06A),A	; e3ee  32 6a f0	2jp
+	RET	NZ		; e3f1  c0		@
+	DEC	A		; e3f2  3d		=
+	LD	(XF073),A	; e3f3  32 73 f0	2sp
+	LD	A,E		; e3f6  7b		{
+	CP	4		; e3f7  fe 04		~.
+	JP	NC,XE487	; e3f9  d2 87 e4	R.d
+XE3FC:	LD	A,L		; e3fc  7d		}
+	AND	1		; e3fd  e6 01		f.
+	JP	NZ,XE473	; e3ff  c2 73 e4	Bsd
+	CALL	XE642		; e402  cd 42 e6	MBf
+	LD	A,0FFH		; e405  3e ff		>.
+	LD	(XF068),A	; e407  32 68 f0	2hp
+	LD	A,(XF06E)	; e40a  3a 6e f0	:np
+	CALL	XE48F		; e40d  cd 8f e4	M.d
+	OR	80H		; e410  f6 80		v.
+	LD	C,A		; e412  4f		O
+XE413:	LD	B,0		; e413  06 00		..
+	LD	DE,XDF01	; e415  11 01 00	...
+	LD	A,1		; e418  3e 01		>.
+XE41A:	LD	HL,XF100	; e41a  21 00 f1	!.q
+	CALL	XE033		; e41d  cd 33 e0	M3`
+	JR	C,XE413		; e420  38 f1		8q
+	LD	B,90H		; e422  06 90		..
+	RES	7,C		; e424  cb b9		K9
+	LD	HL,XF15C	; e426  21 5c f1	!\q
+	LD	A,(HL)		; e429  7e		~
+	AND	10H		; e42a  e6 10		f.
+	LD	DE,XE516	; e42c  11 16 e5	..e
+	JR	Z,XE453		; e42f  28 22		("
+	LD	B,(HL)		; e431  46		F
+	LD	A,B		; e432  78		x
+	AND	40H		; e433  e6 40		f@
+	JR	Z,XE445		; e435  28 0e		(.
+	LD	A,(XE6F8)	; e437  3a f8 e6	:xf
+	PUSH	BC		; e43a  c5		E
+XE43B:	RLCA			; e43b  07		.
+	DEC	C		; e43c  0d		.
+	JR	NZ,XE43B	; e43d  20 fc		 |
+	POP	BC		; e43f  c1		A
+	LD	DE,XE536	; e440  11 36 e5	.6e
+	JR	C,XE453		; e443  38 0e		8.
+XE445:	LD	A,0BFH		; e445  3e bf		>?
+	AND	B		; e447  a0		 
+	LD	B,A		; e448  47		G
+	LD	DE,XE526	; e449  11 26 e5	.&e
+	AND	20H		; e44c  e6 20		f 
+	JR	NZ,XE453	; e44e  20 03		 .
+	LD	DE,XE516	; e450  11 16 e5	..e
+XE453:	LD	A,(XE6F6)	; e453  3a f6 e6	:vf
+	LD	A,B		; e456  78		x
+	LD	HL,(XF06E)	; e457  2a 6e f0	*np
+	LD	BC,XE6FA	; e45a  01 fa e6	.zf
+	ADD	HL,BC		; e45d  09		.
+	LD	(HL),A		; e45e  77		w
+	AND	0CH		; e45f  e6 0c		f.
+	LD	HL,XDF00	; e461  21 00 00	!..
+	RET	NZ		; e464  c0		@
+	CALL	XE473		; e465  cd 73 e4	Msd
+	DEC	HL		; e468  2b		+
+	LD	A,(DE)		; e469  1a		.
+	LD	(HL),A		; e46a  77		w
+	INC	DE		; e46b  13		.
+	LD	BC,XDF0B	; e46c  01 0b 00	...
+	ADD	HL,BC		; e46f  09		.
+	LD	(HL),E		; e470  73		s
+	INC	HL		; e471  23		#
+	LD	(HL),D		; e472  72		r
+XE473:				; e473
+	LD	A,(XF06E)	; e473  3a 6e f0	:np
+	LD	HL,XE4C1	; e476  21 c1 e4	!Ad
+	LD	BC,0011H	; e479  01 11 00	...
+	INC	A		; e47c  3c		<
+XE47D:	ADD	HL,BC		; e47d  09		.
+	DEC	A		; e47e  3d		=
+	JR	NZ,XE47D	; e47f  20 fc		 |
+	LD	A,(HL)		; e481  7e		~
+	LD	(XF06A),A	; e482  32 6a f0	2jp
+	INC	HL		; e485  23		#
+	RET			; e486  c9		I
+;
+XE487:				; e487
+	LD	HL,XDF00	; e487  21 00 00	!..
+	XOR	A		; e48a  af		/
+	LD	(XDF04),A	; e48b  32 04 00	2..
+	RET			; e48e  c9		I
+;
+XE48F:				; e48f
+	DEC	A		; e48f  3d		=
+	LD	HL,XE6E8	; e490  21 e8 e6	!hf
+	CP	(HL)		; e493  be		>
+	INC	A		; e494  3c		<
+	JR	C,XE4AA		; e495  38 13		8.
+	LD	HL,XE4B4	; e497  21 b4 e4	!4d
+	ADD	A,41H		; e49a  c6 41		FA
+	CP	(HL)		; e49c  be		>
+	JR	Z,XE4A9		; e49d  28 0a		(.
+	LD	(HL),A		; e49f  77		w
+	LD	HL,XE4AC	; e4a0  21 ac e4	!,d
+	CALL	XEA17		; e4a3  cd 17 ea	M.j
+	CALL	XE009		; e4a6  cd 09 e0	M.`
+XE4A9:	XOR	A		; e4a9  af		/
+XE4AA:	INC	A		; e4aa  3c		<
+	RET			; e4ab  c9		I
+;
+;*****************************************************************************
+;				data block
+;*****************************************************************************
+XE4AC:	DB	0dh,0ah,'MOUNT A'		; e4ac
+XE4B4:	DB	': IN DRIVE 1'			; e4b4
+XE4C1:	DB	', TYPE ANY KEY',0dh,0ah,80h	; e4c1
+
+	DB	0,0,0,0,0,0,0,0,0	; e4d2
+	DB	01h, 0efh, 26h, 0e5h	; e4db  01 df 26 e5	
+	DB	9ah, 0efh, 81h, 0efh	; e4df  9a ef 81 ef	
+
+	DB	0,0,0,0,0,0,0,0,0	; e4d3
+	DB	 01h, 0efh,  26h, 0e5h	; e4ec  01 ef 26 e5	
+	DB	0d3h, 0efh, 0bah, 0efh	; e4f0  d3 ef ba ef	
+
+	DB	0,0,0,0,0,0,0,0,0	; e4f4
+	DB	01h, 0efh,  26h, 0e5h	; e4fd  01 ef 26 e5	
+	DB	0ch, 0f0h, 0f3h, 0efh	; e501  0c f0 f3 ef	
+
+	DB	0,0,0,0,0,0,0,0,0	; e505
+	DB	01h, 0efh, 26h, 0e5h	; e50e  01 ef 26 e5	
+	DB	45h, 0f0h, 2ch, 0f0h	; e512  45 f0 2c f0	
+
+XE516:	DW	2808h, 0300h 	; e516  08 28 00 03	.(..
+	DW	0007h, 00a4h	; e51a  07 00 a4 00	...$
+	DW	003fh, 00c0h	; e51e  3f 00 c0 00	?.@.
+	DW	0010h, 0020h	; e522  10 00 02 00	....
+
+XE526:	DW	2810h, 0400h	; e526  10 28 00 04	.(..
+	DW	010fh, 0051h	; e52a  0f 01 51 00	..@.
+	DW	003fh, 0080h	; e52e  3f 00 80 00	?...
+	DW	0010h, 0002h	; e532  10 00 02 00	....
+
+XE536:	DW	2810h, 0400h	; e536  10 28 00 04	.(..
+	DW	010fh, 00a9h	; e53a  0f 01 a9 00	..).
+	DW	003fh, 0080h	; e53e  3f 00 80 00	?...
+	DW	0010h, 0002h	; e542  10 00 02 00	....
+
+	DW	2820h, 0500h	; e546  20 28 00 05	 (..
+	DW	031fh, 00c4h	; e54a  1f 03 c4 00	..D.
+	DW	007fh, 0080h	; e54e  7f 00 80 00	....
+	DW	0020h, 0002h	; e552  20 00 02 00	 ...
+
+;*****************************************************************************
+;				code
+;*****************************************************************************
+XE556:				; e556
+	LD	BC,0		; e556  01 00 00	...
+XE559:				; e559
+	LD	H,B		; e559  60		`
+	LD	L,C		; e55a  69		i
+	LD	(XF06B),HL	; e55b  22 6b f0	"kp
+	RET			; e55e  c9		I
+;
+XE55F:				; e55f
+	LD	A,C		; e55f  79		y
+XE560:	LD	(XF06D),A	; e560  32 6d f0	2mp
+	RET			; e563  c9		I
+;
+XE564:				; e564
+	LD	H,B		; e564  60		`
+	LD	L,C		; e565  69		i
+	LD	(XF070),HL	; e566  22 70 f0	"pp
+	RET			; e569  c9		I
+;
+XE56A:				; e56a
+	LD	L,C		; e56a  69		i
+	LD	H,B		; e56b  60		`
+	RET			; e56c  c9		I
+;
+XE56D:				; e56d
+	PUSH	BC		; e56d  c5		E
+	CALL	XE642		; e56e  cd 42 e6	MBf
+	POP	BC		; e571  c1		A
+XE572:				; e572
+	JP	XE709		; e572  c3 09 e7	C.g
+;
+XE642:				; e575
+	CALL	XE642		; e575  cd 42 e6	MBf
+	LD	A,1		; e578  3e 01		>.
+	LD	(XF069),A	; e57a  32 69 f0	2ip
+	XOR	A		; e57d  af		/
+	LD	(XF072),A	; e57e  32 72 f0	2rp
+	JR	XE5C9		; e581  18 46		.F
+;
+XE583:				; e583
+	XOR	A		; e583  af		/
+	LD	(XF069),A	; e584  32 69 f0	2ip
+	LD	HL,XF072	; e587  21 72 f0	!rp
+	DEC	C		; e58a  0d		.
+	JP	M,XE59A		; e58b  fa 9a e5	z.e
+	JR	Z,XE596		; e58e  28 06		(.
+	LD	A,(XF06A)	; e590  3a 6a f0	:jp
+	LD	(HL),A		; e593  77		w
+	JR	XE5C9		; e594  18 33		.3
+;
+XE596:	LD	(HL),80H	; e596  36 80		6.
+	JR	XE5C9		; e598  18 2f		./
+;
+XE59A:				; e59a
+	OR	(HL)		; e59a  b6		6
+	JR	Z,XE5C9		; e59b  28 2c		(,
+	DEC	(HL)		; e59d  35		5
+	LD	HL,(XF065)	; e59e  2a 65 f0	*ep
+	EX	DE,HL		; e5a1  eb		k
+	LD	HL,(XF067)	; e5a2  2a 67 f0	*gp
+	OR	H		; e5a5  b4		4
+	LD	A,28H		; e5a6  3e 28		>(
+	JP	P,XE5AD		; e5a8  f2 ad e5	r-e
+	LD	A,40H		; e5ab  3e 40		>@
+XE5AD:				; e5ad
+	INC	L		; e5ad  2c		,
+	SUB	L		; e5ae  95		.
+	JR	NZ,XE5B3	; e5af  20 02		 .
+	LD	L,A		; e5b1  6f		o
+	INC	DE		; e5b2  13		.
+XE5B3:	PUSH	HL		; e5b3  e5		e
+	LD	HL,(XF06B)	; e5b4  2a 6b f0	*kp
+	CALL	XE63A		; e5b7  cd 3a e6	M:f
+	POP	DE		; e5ba  d1		Q
+	JR	NZ,XE5C5	; e5bb  20 08		 .
+	LD	HL,(XF06D)	; e5bd  2a 6d f0	*mp
+	CALL	XE63A		; e5c0  cd 3a e6	M:f
+	JR	Z,XE5C9		; e5c3  28 04		(.
+XE5C5:	XOR	A		; e5c5  af		/
+	LD	(XF072),A	; e5c6  32 72 f0	2rp
+XE5C9:	LD	HL,(XF06B)	; e5c9  2a 6b f0	*kp
+	EX	DE,HL		; e5cc  eb		k
+	LD	HL,(XF065)	; e5cd  2a 65 f0	*ep
+	CALL	XE63A		; e5d0  cd 3a e6	M:f
+	JR	NZ,XE5E3	; e5d3  20 0e		 .
+	LD	HL,(XF06D)	; e5d5  2a 6d f0	*mp
+	EX	DE,HL		; e5d8  eb		k
+	LD	HL,(XF067)	; e5d9  2a 67 f0	*gp
+	CALL	XE63A		; e5dc  cd 3a e6	M:f
+	AND	0FCH		; e5df  e6 fc		f|
+	JR	Z,XE5F1		; e5e1  28 0e		(.
+XE5E3:	CALL	XE642		; e5e3  cd 42 e6	MBf
+	LD	A,(XF072)	; e5e6  3a 72 f0	:rp
+	AND	7FH		; e5e9  e6 7f		f.
+	LD	A,0		; e5eb  3e 00		>.
+	JR	NZ,XE5F0	; e5ed  20 01		 .
+	INC	A		; e5ef  3c		<
+XE5F0:	OR	A		; e5f0  b7		7
+XE5F1:	LD	HL,(XF06B)	; e5f1  2a 6b f0	*kp
+	LD	(XF065),HL	; e5f4  22 65 f0	"ep
+	LD	HL,(XF06D)	; e5f7  2a 6d f0	*mp
+	LD	(XF067),HL	; e5fa  22 67 f0	"gp
+	LD	B,1		; e5fd  06 01		..
+	CALL	NZ,XE64C	; e5ff  c4 4c e6	DLf
+	LD	A,(XF067)	; e602  3a 67 f0	:gp
+	AND	3		; e605  e6 03		f.
+	RRA			; e607  1f		.
+	LD	H,A		; e608  67		g
+	RRA			; e609  1f		.
+	LD	L,A		; e60a  6f		o
+	LD	DE,0f100h	; e60b  11 00 f1	..q
+	ADD	HL,DE		; e60e  19		.
+	LD	DE,(XF070)	; e60f  ed 5b 70 f0	m[pp
+	LD	A,(XF069)	; e613  3a 69 f0	:ip
+	DEC	A		; e616  3d		=
+	PUSH	AF		; e617  f5		u
+	JR	Z,XE61E		; e618  28 04		(.
+	LD	(XE6F3),A	; e61a  32 f3 e6	2sf
+	EX	DE,HL		; e61d  eb		k
+XE61E:	LD	BC,0080h	; e61e  01 80 00	...
+	LDIR			; e621  ed b0		m0
+	POP	AF		; e623  f1		q
+	RET	Z		; e624  c8		H
+	LD	HL,XF072	; e625  21 72 f0	!rp
+	LD	A,(HL)		; e628  7e		~
+	OR	A		; e629  b7		7
+	JP	P,XE631		; e62a  f2 31 e6	r1f
+	XOR	A		; e62d  af		/
+	LD	(HL),A		; e62e  77		w
+	JR	XE635		; e62f  18 04		..
+;
+XE631:				; e631
+	LD	HL,XF073	; e631  21 73 f0	!sp
+	INC	(HL)		; e634  34		4
+XE635:	CALL	Z,XE642		; e635  cc 42 e6	LBf
+	XOR	A		; e638  af		/
+	RET			; e639  c9		I
+;
+XE63A:				; e63a
+	LD	A,D		; e63a  7a		z
+	XOR	H		; e63b  ac		,
+	LD	A,0FFH		; e63c  3e ff		>.
+	RET	NZ		; e63e  c0		@
+	LD	A,E		; e63f  7b		{
+	XOR	L		; e640  ad		-
+	RET			; e641  c9		I
+;
+XE642:				; e642
+	LD	A,(XE6F3)	; e642  3a f3 e6	:sf
+	OR	A		; e645  b7		7
+	RET	Z		; e646  c8		H
+	XOR	A		; e647  af		/
+	LD	(XE6F3),A	; e648  32 f3 e6	2sf
+	LD	B,A		; e64b  47		G
+XE64C:				; e64c
+	LD	A,(XF067)	; e64c  3a 67 f0	:gp
+	AND	0FCH		; e64f  e6 fc		f|
+	RRCA			; e651  0f		.
+	RRCA			; e652  0f		.
+	LD	C,A		; e653  4f		O
+	LD	D,0F1H		; e654  16 f1		.q
+	LD	HL,(XF065)	; e656  2a 65 f0	*ep
+	LD	A,(XF068)	; e659  3a 68 f0	:hp
+	OR	A		; e65c  b7		7
+	JP	M,XE039		; e65d  fa 39 e0	z9`
+	PUSH	HL		; e660  e5		e
+	PUSH	BC		; e661  c5		E
+	CALL	XE48F		; e662  cd 8f e4	M.d
+	POP	BC		; e665  c1		A
+	LD	HL,(XF068)	; e666  2a 68 f0	*hp
+	LD	H,0		; e669  26 00		&.
+	LD	DE,XE6FA	; e66b  11 fa e6	.zf
+	ADD	HL,DE		; e66e  19		.
+	LD	E,B		; e66f  58		X
+	LD	D,C		; e670  51		Q
+	OR	80H		; e671  f6 80		v.
+	LD	C,A		; e673  4f		O
+	LD	A,(HL)		; e674  7e		~
+	RRA			; e675  1f		.
+	JR	NC,XE68A	; e676  30 12		0.
+	LD	A,E		; e678  7b		{
+	OR	A		; e679  b7		7
+	JP	Z,XE69F		; e67a  ca 9f e6	J.f
+	EX	(SP),HL		; e67d  e3		c
+	LD	A,L		; e67e  7d		}
+	CP	23H		; e67f  fe 23		~#
+	JR	C,XE686		; e681  38 03		8.
+	LD	A,85H		; e683  3e 85		>.
+	SUB	L		; e685  95		.
+XE686:	RLCA			; e686  07		.
+	RLCA			; e687  07		.
+	LD	L,A		; e688  6f		o
+	EX	(SP),HL		; e689  e3		c
+XE68A:	XOR	A		; e68a  af		/
+	LD	A,D		; e68b  7a		z
+	RRA			; e68c  1f		.
+	JR	NC,XE691	; e68d  30 02		0.
+	ADD	A,5		; e68f  c6 05		F.
+XE691:	LD	D,A		; e691  57		W
+	LD	A,(HL)		; e692  7e		~
+	POP	HL		; e693  e1		a
+	LD	H,1		; e694  26 01		&.
+	AND	41H		; e696  e6 41		fA
+	JR	NZ,XE6A8	; e698  20 0e		 .
+	LD	A,L		; e69a  7d		}
+	CP	23H		; e69b  fe 23		~#
+	JR	C,XE6A8		; e69d  38 09		8.
+XE69F:				; e69f
+	LD	HL,XE9EC	; e69f  21 ec e9	!li
+	CALL	XEA17		; e6a2  cd 17 ea	M.j
+	JP	XE003		; e6a5  c3 03 e0	C.`
+;
+XE6A8:	LD	A,H		; e6a8  7c		|
+	LD	B,L		; e6a9  45		E
+	LD	HL,XF100	; e6aa  21 00 f1	!.q
+	JP	XE033		; e6ad  c3 33 e0	C3`
+;
+	LD	(XC208),SP	; e6b0  ed 73 08 c2	ms.B
+	LD	SP,XC208	; e6b4  31 08 c2	1.B
+	PUSH	HL		; e6b7  e5		e
+	PUSH	DE		; e6b8  d5		U
+	PUSH	BC		; e6b9  c5		E
+	PUSH	AF		; e6ba  f5		u
+	HALT			; e6bb  76		v
+;
+;*****************************************************************************
+;				data block
+;*****************************************************************************
+XE6BC:	DB	0		; e6bc  00		.
+	DB	0, 0, 0fch, 0	; e6bd  00 00 fc 00	..|.
+
+v_ctrlreg:			; e6c1
+	DB	3dh, 0 		; e6c1  3d 00		=.
+	DB	0a0h		; e6c3  a0		 
+	DB	0a1h		; e6c4  a1		!
+	DB	0a2h		; e6c5  a2		"
+	DB	0a3h		; e6c6  a3		#
+	DB	0f8h		; e6c7  f8		x
+	DB	90h		; e6c8  90		.
+	DB	0		; e6c9  00		.
+	DB	0,0,0,0,0,0,0
+;
+XE6E1:	DB	01h		; e6e1  01		.
+	DB	00h		; e6e2  00		.
+	DB	59h		; e6e3  59		Y
+	DB	59h		; e6e4  59		Y
+	DB	59h		; e6e5  59		Y
+
+XE6E6:	DW	e6e2h		;e6e6  e2 e6		bf
+XE6E8:	DB	01h		;e6e8  01		.
+XE6E9:	DB	0ah		;e6e9  0a		.
+
+;*****************************************************************************
+;				code block
+;*****************************************************************************
+XE6EA:				; e6ea
+	RET			; e6ea  c9		I
+	NOP			; e6eb  00		.
+	NOP			; e6ec  00		.
+;
+	RET			; e6ed  c9		I
+	NOP			; e6ee  00		.
+	NOP			; e6ef  00		.
+;
+	RET			; e6f0  c9		I
+	NOP			; e6f1  00		.
+	NOP			; e6f2  00		.
+;
+XE6F3:	DB	00h		; e6f3  00		.
+	DB	00h		; e6f4  00		.
+	DB	0cah		; e6f5  ca		J
+XE6F6:	DB	00h		; e6f6  00		.
+	DB	0f3h		; e6f7  f3		s
+XE6F8:	DB	00h		; e6f8  00		.
+XE6F9:	DB	01h		; e6f9  01		.
+XE6FA:	DB	00h		; e6fa  00		.
+	DB	00h		; e6fb  00		.
+	DB	00h		; e6fc  00		.
+	DB	00h		; e6fd  00		.
+	DB	01h		; e6fe  01		.
+XE6FF:	DB	10h		; e6ff  10		.
+
+
+;	Miscellaneous equates
+;
+;  These are addresses referenced in the code but
+;  which are in the middle of a multibyte instruction
+;  or are addresses outside the initialized space
+;
+XC208	EQU	0C208H			;data stack backup
+
+XE703	EQU	0E703H			;function
+XE706	EQU	0E706H			;function
+XE709	EQU	0E709H			;function
+XE70C	EQU	0E70CH			;function
+XE70F	EQU	0E70FH			;function
+XE712	EQU	0E712H			;function
+XE715	EQU	0E715H			;function
+XE906	EQU	0E906H			;function
+XE909	EQU	0E909H			;function
+
+XE912	EQU	0E912H			;data
+
+XE96E	EQU	0E96EH			;function
+XE9D6	EQU	0E9D6H			;function
+
+XE9EC	EQU	0E9ECH			;data
+
+XEA17	EQU	0EA17H			;function
+XEA46	EQU	0EA46H			;function
+XEE42	EQU	0EE42H			;function
+
+XEEFF	EQU	0EEFFH			;data
+XF065	EQU	0F065H			;data
+XF067	EQU	0F067H			;data
+XF068	EQU	0F068H			;data
+XF069	EQU	0F069H			;data
+XF06A	EQU	0F06AH			;data
+XF06B	EQU	0F06BH			;data
+XF06D	EQU	0F06DH			;data
+XF06E	EQU	0F06EH			;data
+XF070	EQU	0F070H			;data
+XF072	EQU	0F072H			;data
+XF073	EQU	0F073H			;data
+v_drvctrl	EQU	0F074H		;data
+XF076	EQU	0F076H			;data
+XF077	EQU	0F077H			;data
+XF078	EQU	0F078H			;data
+
+
+;data
+XF079	EQU	0F079H
+stack_bak	EQU	0F07AH
+XF0AE	EQU	0F0AEH
+XF0B0	EQU	0F0B0H
+stack_ptr	EQU	0F0DCH
+XF15C:	EQU	0F1FCH
+XF100:	EQU	0F100H
+
+;code
+
+
+
+
+
+;
+	END
+;
+
