@@ -19,28 +19,31 @@ init:	JP	start		; df0a  c3 0d df	C._
 start:	DI			; df0d  f3		s
 	LD	SP,stack_ptr	; df0e  31 dc f0	1\p	;initialize stack pointer
 	LD	HL,XE6FF	; df11  21 ff e6	!.f
-	LD	A,(HL)		; df14  7e		~	;a = 0x10
-	PUSH	AF		; df15  f5		u
-	LD	(HL),0		; df16  36 00		6.
-	LD	BC,0081h	; df18  01 81 00	...
-	LD	DE,0801h	; df1b  11 01 08	...
-	LD	HL,0e700h	; df1e  21 00 e7	!.g
-	LD	A,1		; df21  3e 01		>.
-	CALL	XE033		; df23  cd 33 e0	M3`
-	LD	BC,0081h	; df26  01 81 00	...
-	LD	DE,0101h	; df29  11 01 01	...
-	LD	HL,0e900h	; df2c  21 00 e9	!.i
-	LD	A,3		; df2f  3e 03		>.
-	CALL	XE033		; df31  cd 33 e0	M3`
-	CALL	cmd_get_sector	; df34  cd b4 e2	M4b
+	LD	A,(HL)		; df14  7e		~	;read XE6FF	;first iteration 0x10
+	PUSH	AF		; df15  f5		u	;protect af
+	LD	(HL),0		; df16  36 00		6.	;XE6FF = 0
+
+	LD	BC,0081h	; df18  01 81 00	...	;B=81 C=00
+	LD	DE,0801h	; df1b  11 01 08	...	;D=01 E=08
+	LD	HL,0e700h	; df1e  21 00 e7	!.g	;HL=0xe700
+	LD	A,1		; df21  3e 01		>.	;A=1
+	CALL	bios_17		; df23  cd 33 e0	M3`	;read next block of boodloader into 0xe700?
+
+	LD	BC,0081h	; df26  01 81 00	...	;B=81 C=00
+	LD	DE,0101h	; df29  11 01 01	...	;D=01 E=01
+	LD	HL,0e900h	; df2c  21 00 e9	!.i	;HL=0xe900
+	LD	A,3		; df2f  3e 03		>.	;A=3
+	CALL	bios_17		; df31  cd 33 e0	M3`	;read next block of bootloader into 0xe900?
+
+	CALL	cmd_get_sector	; df34  cd b4 e2	M4b	;get current sector
 	LD	BC,0008h	; df37  01 08 00	...
 XDF3A:	PUSH	BC		; df3a  c5		E
 	LD	C,0		; df3b  0e 00		..
 	CALL	XE909		; df3d  cd 09 e9	M.i
-	LD	BC,3fffh	; df40  01 ff 3f	..?
-	LD	H,B		; df43  60		`
+	LD	BC,3fffh	; df40  01 ff 3f	..?	;BC=3fff
+	LD	H,B		; df43  60		`	;HL=BC
 	LD	L,C		; df44  69		i
-	LD	D,H		; df45  54		T
+	LD	D,H		; df45  54		T	;DE=BC
 	LD	E,L		; df46  5d		]
 	LDDR			; df47  ed b8		m8
 	POP	BC		; df49  c1		A
@@ -98,105 +101,109 @@ XDFA9:				; dfa9
 ;*****************************************************************************
 ;				bios jump table
 ;*****************************************************************************
-XE000:	JP	XEE42		; e000  c3 42 ee	CBn	;not yet loaded
+bios_0:				; e000				;0
+	JP	bios_call_0	; e000  c3 42 ee	CBn	;not yet loaded
 ;
-XE003:
-	JP	XE96E		; e003  c3 6e e9	Cni	;not yet loaded
+bios_1:				; e003				;2
+	JP	bios_call_1	; e003  c3 6e e9	Cni	;not yet loaded
 ;
-XE006:
-	JP	XE703		; e006  c3 03 e7	C.g	;not yet loaded
+bios_2:				; e006				;0
+	JP	bios_call_2	; e006  c3 03 e7	C.g	;not yet loaded
 ;
-XE009:
-	JP	XE706		; e009  c3 06 e7	C.g	;not yet loaded
+bios_3:	``			; e009				;2
+	JP	bios_call_3	; e009  c3 06 e7	C.g	;not yet loaded
 ;
-XE00C:
-	JP	XE56D		; e00c  c3 6d e5	Cme
+bios_4:				; e00c				;0
+	JP	bios_call_4	; e00c  c3 6d e5	Cme
 ;
-XE00F:
-	JP	XE70C		; e00f  c3 0c e7	C.g	;not yet loaded
+bios_5:				; e00f				;0
+	JP	bios_call_5	; e00f  c3 0c e7	C.g	;not yet loaded
 ;
-XE012:
-	JP	XE70F		; e012  c3 0f e7	C.g	;not yet loaded
+bios_6:				; e012				;0
+	JP	bios_call_6	; e012  c3 0f e7	C.g	;not yet loaded
 ;
-XE015:
-	JP	XE712		; e015  c3 12 e7	C.g	;not yet loaded
+bios_7:				; e015				;0
+	JP	bios_call_7	; e015  c3 12 e7	C.g	;not yet loaded
 ;
-XE018:
-	JP	XE556		; e018  c3 56 e5	CVe
+bios_8:				; e018				;0
+	JP	bios_call_8	; e018  c3 56 e5	CVe
 ;
-XE01b:
-	JP	XE3E2		; e01b  c3 e2 e3	Cbc
+bios_9:				; e01b				;0
+	JP	bios_call_9	; e01b  c3 e2 e3	Cbc
 ;
-XE01e:
-	JP	XE559		; e01e  c3 59 e5	CYe
+bios_10:			; e01e				;0
+	JP	bios_call_10	; e01e  c3 59 e5	CYe
 ;
-XE021:
-	JP	XE55F		; e021  c3 5f e5	C_e
+bios_11:			; e021				;0
+	JP	bios_call_11	; e021  c3 5f e5	C_e
 ;
-XE024:
-	JP	XE564		; e024  c3 64 e5	Cde
+bios_12:			; e024				;0
+	JP	bios_call_12	; e024  c3 64 e5	Cde
 ;
-XE027:
-	JP	XE575		; e027  c3 75 e5	Cue
+bios_13:			; e027				;0
+	JP	bios_call_13	; e027  c3 75 e5	Cue
 ;
-XE02a:
-	JP	XE583		; e02a  c3 83 e5	C.e
+bios_14:			; e02a				;0
+	JP	bios_call_14	; e02a  c3 83 e5	C.e
 ;
-XE02d:
-	JP	XE715		; e02d  c3 15 e7	C.g	;not yet loaded
+bios_15:			; e02d				;0
+	JP	bios_call_15	; e02d  c3 15 e7	C.g	;not yet loaded
 ;
-XE030:
-	JP	XE56A		; e030  c3 6a e5	Cje
+bios_16:			; e030				;0
+	JP	bios_call_16	; e030  c3 6a e5	Cje
 ;
-XE033:
-	JP	XE347		; e033  c3 47 e3	CGc
+;Takes BC DE HL A
+bios_17:			; e033				;4
+	JP	bios_call_17	; e033  c3 47 e3	CGc
 ;
-XE036:
+bios_18:			; e036				;1
 	RET			; e036  c9		I	;place holder
 	NOP			; e037  00		.
 	NOP			; e038  00		.
-
-XE039:
-	JP	XE039		; e039  c3 39 e0	C9`
 ;
-XE03c:
-	JP	XE642		; e03c  c3 42 e6	CBf
+bios_19:			; e039				;1 "Halt" infinate loop
+	JP	bios_19		; e039  c3 39 e0	C9`
+;
+bios_20:			; e03c				;0
+	JP	bios_call_20	; e03c  c3 42 e6	CBf
 ;
 ;*****************************************************************************
 ;				function
 ;*****************************************************************************
+;takes A BC D
 XE03F:				; e03f				;takes A C
 	LD	(stack_bak),SP	; e03f  ed 73 7a f0	mszp	;backup stack pointer
-	LD	SP,XF0B0	; e043  31 b0 f0	10p	;set custom stack pointer
+	LD	SP,fn_stack_2	; e043  31 b0 f0	10p	;set custom stack pointer
 	PUSH	AF		; e046  f5		u	;protect af,hl,de
 	PUSH	HL		; e047  e5		e
 	PUSH	DE		; e048  d5		U
-	LD	A,5		; e049  3e 05		>.
+	LD	A,5		; e049  3e 05		>.	;A = 5
 	BIT	7,C		; e04b  cb 79		Ky	;if bit7 of C is 0
-	JP	Z,XE115		; e04d  ca 15 e1	J.a			;	jump to XE115
-	LD	A,C		; e050  79		y
-	AND	7		; e051  e6 07		f.
-	LD	C,A		; e053  4f		O
-	CP	3		; e054  fe 03		~.
-	JR	C,XE05B		; e056  38 03		8.
-	RLA			; e058  17		.
-	AND	0CH		; e059  e6 0c		f.
-XE05B:	OR	80H		; e05b  f6 80		v.
-	LD	L,A		; e05d  6f		o
-	LD	A,(XE6F6)	; e05e  3a f6 e6	:vf
-	AND	L		; e061  a5		%
-	JR	Z,XE075		; e062  28 11		(.
-	LD	E,28H		; e064  1e 28		.(
-	LD	A,B		; e066  78		x
-	ADD	A,A		; e067  87		.
+	JP	Z,clear_read		; e04d  ca 15 e1	J.a	;    jump to XE115
+	LD	A,C		; e050  79		y	;A = C
+	AND	7		; e051  e6 07		f.	;A &= 0000$0111b	0-7
+	LD	C,A		; e053  4f		O	;C = A
+	CP	3		; e054  fe 03		~.	;if C < 3
+	JR	C,XE05B		; e056  38 03		8.	;    jump to XE05B
+	RLA			; e058  17		.	;A <<= 1,    A0 = 0
+	AND	0CH		; e059  e6 0c		f.	;A &= 0000$1100b	00 04 08 0C
+XE05B:	OR	80H		; e05b  f6 80		v.	;A |= 1000$0000b	80 84 88 8C
+	LD	L,A		; e05d  6f		o	;L = A
+	LD	A,(XE6F6)	; e05e  3a f6 e6	:vf	;read XE6F6
+	AND	L		; e061  a5		%	;'and' it against prev calculated value
+								;			00 80 04 84 08 88 0C 8C
+	JR	Z,XE075		; e062  28 11		(.	;if the read value is 0, jump to XE075
+	LD	E,28H		; e064  1e 28		.(	;E = 28h
+	LD	A,B		; e066  78		x	;A = B
+	ADD	A,A		; e067  87		.	;A = pow(A, 5)
 	ADD	A,A		; e068  87		.
 	ADD	A,A		; e069  87		.
 	ADD	A,A		; e06a  87		.
-	OR	D		; e06b  b2		2
-	LD	D,A		; e06c  57		W
-	RR	B		; e06d  cb 18		K.
-	JR	NC,XE08B	; e06f  30 1a		0.
-	SET	6,L		; e071  cb f5		Ku
+	OR	D		; e06b  b2		2	;A |= D
+	LD	D,A		; e06c  57		W	;D = A
+	RR	B		; e06d  cb 18		K.	;B rrot 1
+	JR	NC,XE08B	; e06f  30 1a		0.	;if B0 was 0 jump to XE08B
+	SET	6,L		; e071  cb f5		Ku	;L |= 0100$0000b
 	JR	XE08B		; e073  18 16		..
 ;
 XE075:	LD	E,14H		; e075  1e 14		..
@@ -262,23 +269,35 @@ XE0C0:	PUSH	HL		; e0c0  e5		e
 	OR	A		; e0e1  b7		7
 XE0E2:	PUSH	BC		; e0e2  c5		E
 	PUSH	HL		; e0e3  e5		e
-XE0E4:	CALL	NZ,XE25F	; e0e4  c4 5f e2	D_b
-	CP	B		; e0e7  b8		8
-	PUSH	AF		; e0e8  f5		u
+;B = sector number
+;C = ???? read/write?
+find_sector:			; e0e4
+	CALL	NZ,get_sector_b	; e0e4  c4 5f e2	D_b	;if NZ then get sector number
+	CP	B		; e0e7  b8		8	;check if it matches the requested sector
+	PUSH	AF		; e0e8  f5		u	;store AF sector number
 	IN	A,(0E0H)	; e0e9  db e0		[`	;input status 1
-	AND	48H		; e0eb  e6 48		fH	;check sector mark and nonmaskable interupt
-	JR	NZ,XE0FC	; e0ed  20 0d		 .	;jump if no nmi or no sector mark
-	CALL	secmark_off		; e0ef  cd 1f e2	M.b
-	POP	AF		; e0f2  f1		q
-	JR	NZ,XE0E4	; e0f3  20 ef		 o
-	DEC	C		; e0f5  0d		.
-	JP	M,write_disk	; e0f6  fa af e1	z/a
-	JP	read_disk	; e0f9  c3 28 e1	C(a
+	AND	48H		; e0eb  e6 48		fH	;check sector mark and non-maskable interupt
+								;A=0 if we are not at a sector mark
+								;    and there is a maskable interupt
+								;why does this care about nonmaskable interupt? the 
+								;docs dont mention it getting set by fdc anywhere?
+								;if i change this to 0x40 it boots to cpm atm, i dont 
+								;understand 
+								;
+				; e0ed  20 0d		 .	;if A!=0 jump
+	JR	NZ,get_next_sector
+	CALL	secmark_off	; e0ef  cd 1f e2	M.b	;wait for sectormark to turn off
+	POP	AF		; e0f2  f1		q	;restore AF sector number
+	JR	NZ,find_sector	; e0f3  20 ef		 o	;if we are not at requested sector, jump
+	DEC	C		; e0f5  0d		.	;decrement C
+	JP	M,write_disk	; e0f6  fa af e1	z/a	;if C >= 0x80 write sector to disk
+	JP	read_disk	; e0f9  c3 28 e1	C(a	;otherwise read sector from disk
 ;
-XE0FC:	CALL	get_sector_safe	; e0fc  cd a9 e2	M)b
-	POP	AF		; e0ff  f1		q
-	INC	A		; e100  3c		<
-XE101:	JR	XE0E4		; e101  18 e1		.a
+get_next_sector:
+	CALL	get_sector_safe	; e0fc  cd a9 e2	M)b	;wait for next sector
+	POP	AF		; e0ff  f1		q	;restore last sector number
+	INC	A		; e100  3c		<	;get requested sector
+	JR	find_sector	; e101  18 e1		.a	;get next sector if sector not at 0
 ;
 XE103:				; e103
 	POP	BC		; e103  c1		A
@@ -294,8 +313,8 @@ XE103:				; e103
 ;DE=????
 XE111:				; e111
 	LD	(XE912),DE	; e111  ed 53 12 e9	mS.i
-XE115:				; e115
-	LD	SP,XF0AE	; e115  31 ae f0	1.p	;set custom stack pointer
+clear_read:			; e115
+	LD	SP,fn_stack_3	; e115  31 ae f0	1.p	;set custom stack pointer
 	PUSH	AF		; e118  f5		u	;protect af
 	EX	DE,HL		; e119  eb		k	;protect hl in de
 	CALL	XE33F		; e11a  cd 3f e3	M?c
@@ -310,13 +329,13 @@ XE115:				; e115
 read_disk:			; e128
 	PUSH	BC		; e128  c5		E
 	LD	HL,0023h	; e129  21 23 00	!#.
-	CALL	wait_dcr		; e12c  cd 07 e2	M.b
+	CALL	wait_dcr	; e12c  cd 07 e2	M.b
 	LD	A,(v_ctrlreg)	; e12f  3a c1 e6	:Af	;read v_ctrlreg
 	AND	0F7H		; e132  e6 f7		fw	;unset aquire (start disk read)
 	OUT	(0F8H),A	; e134  d3 f8		Sx	;send to control register
 	OUT	(82H),A		; e136  d3 82		S.	;set disk read
 	LD	HL,XDF09	; e138  21 09 00	!..
-	CALL	wait_dcr		; e13b  cd 07 e2	M.b
+	CALL	wait_dcr	; e13b  cd 07 e2	M.b
 	LD	A,(v_ctrlreg)	; e13e  3a c1 e6	:Af	;read v_ctrlreg
 	OUT	(0F8H),A	; e141  d3 f8		Sx	;send to control register
 	POP	BC		; e143  c1		A
@@ -326,9 +345,9 @@ read_disk:			; e128
 	LD	HL,cmp_blk	; e14a  21 91 e1	!.a
 read_sync:			; e14d
 	EX	(SP),HL		; e14d  e3		c
-	CALL	serial_data_wait		; e14e  cd 6c e2	Mlb
-	IN	A,(81H)		; e151  db 81		[.	;input sync1
-	CP	0FBH		; e153  fe fb		~{	;validate
+	CALL	serial_data_wait	; e14e  cd 6c e2	Mlb
+	IN	A,(81H)			; e151  db 81		[.	;input sync1
+	CP	0FBH			; e153  fe fb		~{	;validate
 	JP	NZ,serial_data_err	; e155  c2 85 e2	B.b
 	LD	A,(XF078)	; e158  3a 78 f0	:xp
 	LD	B,A		; e15b  47		G
@@ -525,9 +544,9 @@ secmark_on_loop:		; e24d
 	JR	NZ,secmark_on_loop
 	JR	secmark_err	; e25a  18 e6		.f
 ;
-XE25C:				; e25c
+get_sector_a:			; e25c
 	CALL	secmark_off	; e25c  cd 1f e2	M.b	;wait for secmark off
-XE25F:				; e25f
+get_sector_b:			; e25f
 	CALL	XE1FB		; e25f  cd fb e1	M{a
 	CALL	secmark_on	; e262  cd 4a e2	MJb	;wait for secmark on
 	CALL	sector_stable	; e265  cd d6 e2	MVb	;get previous sector in A
@@ -600,7 +619,7 @@ cmd_execute_05:			; e2b6
 	LD	A,H		; e2c7  7c		|	;restore new cmd in A
 	OUT	(0F8H),A	; e2c8  d3 f8		Sx	;output to control register
 	LD	(v_ctrlreg),A	; e2ca  32 c1 e6	2Af	;write the new cmd into v_ctrlreg
-cmdack_loop:				; e2cd
+cmdack_loop:			; e2cd
 	CALL	disabled_0	; e2cd  cd e1 e1	Maa
 	IN	A,(0D0H)	; e2d0  db d0		[P	;input status2
 	XOR	L		; e2d2  ad		-	;compare against prev result
@@ -624,7 +643,7 @@ XE2E1:				; e2e1
 	RET	Z		; e2e7  c8		H
 	LD	B,0CH		; e2e8  06 0c		..
 	CALL	XE299		; e2ea  cd 99 e2	M.b
-XE2ED:	CALL	XE25C		; e2ed  cd 5c e2	M\b
+XE2ED:	CALL	get_sector_a	; e2ed  cd 5c e2	M\b
 	RET	Z		; e2f0  c8		H
 	JR	XE2ED		; e2f1  18 fa		.z
 ;
@@ -682,7 +701,9 @@ XE33F:				; e33f
 	EI			; e345  fb		{
 	RET			; e346  c9		I
 ;
-XE347:	LD	(XF076),A	; e347  32 76 f0	2vp	;protect acc in var
+;takes BC DE HL A
+bios_call_17:			; e347
+	LD	(XF076),A	; e347  32 76 f0	2vp	;protect acc in var
 XE34A:	LD	A,(XE6E9)	; e34a  3a e9 e6	:if	;read 0x0a
 XE34D:	LD	(XF077),A	; e34d  32 77 f0	2wp	;write A
 	PUSH	HL		; e350  e5		e	;protect HL,DE,BC
@@ -702,7 +723,7 @@ XE34D:	LD	(XF077),A	; e34d  32 77 f0	2wp	;write A
 	AND	40H		; e367  e6 40		f@
 	LD	E,2		; e369  1e 02		..
 	JR	NZ,XE34A	; e36b  20 dd		 ]
-	CALL	XE25C		; e36d  cd 5c e2	M\b
+	CALL	get_sector_a	; e36d  cd 5c e2	M\b
 XE370:	XOR	A		; e370  af		/	;A=0
 	RET			; e371  c9		I
 ;
@@ -755,9 +776,9 @@ XE3B4:				; e3b4
 	XOR	A		; e3bc  af		/
 	CALL	XE6EA		; e3bd  cd ea e6	Mjf
 	OR	A		; e3c0  b7		7
-	CALL	Z,XE009		; e3c1  cc 09 e0	L.`
+	CALL	Z,bios_3	; e3c1  cc 09 e0	L.`
 	CP	3		; e3c4  fe 03		~.
-	JP	Z,XE003		; e3c6  ca 03 e0	J.`
+	JP	Z,bios_1	; e3c6  ca 03 e0	J.`
 	LD	B,A		; e3c9  47		G
 	LD	A,(XE6F9)	; e3ca  3a f9 e6	:yf
 	CP	B		; e3cd  b8		8
@@ -777,11 +798,11 @@ XE3DE:	DB	' ',0			; e3de  20 00	   	 .
 ;*****************************************************************************
 ;				more code
 ;*****************************************************************************
-XE3E2:
+bios_call_9:			; e3e2
 	LD	L,C		; e3e2  69		i
 	LD	H,0		; e3e3  26 00		&.
 	XOR	A		; e3e5  af		/
-	CALL	XE036		; e3e6  cd 36 e0	M6`
+	CALL	bios_18		; e3e6  cd 36 e0	M6`
 	LD	(XF06E),HL	; e3e9  22 6e f0	"np
 	EX	DE,HL		; e3ec  eb		k
 	OR	A		; e3ed  b7		7
@@ -795,7 +816,7 @@ XE3E2:
 XE3FC:	LD	A,L		; e3fc  7d		}
 	AND	1		; e3fd  e6 01		f.
 	JP	NZ,XE473	; e3ff  c2 73 e4	Bsd
-	CALL	XE642		; e402  cd 42 e6	MBf
+	CALL	bios_call_20	; e402  cd 42 e6	MBf
 	LD	A,0FFH		; e405  3e ff		>.
 	LD	(XF068),A	; e407  32 68 f0	2hp
 	LD	A,(XF06E)	; e40a  3a 6e f0	:np
@@ -806,7 +827,7 @@ XE413:	LD	B,0		; e413  06 00		..
 	LD	DE,XDF01	; e415  11 01 00	...
 	LD	A,1		; e418  3e 01		>.
 XE41A:	LD	HL,XF100	; e41a  21 00 f1	!.q
-	CALL	XE033		; e41d  cd 33 e0	M3`
+	CALL	bios_17		; e41d  cd 33 e0	M3`
 	JR	C,XE413		; e420  38 f1		8q
 	LD	B,90H		; e422  06 90		..
 	RES	7,C		; e424  cb b9		K9
@@ -885,7 +906,7 @@ XE48F:				; e48f
 	LD	(HL),A		; e49f  77		w
 	LD	HL,XE4AC	; e4a0  21 ac e4	!,d
 	CALL	XEA17		; e4a3  cd 17 ea	M.j
-	CALL	XE009		; e4a6  cd 09 e0	M.`
+	CALL	bios_3		; e4a6  cd 09 e0	M.`
 XE4A9:	XOR	A		; e4a9  af		/
 XE4AA:	INC	A		; e4aa  3c		<
 	RET			; e4ab  c9		I
@@ -936,46 +957,46 @@ XE536:	DW	2810h, 0400h	; e536  10 28 00 04	.(..
 ;*****************************************************************************
 ;				code
 ;*****************************************************************************
-XE556:				; e556
+bios_call_8:			; e556
 	LD	BC,0		; e556  01 00 00	...
-XE559:				; e559
+bios_call_10:			; e559
 	LD	H,B		; e559  60		`
 	LD	L,C		; e55a  69		i
 	LD	(XF06B),HL	; e55b  22 6b f0	"kp
 	RET			; e55e  c9		I
 ;
-XE55F:				; e55f
+bios_call_11:			; e55f
 	LD	A,C		; e55f  79		y
 XE560:	LD	(XF06D),A	; e560  32 6d f0	2mp
 	RET			; e563  c9		I
 ;
-XE564:				; e564
+bios_call_12:			; e564
 	LD	H,B		; e564  60		`
 	LD	L,C		; e565  69		i
 	LD	(XF070),HL	; e566  22 70 f0	"pp
 	RET			; e569  c9		I
 ;
-XE56A:				; e56a
+bios_call_16:			; e56a
 	LD	L,C		; e56a  69		i
 	LD	H,B		; e56b  60		`
 	RET			; e56c  c9		I
 ;
-XE56D:				; e56d
+bios_call_4:			; e56d
 	PUSH	BC		; e56d  c5		E
-	CALL	XE642		; e56e  cd 42 e6	MBf
+	CALL	bios_call_20	; e56e  cd 42 e6	MBf
 	POP	BC		; e571  c1		A
 XE572:				; e572
 	JP	XE709		; e572  c3 09 e7	C.g
 ;
-XE642:				; e575
-	CALL	XE642		; e575  cd 42 e6	MBf
+bios_call_20:			; e575
+	CALL	bios_call_20	; e575  cd 42 e6	MBf
 	LD	A,1		; e578  3e 01		>.
 	LD	(XF069),A	; e57a  32 69 f0	2ip
 	XOR	A		; e57d  af		/
 	LD	(XF072),A	; e57e  32 72 f0	2rp
 	JR	XE5C9		; e581  18 46		.F
 ;
-XE583:				; e583
+bios_call_14:			; e583
 	XOR	A		; e583  af		/
 	LD	(XF069),A	; e584  32 69 f0	2ip
 	LD	HL,XF072	; e587  21 72 f0	!rp
@@ -1027,7 +1048,7 @@ XE5C9:	LD	HL,(XF06B)	; e5c9  2a 6b f0	*kp
 	CALL	XE63A		; e5dc  cd 3a e6	M:f
 	AND	0FCH		; e5df  e6 fc		f|
 	JR	Z,XE5F1		; e5e1  28 0e		(.
-XE5E3:	CALL	XE642		; e5e3  cd 42 e6	MBf
+XE5E3:	CALL	bios_call_20	; e5e3  cd 42 e6	MBf
 	LD	A,(XF072)	; e5e6  3a 72 f0	:rp
 	AND	7FH		; e5e9  e6 7f		f.
 	LD	A,0		; e5eb  3e 00		>.
@@ -1070,7 +1091,7 @@ XE61E:	LD	BC,0080h	; e61e  01 80 00	...
 XE631:				; e631
 	LD	HL,XF073	; e631  21 73 f0	!sp
 	INC	(HL)		; e634  34		4
-XE635:	CALL	Z,XE642		; e635  cc 42 e6	LBf
+XE635:	CALL	Z,bios_call_20	; e635  cc 42 e6	LBf
 	XOR	A		; e638  af		/
 	RET			; e639  c9		I
 ;
@@ -1083,7 +1104,7 @@ XE63A:				; e63a
 	XOR	L		; e640  ad		-
 	RET			; e641  c9		I
 ;
-XE642:				; e642
+bios_call_20:			; e642
 	LD	A,(XE6F3)	; e642  3a f3 e6	:sf
 	OR	A		; e645  b7		7
 	RET	Z		; e646  c8		H
@@ -1100,7 +1121,7 @@ XE64C:				; e64c
 	LD	HL,(XF065)	; e656  2a 65 f0	*ep
 	LD	A,(XF068)	; e659  3a 68 f0	:hp
 	OR	A		; e65c  b7		7
-	JP	M,XE039		; e65d  fa 39 e0	z9`
+	JP	M,bios_19	; e65d  fa 39 e0	z9`
 	PUSH	HL		; e660  e5		e
 	PUSH	BC		; e661  c5		E
 	CALL	XE48F		; e662  cd 8f e4	M.d
@@ -1146,15 +1167,15 @@ XE691:	LD	D,A		; e691  57		W
 XE69F:				; e69f
 	LD	HL,XE9EC	; e69f  21 ec e9	!li
 	CALL	XEA17		; e6a2  cd 17 ea	M.j
-	JP	XE003		; e6a5  c3 03 e0	C.`
+	JP	bios_1		; e6a5  c3 03 e0	C.`
 ;
 XE6A8:	LD	A,H		; e6a8  7c		|
 	LD	B,L		; e6a9  45		E
 	LD	HL,XF100	; e6aa  21 00 f1	!.q
-	JP	XE033		; e6ad  c3 33 e0	C3`
+	JP	bios_17		; e6ad  c3 33 e0	C3`
 ;
-	LD	(XC208),SP	; e6b0  ed 73 08 c2	ms.B
-	LD	SP,XC208	; e6b4  31 08 c2	1.B
+	LD	(fn_stack_1),SP	; e6b0  ed 73 08 c2	ms.B
+	LD	SP,fn_stack_1	; e6b4  31 08 c2	1.B
 	PUSH	HL		; e6b7  e5		e
 	PUSH	DE		; e6b8  d5		U
 	PUSH	BC		; e6b9  c5		E
@@ -1225,28 +1246,28 @@ XE6FF:	DB	10h		; e6ff  10		.
 ;  which are in the middle of a multibyte instruction
 ;  or are addresses outside the initialized space
 ;
-XC208	EQU	0C208H			;data stack backup
+fn_stack_1	EQU	0C208H		;data stack backup
 
-XE703	EQU	0E703H			;function
-XE706	EQU	0E706H			;function
+bios_call_2	EQU	0E703H		;function
+bios_call_3	EQU	0E706H		;function
 XE709	EQU	0E709H			;function
-XE70C	EQU	0E70CH			;function
-XE70F	EQU	0E70FH			;function
-XE712	EQU	0E712H			;function
-XE715	EQU	0E715H			;function
+bios_call_5	EQU	0E70CH		;function
+bios_call_6	EQU	0E70FH		;function
+bios_call_7	EQU	0E712H		;function
+bios_call_15	EQU	0E715H		;function
 XE906	EQU	0E906H			;function
 XE909	EQU	0E909H			;function
 
 XE912	EQU	0E912H			;data
 
-XE96E	EQU	0E96EH			;function
+bios_call_1	EQU	0E96EH		;function
 XE9D6	EQU	0E9D6H			;function
 
 XE9EC	EQU	0E9ECH			;data
 
 XEA17	EQU	0EA17H			;function
 XEA46	EQU	0EA46H			;function
-XEE42	EQU	0EE42H			;function
+bios_call_0	EQU	0EE42H		;function
 
 XEEFF	EQU	0EEFFH			;data
 XF065	EQU	0F065H			;data
@@ -1269,9 +1290,9 @@ XF078	EQU	0F078H			;data
 ;data
 XF079	EQU	0F079H
 stack_bak	EQU	0F07AH
-XF0AE	EQU	0F0AEH
-XF0B0	EQU	0F0B0H
-stack_ptr	EQU	0F0DCH
+fn_stack_3	EQU	0F0AEH	;
+fn_stack_2	EQU	0F0B0H	;DS	0x02
+stack_ptr	EQU	0F0DCH	;DS	0x2C
 XF15C:	EQU	0F1FCH
 XF100:	EQU	0F100H
 
