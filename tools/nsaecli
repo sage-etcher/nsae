@@ -1,16 +1,45 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
+# nsaectl file
 nsaectl=$1
 
+# setup history
+histfile="${XDG_CACHE_HOME:-$HOME/.cache}/nsaecli_history"
+history -r "$histfile"
+set -o vi
+
+# main loop
 while :
 do
-    read -p "> " cmd
+    # read with history
+    read -p "> " -e cmd
+    history -s "$cmd"
 
-    if [ "x$cmd" = "xquit" ]; then
-        break
-    fi
+    # custom commands
+    case "$cmd" in
+        quit)
+            break
+            ;;
+        history)
+            history
+            continue
+            ;;
+        help)
+            $nsaectl -h
+            continue
+            ;;
+    esac # is rediculous
 
+    # execute the command using nsaectl
     $nsaectl $cmd 2>/dev/null
+
+    # log error for missing commands
+    if [ $? ]; then
+        echo "$cmd?"
+    fi
 done
+
+# save the history
+history -w "$histfile"
 
 # end of file
