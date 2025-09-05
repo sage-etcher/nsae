@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+
+nsaectl=$1
+
+while :
+do
+    read -p "> " cmd
+
+    if [ "x$cmd" = "xquit" ]; then
+        break
+    fi
+
+    $nsaectl $cmd 2>/dev/null
+done
+
+# end of file
