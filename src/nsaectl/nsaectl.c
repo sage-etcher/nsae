@@ -76,6 +76,7 @@ main (int argc, char **argv)
 
     /* mode selection */
     const char *mode_list[NSAE_CMD_COUNT] = {
+        [NSAE_CMD_NOP]           = "nop",
         [NSAE_CMD_EXIT]          = "exit",
         [NSAE_CMD_RESTART]       = "restart",
         [NSAE_CMD_PAUSE]         = "pause",

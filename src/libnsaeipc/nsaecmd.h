@@ -6,6 +6,7 @@
 typedef enum {
 
     /* emulator */
+    NSAE_CMD_NOP,           /* 1     cmd                           */
     NSAE_CMD_EXIT,          /* 1     cmd                           */
     NSAE_CMD_RESTART,       /* 1     cmd                           */
     NSAE_CMD_PAUSE,         /* 1     cmd                           */
