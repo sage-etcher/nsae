@@ -163,8 +163,8 @@ adv_update_status (adv_t *self)
     {
     case 0x0:
     case 0x5:
-        *stat2 &= ~0x7;
-        *stat2 |= fdc_get_sector (fdc) & 0x7;
+        *stat2 &= ~0x0f;
+        *stat2 |= fdc_get_sector (fdc) & 0x0f;
         break;
     }
 }
@@ -196,7 +196,7 @@ adv_in (adv_t *self, uint8_t port, uint16_t pc)
 
     case 0xc0: /* clear non-maskable interupt */
         log_mobo ("nsae: mobo: clear non-maskable interupt\n");
-        self->hw_interupt = 1;
+        self->hw_interupt = false;
         return 0x00;
 
     case 0xd0: /* get io stat register 2 */
@@ -373,7 +373,7 @@ adv_out (adv_t *self, uint8_t port, uint8_t data, uint16_t pc)
 
     case 0xc0: /* clear non-maskable interupt */
         log_mobo ("nsae: mobo: clear non-maskable interupt\n");
-        self->hw_interupt = 0;
+        self->hw_interupt = false;
         return;
 
     case 0xf0: /* output to control register */
