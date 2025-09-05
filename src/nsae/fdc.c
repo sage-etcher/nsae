@@ -155,8 +155,8 @@ fdc_secmark_low (fdc_t *self)
     fdc_set_write (self, false);    /* cleared on leading edge */
 
     self->sector_mark = true;
-    self->sector_mark_hold = 5;
-    //self->fdc.sector_mark_hold = 25;
+    self->sector_mark_hold = 10;
+    //self->sector_mark_hold = 25;
 
     fdc_next_sector (self);
 
@@ -171,7 +171,7 @@ fdc_secmark_high (fdc_t *self)
 
     self->sector_mark = false;
     self->sector_mark_hold = 40;
-    //self->fdc.sector_mark_hold = 3300;
+    //self->sector_mark_hold = 3300;
 
     /* it is only ready after the sectormark leaves */
     self->serial_data = true;
@@ -277,6 +277,7 @@ fdc_next_sector (fdc_t *self)
     self->last_sector = self->sector[self->disk];
     self->sector[self->disk]++;
     self->sector[self->disk] %= FD_SECTORS;
+
     //log_debug ("at sector: %2d\n", self->sector[self->disk]);
 }
 
@@ -285,15 +286,18 @@ uint8_t
 fdc_get_sector (fdc_t *self)
 {
     assert (self != NULL);
-    uint8_t sec = self->last_sector;
 
-    //self->preamble = 0;
-    //self->sync = 0;
-    //self->index = 0;
-    //self->read_mode = false;
-    //self->write_mode = false;
+    if (!self->powered)
+    {
+        return 0x0e;
+    }
 
-    return sec;
+    if (self->last_sector == 9)
+    {
+        return 0x0f;
+    }
+
+    return self->last_sector;
 }
 
 uint8_t
@@ -325,15 +329,6 @@ fdc_calc_disk_offset (uint8_t side, uint8_t track, uint8_t sector, uint16_t i)
     uint32_t abs_sector = (abs_track * FD_SECTORS) + sector;
     uint32_t offset = (abs_sector * FD_BLKSIZE) + i;
     return offset;
-
-    //uint32_t offset = side;
-    //offset *= FD_TRACKS;
-    //offset += track;
-    //offset <<= 4;
-    //offset += sector;
-    //offset *= FD_BLKSIZE;
-
-    //return offset;
 }
 
 static uint32_t

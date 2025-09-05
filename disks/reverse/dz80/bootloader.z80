@@ -230,8 +230,8 @@ XE08B:	LD	A,D		; e08b  7a		z
 XE095:	LD	A,L		; e095  7d		}
 XE096:	LD	(v_drvctrl),A	; e096  32 74 f0	2tp	;save L into v_drvctrl
 	DI			; e099  f3		s
-	LD	DE,(XE912)	; e09a  ed 5b 12 e9	m[.i
-XE09E:	CALL	XE1FB		; e09e  cd fb e1	M{a
+	LD	DE,(var_1)	; e09a  ed 5b 12 e9	m[.i
+XE09E:	CALL	get_var_1		; e09e  cd fb e1	M{a
 	LD	A,(XE6BC)	; e0a1  3a bc e6	:<f
 	AND	7FH		; e0a4  e6 7f		f.
 	JR	NZ,XE09E	; e0a6  20 f6		 v
@@ -250,7 +250,7 @@ XE09E:	CALL	XE1FB		; e09e  cd fb e1	M{a
 	JP	NZ,XE111	; e0bd  c2 11 e1	B.a	;jump if writable
 XE0C0:	PUSH	HL		; e0c0  e5		e
 	PUSH	BC		; e0c1  c5		E
-	LD	HL,XE6E1	; e0c2  21 e1 e6	!af
+	LD	HL,var_0	; e0c2  21 e1 e6	!af
 	LD	B,0		; e0c5  06 00		..
 	ADD	HL,BC		; e0c7  09		.
 	LD	(XE6E6),HL	; e0c8  22 e6 e6	"ff
@@ -286,7 +286,7 @@ find_sector:			; e0e4
 								;
 				; e0ed  20 0d		 .	;if A!=0 jump
 	JR	NZ,get_next_sector
-	CALL	secmark_off	; e0ef  cd 1f e2	M.b	;wait for sectormark to turn off
+	CALL	secmark_1	; e0ef  cd 1f e2	M.b	;wait for sectormark to turn off
 	POP	AF		; e0f2  f1		q	;restore AF sector number
 	JR	NZ,find_sector	; e0f3  20 ef		 o	;if we are not at requested sector, jump
 	DEC	C		; e0f5  0d		.	;decrement C
@@ -312,7 +312,7 @@ XE103:				; e103
 ;A=error code?
 ;DE=????
 XE111:				; e111
-	LD	(XE912),DE	; e111  ed 53 12 e9	mS.i
+	LD	(var_1),DE	; e111  ed 53 12 e9	mS.i
 clear_read:			; e115
 	LD	SP,fn_stack_3	; e115  31 ae f0	1.p	;set custom stack pointer
 	PUSH	AF		; e118  f5		u	;protect af
@@ -459,15 +459,15 @@ disabled_0:			; e1e1
 XE1EB:				; e1eb
 	PUSH	AF		; e1eb  f5		u
 	PUSH	DE		; e1ec  d5		U
-	LD	DE,(XE912)	; e1ed  ed 5b 12 e9	m[.i
+	LD	DE,(var_1)	; e1ed  ed 5b 12 e9	m[.i
 	CALL	disabled_0	; e1f1  cd e1 e1	Maa
-	LD	(XE912),DE	; e1f4  ed 53 12 e9	mS.i
+	LD	(var_1),DE	; e1f4  ed 53 12 e9	mS.i
 	POP	DE		; e1f8  d1		Q
 	POP	AF		; e1f9  f1		q
 	RET			; e1fa  c9		I
 ;
-XE1FB:				; e1fb
-	LD	(XE912),DE	; e1fb  ed 53 12 e9	mS.i
+get_var_1:				; e1fb
+	LD	(var_1),DE	; e1fb  ed 53 12 e9	mS.i
 	RET			; e1ff  c9		I
 ;
 XE200:				; e200
@@ -501,9 +501,9 @@ disabled_2:			; e21a
 ret_0:				; e21e
 	RET			; e21e  c9		I	;return
 ;
-secmark_off:			; e21f
+secmark_1:			; e21f
 	LD	HL,0E098H	; e21f  21 98 01	!..	;try 0xe098 times
-secmark_off_loop:		; e222
+secmark_1_loop:		; e222
 	IN	A,(0E0H)	; e222  db e0		[`	;input status 1
 	AND	40H		; e224  e6 40		f@	;check sector mark
 	RET	NZ		; e226  c0		@	;return if not at sector mark
@@ -524,15 +524,15 @@ disabled_1:			; e237
 	LD	A,H		; e23d  7c		|	
 	OR	L		; e23e  b5		5
 				; e23f  c2 22 e2	B"b	;try until HL=0
-	JP	NZ,secmark_off_loop
+	JP	NZ,secmark_1_loop
 secmark_err:			; e242
-	LD	(XE6E1),A	; e242  32 e1 e6	2af
+	LD	(var_0),A	; e242  32 e1 e6	2af
 	LD	A,4		; e245  3e 04		>.
 	JP	XE111		; e247  c3 11 e1	C.a
 ;
-secmark_on:			; e24a
+secmark_0:			; e24a
 	LD	HL,0E3EFH	; e24a  21 ef 04	!o.	;try 0xe3ef times
-secmark_on_loop:		; e24d
+secmark_0_loop:			; e24d
 	CALL	disabled_0	; e24d  cd e1 e1	Maa
 	IN	A,(0E0H)	; e250  db e0		[`	;input status 1
 	AND	40H		; e252  e6 40		f@	;check sector mark
@@ -541,23 +541,23 @@ secmark_on_loop:		; e24d
 	LD	A,H		; e256  7c		|
 	OR	L		; e257  b5		5
 				; e258  20 f3		 s	;try until HL=0
-	JR	NZ,secmark_on_loop
+	JR	NZ,secmark_0_loop
 	JR	secmark_err	; e25a  18 e6		.f
 ;
 get_sector_a:			; e25c
-	CALL	secmark_off	; e25c  cd 1f e2	M.b	;wait for secmark off
+	CALL	secmark_1	; e25c  cd 1f e2	M.b	;wait for secmark off
 get_sector_b:			; e25f
-	CALL	XE1FB		; e25f  cd fb e1	M{a
-	CALL	secmark_on	; e262  cd 4a e2	MJb	;wait for secmark on
+	CALL	get_var_1	; e25f  cd fb e1	M{a
+	CALL	secmark_0	; e262  cd 4a e2	MJb	;wait for secmark on
 	CALL	sector_stable	; e265  cd d6 e2	MVb	;get previous sector in A
 	INC	A		; e268  3c		<	;get current sector
 	AND	0FH		; e269  e6 0f		f.	;mask away garbage
 	RET			; e26b  c9		I
 ;
-serial_data_wait:				; e26c
+serial_data_wait:		; e26c
 	LD	BC,035e0h	; e26c  01 e0 35	.`5	;try 0x35 times
 								;from status 1
-serial_data_wait_loop:
+serial_data_wait_loop:		; e26f
 	IN	F,(C)		; e26f  ed 70		mp	;input status1 into flags
 	RET	M		; e271  f8		x	;return if disk serial data
 	IN	A,(0E0H)	; e272  db e0		[`	;input status 1
@@ -582,16 +582,18 @@ XE28A:				; e28a
 	CP	0EH		; e28d  fe 0e		~.	;check if motor off
 	RET	NZ		; e28f  c0		@	;return if motor is on
 	XOR	A		; e290  af		/	;A=0
-	LD	(XE6E1),A	; e291  32 e1 e6	2af
+	LD	(var_0),A	; e291  32 e1 e6	2af
 	CALL	cmd_start_motor	; e294  cd af e2	M/b
 	LD	B,64H		; e297  06 64		.d	;try 0x64 times
-XE299:	PUSH	HL		; e299  e5		e	;protect HL
-XE29A:	PUSH	BC		; e29a  c5		E	;protect BC (counter)
-	CALL	XE1FB		; e29b  cd fb e1	M{a
+wait_2:				; e299
+	PUSH	HL		; e299  e5		e	;protect HL
+wait_2_loop:			; e29a
+	PUSH	BC		; e29a  c5		E	;protect BC (counter)
+	CALL	get_var_1		; e29b  cd fb e1	M{a
 	LD	HL,0E096H	; e29e  21 96 01	!..	;HL=0xe096
 	CALL	wait_dcr	; e2a1  cd 07 e2	M.b	;wait
 	POP	BC		; e2a4  c1		A	;restore counter
-	DJNZ	XE29A		; e2a5  10 f3		.s	;loop until BC=0
+	DJNZ	wait_2_loop	; e2a5  10 f3		.s	;loop until BC=0
 	POP	HL		; e2a7  e1		a	;restore HL
 	RET			; e2a8  c9		I
 ;
@@ -635,22 +637,25 @@ sector_stable_loop:
 				; e2df  18 f7		.w	;loop
 	JR	sector_stable_loop
 ;
+;doesnt take HL A
+;takes C
 XE2E1:				; e2e1
-	LD	HL,XE6E1	; e2e1  21 e1 e6	!af
-	LD	A,(HL)		; e2e4  7e		~
-	LD	(HL),C		; e2e5  71		q
-	CP	C		; e2e6  b9		9
-	RET	Z		; e2e7  c8		H
-	LD	B,0CH		; e2e8  06 0c		..
-	CALL	XE299		; e2ea  cd 99 e2	M.b
-XE2ED:	CALL	get_sector_a	; e2ed  cd 5c e2	M\b
-	RET	Z		; e2f0  c8		H
-	JR	XE2ED		; e2f1  18 fa		.z
+	LD	HL,var_0	; e2e1  21 e1 e6	!af
+	LD	A,(HL)		; e2e4  7e		~	;old_value = var_0
+	LD	(HL),C		; e2e5  71		q	;var_0 = C
+	CP	C		; e2e6  b9		9	;if C == old_value
+	RET	Z		; e2e7  c8		H	;    return
+	LD	B,0CH		; e2e8  06 0c		..	;wait time
+	CALL	wait_2		; e2ea  cd 99 e2	M.b	;wait
+wait_index_mark:		; e2ed
+	CALL	get_sector_a	; e2ed  cd 5c e2	M\b	;get sector
+	RET	Z		; e2f0  c8		H	;if its 0, return
+	JR	wait_index_mark	; e2f1  18 fa		.z
 ;
 XE2F3:				; e2f3
 	PUSH	HL		; e2f3  e5		e
 	CALL	XE2E1		; e2f4  cd e1 e2	Mab
-	CALL	secmark_off	; e2f7  cd 1f e2	M.b
+	CALL	secmark_1	; e2f7  cd 1f e2	M.b
 	POP	HL		; e2fa  e1		a
 	XOR	A		; e2fb  af		/
 XE2FC:	LD	B,A		; e2fc  47		G
@@ -685,14 +690,14 @@ step_loop:			; e317
 	JR	NZ,step_chktrk0	; e32a  20 02		 .
 	LD	B,5		; e32c  06 05		..
 step_chktrk0:			; e32e
-	CALL	XE299		; e32e  cd 99 e2	M.b
+	CALL	wait_2		; e32e  cd 99 e2	M.b
 	IN	A,(0E0H)	; e331  db e0		[`	;input status 1
 	AND	20H		; e333  e6 20		f 	;check track 0
 	JR	NZ,XE33A	; e335  20 03		 .	;jump if at track 0
 	DEC	H		; e337  25		%	;decrement H
 	JR	NZ,step_loop	; e338  20 dd		 ]	;while H!=0 jump
 XE33A:	LD	B,3		; e33a  06 03		..
-	JP	XE299		; e33c  c3 99 e2	C.b
+	JP	wait_2		; e33c  c3 99 e2	C.b
 ;
 XE33F:				; e33f
 	LD	HL,XE6FF	; e33f  21 ff e6	!.f
@@ -1199,7 +1204,7 @@ v_ctrlreg:			; e6c1
 	DB	0		; e6c9  00		.
 	DB	0,0,0,0,0,0,0
 ;
-XE6E1:	DB	01h		; e6e1  01		.
+var_0:	DB	01h		; e6e1  01		.
 	DB	00h		; e6e2  00		.
 	DB	59h		; e6e3  59		Y
 	DB	59h		; e6e4  59		Y
@@ -1258,7 +1263,7 @@ bios_call_15	EQU	0E715H		;function
 XE906	EQU	0E906H			;function
 XE909	EQU	0E909H			;function
 
-XE912	EQU	0E912H			;data
+var_1	EQU	0E912H			;data
 
 bios_call_1	EQU	0E96EH		;function
 XE9D6	EQU	0E9D6H			;function

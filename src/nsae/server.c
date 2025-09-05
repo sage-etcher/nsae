@@ -284,10 +284,11 @@ server_handle_ipc (nsae_t *self)
                 self->adv.fdc.precompensation,
                 self->adv.fdc.read_mode,
                 self->adv.fdc.write_mode);
-        log_info ("preamble: %2d\tsync:    %1d\tindex: %3d\n",
+        log_info ("preamble: %2d\tsync:    %1d\tindex: %3d\tt: %2d\n",
                 self->adv.fdc.preamble,
                 self->adv.fdc.sync,
-                self->adv.fdc.index);
+                self->adv.fdc.index,
+                self->adv.fdc.sector_mark_hold);
         log_info ("disk 0: %4s\tt: %2d\ts: %2d\twp: %1d\t%s\n",
                 (!self->adv.fdc.disk_loaded[0] ? "    " :
                     (self->adv.fdc.disk_type[0] == FD_SSDD ? "SSDD" :

@@ -107,6 +107,12 @@ adv_update_status (adv_t *self)
     fdc_t *fdc = &self->fdc;
     kb_t *kb = &self->kb;
 
+    /* this is not mentioned in the technical manual, however both NSCPM and
+     * DEMODIAG expect it to read sectors */
+    if (fdc->sector_mark)
+    {
+        self->hw_interupt = true;
+    }
 
     /* update fdc */
     fdc_update (fdc);

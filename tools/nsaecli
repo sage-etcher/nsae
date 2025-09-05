@@ -28,13 +28,17 @@ do
             $nsaectl -h
             continue
             ;;
+        shell)
+            ${SHELL:-sh}
+            continue
+            ;;
     esac # is rediculous
 
     # execute the command using nsaectl
     $nsaectl $cmd 2>/dev/null
 
     # log error for missing commands
-    if [ $? ]; then
+    if [ "x$?" != "x0" ]; then
         echo "$cmd?"
     fi
 done
