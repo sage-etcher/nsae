@@ -18,6 +18,18 @@ typedef enum {
     NSAE_CMD_RUN,           /* 1     cmd                           */
     NSAE_CMD_STATUS,        /* 1     cmd                           */
 
+    /* logging */
+    NSAE_CMD_LOG_CPU,       /* 2     cmd state                     */
+    NSAE_CMD_LOG_MMU,       /* 2     cmd state                     */
+    NSAE_CMD_LOG_RAM,       /* 2     cmd state                     */
+    NSAE_CMD_LOG_FDC,       /* 2     cmd state                     */
+    NSAE_CMD_LOG_CRT,       /* 2     cmd state                     */
+    NSAE_CMD_LOG_KB,        /* 2     cmd state                     */
+    NSAE_CMD_LOG_MOBO,      /* 2     cmd state                     */
+    NSAE_CMD_LOG_VERBOSE,   /* 2     cmd state                     */
+    NSAE_CMD_LOG_DEBUG,     /* 2     cmd state                     */
+    NSAE_CMD_LOG_OUTPUT,    /* 5/9+  cmd filename_len file         */
+
     /* floppydisk */
     NSAE_CMD_FD_EJECT,      /* 2     cmd fd_num                    */
     NSAE_CMD_FD_LOAD,       /* 6/10+ cmd fd_num filename_len file  */

@@ -23,6 +23,9 @@
 #define USAGE_STR ___SRC_NSAECTL_NSAECTL_HELP
 #define USAGE_LEN ___SRC_NSAECTL_NSAECTL_HELP_LEN
 
+
+FILE *g_log_fp = NULL;
+
 bool g_log_info    = true;
 bool g_log_verbose = false;
 bool g_log_debug   = false;
@@ -87,6 +90,17 @@ main (int argc, char **argv)
         [NSAE_CMD_STEP]          = "step",
         [NSAE_CMD_RUN]           = "run",
         [NSAE_CMD_STATUS]        = "status",
+
+        [NSAE_CMD_LOG_CPU]       = "log_cpu",
+        [NSAE_CMD_LOG_MMU]       = "log_mmu",
+        [NSAE_CMD_LOG_RAM]       = "log_ram",
+        [NSAE_CMD_LOG_FDC]       = "log_fdc",
+        [NSAE_CMD_LOG_CRT]       = "log_crt",
+        [NSAE_CMD_LOG_KB]        = "log_kb",
+        [NSAE_CMD_LOG_MOBO]      = "log_mobo",
+        [NSAE_CMD_LOG_VERBOSE]   = "log_verbose",
+        [NSAE_CMD_LOG_DEBUG]     = "log_debug",
+        [NSAE_CMD_LOG_OUTPUT]    = "log_output",
 
         [NSAE_CMD_FD_EJECT]      = "fd_eject",
         [NSAE_CMD_FD_LOAD]       = "fd_load",
@@ -169,6 +183,17 @@ main (int argc, char **argv)
         [NSAE_CMD_RUN]           = 1,
         [NSAE_CMD_STATUS]        = 1,
 
+        [NSAE_CMD_LOG_CPU]       = 2,
+        [NSAE_CMD_LOG_MMU]       = 2,
+        [NSAE_CMD_LOG_RAM]       = 2,
+        [NSAE_CMD_LOG_FDC]       = 2,
+        [NSAE_CMD_LOG_CRT]       = 2,
+        [NSAE_CMD_LOG_KB]        = 2,
+        [NSAE_CMD_LOG_MOBO]      = 2,
+        [NSAE_CMD_LOG_VERBOSE]   = 2,
+        [NSAE_CMD_LOG_DEBUG]     = 2,
+        [NSAE_CMD_LOG_OUTPUT]    = 2,
+
         [NSAE_CMD_FD_EJECT]      = 2,
         [NSAE_CMD_FD_LOAD]       = 3,
         [NSAE_CMD_FD_SAVE]       = 3,
@@ -235,6 +260,15 @@ main (int argc, char **argv)
     /* cmd u */
     case NSAE_CMD_BRKPNT_SET:   /* cmd addr */
     case NSAE_CMD_BRKPNT_REMOVE:/* cmd addr */
+    case NSAE_CMD_LOG_CPU:      /* cmd state */
+    case NSAE_CMD_LOG_MMU:      /* cmd state */
+    case NSAE_CMD_LOG_RAM:      /* cmd state */
+    case NSAE_CMD_LOG_FDC:      /* cmd state */
+    case NSAE_CMD_LOG_CRT:      /* cmd state */
+    case NSAE_CMD_LOG_KB:       /* cmd state */
+    case NSAE_CMD_LOG_MOBO:     /* cmd state */
+    case NSAE_CMD_LOG_VERBOSE:  /* cmd state */
+    case NSAE_CMD_LOG_DEBUG:    /* cmd state */
     case NSAE_CMD_FD_EJECT:     /* cmd fd_num */
     case NSAE_CMD_KB_PUSH:      /* cmd keycode */
     case NSAE_CMD_KB_OVERFLOW:  /* cmd state */
@@ -272,6 +306,7 @@ main (int argc, char **argv)
         break;
 
     /* cmd file */
+    case NSAE_CMD_LOG_OUTPUT:
     case NSAE_CMD_HD_LOAD:
     case NSAE_CMD_HD_SAVE:
     case NSAE_CMD_PROM_LOAD:

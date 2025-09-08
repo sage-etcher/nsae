@@ -20,6 +20,7 @@
 #include <time.h>
 #include <unistd.h>
 
+FILE *g_log_fp = NULL;
 
 bool g_log_info = true;
 bool g_log_verbose = true;

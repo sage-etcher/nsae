@@ -55,6 +55,15 @@ vsend_cmd (uint8_t cmd, va_list args)
             break;
 
         /* cmd u8 */
+        case NSAE_CMD_LOG_CPU:      /* cmd state */
+        case NSAE_CMD_LOG_MMU:      /* cmd state */
+        case NSAE_CMD_LOG_RAM:      /* cmd state */
+        case NSAE_CMD_LOG_FDC:      /* cmd state */
+        case NSAE_CMD_LOG_CRT:      /* cmd state */
+        case NSAE_CMD_LOG_KB:       /* cmd state */
+        case NSAE_CMD_LOG_MOBO:     /* cmd state */
+        case NSAE_CMD_LOG_VERBOSE:  /* cmd state */
+        case NSAE_CMD_LOG_DEBUG:    /* cmd state */
         case NSAE_CMD_FD_EJECT:     /* cmd fd_num */
         case NSAE_CMD_FD_STATUS:    /* cmd fd_num */
         case NSAE_CMD_KB_PUSH:      /* cmd keycode */
@@ -107,7 +116,8 @@ vsend_cmd (uint8_t cmd, va_list args)
             send_string (va_arg (args, char *));
             break;
 
-        /* cmd u8 size str */
+        /* cmd size str */
+        case NSAE_CMD_LOG_OUTPUT:   /* cmd len file */
         case NSAE_CMD_HD_LOAD:      /* cmd len file */
         case NSAE_CMD_HD_SAVE:      /* cmd len file */
         case NSAE_CMD_PROM_LOAD:    /* cmd len file */

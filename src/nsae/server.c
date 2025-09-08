@@ -8,6 +8,7 @@
 #include "nsae.h"
 #include "nsaecmd.h"
 #include "nsaeipc.h"
+#include "nslog.h"
 #include "ram.h"
 
 #include <assert.h>
@@ -28,6 +29,7 @@ server_handle_ipc (nsae_t *self)
     uint8_t fd_sector = 0x00;
     uint8_t kb_state = 0x00;
     uint8_t kb_keycode = 0x00;
+    uint8_t log_state = 0x00;
     uint8_t mmu_page = 0x00;
     uint8_t mmu_slot = 0x00;
     uint8_t data = 0x00;
@@ -67,6 +69,7 @@ server_handle_ipc (nsae_t *self)
     case NSAE_CMD_HD_LOAD:
     case NSAE_CMD_HD_SAVE:
     case NSAE_CMD_PROM_LOAD:
+    case NSAE_CMD_LOG_OUTPUT:
         nsae_ipc_recieve_block ((uint8_t *)&n, sizeof (size_t));
         file = malloc (n+1);
         nsae_ipc_recieve_block ((uint8_t *)file, n);
@@ -83,6 +86,18 @@ server_handle_ipc (nsae_t *self)
     case NSAE_CMD_KB_DATA:
     case NSAE_CMD_KB_INTERUPT:
         nsae_ipc_recieve_block ((uint8_t *)&kb_state, sizeof (uint8_t));
+        break;
+
+    case NSAE_CMD_LOG_CPU:
+    case NSAE_CMD_LOG_MMU:
+    case NSAE_CMD_LOG_RAM:
+    case NSAE_CMD_LOG_FDC:
+    case NSAE_CMD_LOG_CRT:
+    case NSAE_CMD_LOG_KB:
+    case NSAE_CMD_LOG_MOBO:
+    case NSAE_CMD_LOG_VERBOSE:
+    case NSAE_CMD_LOG_DEBUG:
+        nsae_ipc_recieve_block ((uint8_t *)&log_state, sizeof (uint8_t));
         break;
 
     case NSAE_CMD_ADV_IN:
@@ -155,6 +170,14 @@ server_handle_ipc (nsae_t *self)
     {
         log_error ("nsae: server: kb_state out of range 0-1 -- %u\n", 
                 kb_state);
+        free (file);
+        return 1;
+    }
+
+    if (log_state >= 2)
+    {
+        log_error ("nsae: server: log_state out of range 0-1 -- %u\n", 
+                log_state);
         free (file);
         return 1;
     }
@@ -244,6 +267,60 @@ server_handle_ipc (nsae_t *self)
         log_info ("pause: %d\n", self->pause);
         break;
 
+    /* log */
+    case NSAE_CMD_LOG_CPU:
+        log_verbose ("nsae: server: log_cpu %d\n", log_state);
+        g_log_cpu = log_state;
+        break;
+
+    case NSAE_CMD_LOG_MMU:
+        log_verbose ("nsae: server: log_mmu %d\n", log_state);
+        g_log_mmu = log_state;
+        break;
+
+    case NSAE_CMD_LOG_RAM:
+        log_verbose ("nsae: server: log_ram %d\n", log_state);
+        g_log_ram = log_state;
+        break;
+
+    case NSAE_CMD_LOG_FDC:
+        log_verbose ("nsae: server: log_fdc %d\n", log_state);
+        g_log_fdc= log_state;
+        break;
+
+    case NSAE_CMD_LOG_CRT:
+        log_verbose ("nsae: server: log_crt %d\n", log_state);
+        g_log_crt = log_state;
+        break;
+
+    case NSAE_CMD_LOG_KB:
+        log_verbose ("nsae: server: log_kb %d\n", log_state);
+        g_log_kb = log_state;
+        break;
+
+    case NSAE_CMD_LOG_MOBO:
+        log_verbose ("nsae: server: log_mobo %d\n", log_state);
+        g_log_mobo = log_state;
+        break;
+
+    case NSAE_CMD_LOG_VERBOSE:
+        log_verbose ("nsae: server: log_verbose %d\n", log_state);
+        g_log_verbose = log_state;
+        break;
+
+    case NSAE_CMD_LOG_DEBUG:
+        log_verbose ("nsae: server: log_debug %d\n", log_state);
+        g_log_debug = log_state;
+        break;
+
+    case NSAE_CMD_LOG_OUTPUT:
+        log_verbose ("nsae: server: log_output %s\n", file);
+        g_log_fp = fopen (file, "a+");
+        if (g_log_fp == NULL)
+        {
+            log_error ("nsae: server: cannot open -- %s\n", file);
+        }
+        break;
 
     /* floppy */
     case NSAE_CMD_FD_EJECT:
