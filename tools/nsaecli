@@ -9,38 +9,55 @@ history -r "$histfile"
 set -o vi
 
 # main loop
-while :
+prev_cmds=""
+run_flag=true
+while $run_flag
 do
     # read with history
-    read -p "> " -e cmd
-    history -s "$cmd"
+    read -p "> " -e cmds
 
-    # custom commands
-    case "$cmd" in
-        quit)
-            break
-            ;;
-        history)
-            history
-            continue
-            ;;
-        help)
-            $nsaectl -h
-            continue
-            ;;
-        shell)
-            ${SHELL:-sh}
-            continue
-            ;;
-    esac # is rediculous
-
-    # execute the command using nsaectl
-    $nsaectl $cmd 2>/dev/null
-
-    # log error for missing commands
-    if [ "x$?" != "x0" ]; then
-        echo "$cmd?"
+    # execute the previous command if no cmd was given
+    if [[ -z "$cmds" ]]; then
+        cmds="$prev_cmds"
+    else
+        history -s "$cmds"
+        prev_cmds="$cmds"
     fi
+
+    IFS=';' read -ra cmd_arr <<< "$cmds"
+    for cmd in "${cmd_arr[@]}"; do
+        # custom commands
+        case "$cmd" in
+            quit)
+                run_flag=false
+                break
+                ;;
+            history)
+                history
+                continue
+                ;;
+            help)
+                $nsaectl -h
+                continue
+                ;;
+            shell)
+                ${SHELL:-sh}
+                continue
+                ;;
+            clear)
+                clear
+                continue
+                ;;
+        esac # is rediculous
+
+        # execute the command using nsaectl
+        $nsaectl $cmd 2>/dev/null
+
+        # log error for missing commands
+        if [ "x$?" != "x0" ]; then
+            echo "$cmd?"
+        fi
+    done
 done
 
 # save the history
