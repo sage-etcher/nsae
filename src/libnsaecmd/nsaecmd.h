@@ -96,5 +96,21 @@ typedef enum {
  * uint8_t  slot;           // 1
  */
 
+typedef struct {
+    size_t length;
+    char *buf;
+} nscmd_str_t;
+
+
+typedef union {
+    bool b;
+    uint8_t u8;
+    uint16_t u16;
+    uint32_t u32;
+
+} nscmd_args_t;
+
+
+
 #endif /* NSAECMD_H */
 /* end of file */
