@@ -253,12 +253,14 @@ server_handle_ipc (nsae_t *self)
         log_verbose ("nsae: server: step\n");
         self->step = true;
         self->pause = false;
+        self->resuming = true;
         break;
 
     case NSAE_CMD_RUN:
         log_verbose ("nsae: server: run\n");
         self->step = false;
         self->pause = false;
+        self->resuming = true;
         break;
 
     case NSAE_CMD_STATUS:

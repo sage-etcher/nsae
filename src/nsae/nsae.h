@@ -24,6 +24,7 @@ typedef struct {
     int max_fps;
 
     bool step;
+    bool resuming;
     bool pause;
     bool exit;
 

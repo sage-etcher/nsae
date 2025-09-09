@@ -112,7 +112,7 @@ extern "C" {
 #define Z80_FETCH_BYTE(address, x)                                      \
 {                                                                       \
         Z80_READ_BYTE((address), (x))                                   \
-        if (br_lookup (BR_CTX, address) != -1)                          \
+        if (!NSAE_CTX->resuming && br_lookup (BR_CTX, address) != -1)   \
         {                                                               \
                 NSAE_CTX->pause = true;                                 \
                 log_verbose ("breakpoint met %04x\n", address);         \
@@ -120,6 +120,7 @@ extern "C" {
                 /* required source modification (z80emu.c changelog) */ \
                 goto breakpoint_met;                                    \
         }                                                               \
+        NSAE_CTX->resuming = false;                                     \
 }
 
 #define Z80_READ_WORD(address, x)                                       \
