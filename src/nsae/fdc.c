@@ -125,7 +125,7 @@ void
 fdc_load_drvctrl (fdc_t *self, uint8_t data)
 {
     assert (self != NULL);
-    log_fdc ("nsae: fdc: 0x%02x load drive control\n", data);
+    //log_fdc ("nsae: fdc: 0x%02x load drive control\n", data);
 
     /* bit 5 precompensation and step_direction */
     self->step_direction = (data >> 5) & 0x01;
