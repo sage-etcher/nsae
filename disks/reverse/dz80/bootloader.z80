@@ -170,7 +170,12 @@ bios_20:			; e03c				;0
 ;*****************************************************************************
 ;				function
 ;*****************************************************************************
-;takes A BC D
+;A  = number of blocks
+;B  =
+;C  = drive control?
+;D  = sector num
+;E  = track num
+;HL = destdir
 XE03F:				; e03f				;takes A C
 	LD	(stack_bak),SP	; e03f  ed 73 7a f0	mszp	;backup stack pointer
 	LD	SP,fn_stack_2	; e043  31 b0 f0	10p	;set custom stack pointer
@@ -178,16 +183,16 @@ XE03F:				; e03f				;takes A C
 	PUSH	HL		; e047  e5		e
 	PUSH	DE		; e048  d5		U
 	LD	A,5		; e049  3e 05		>.	;A = 5
-	BIT	7,C		; e04b  cb 79		Ky	;if bit7 of C is 0
-	JP	Z,clear_read		; e04d  ca 15 e1	J.a	;    jump to XE115
-	LD	A,C		; e050  79		y	;A = C
-	AND	7		; e051  e6 07		f.	;A &= 0000$0111b	0-7
-	LD	C,A		; e053  4f		O	;C = A
-	CP	3		; e054  fe 03		~.	;if C < 3
+	BIT	7,C		; e04b  cb 79		Ky	;if unused bit7 of drv_ctrl is 0
+	JP	Z,clear_read	; e04d  ca 15 e1	J.a	;    jump to clear_read
+	LD	A,C		; e050  79		y	;get disk select and unused bit2
+	AND	7		; e051  e6 07		f.
+	LD	C,A		; e053  4f		O
+	CP	3		; e054  fe 03		~.	;if disk1 and disk2 are not both selected
 	JR	C,XE05B		; e056  38 03		8.	;    jump to XE05B
-	RLA			; e058  17		.	;A <<= 1,    A0 = 0
-	AND	0CH		; e059  e6 0c		f.	;A &= 0000$1100b	00 04 08 0C
-XE05B:	OR	80H		; e05b  f6 80		v.	;A |= 1000$0000b	80 84 88 8C
+	RLA			; e058  17		.	;extract disk2 and unused bit2 (shifted left 1)
+	AND	0CH		; e059  e6 0c		f.	;
+XE05B:	OR	80H		; e05b  f6 80		v.	;toggle unused bit7 on (maybe for clear_read?)
 	LD	L,A		; e05d  6f		o	;L = A
 	LD	A,(XE6F6)	; e05e  3a f6 e6	:vf	;read XE6F6
 	AND	L		; e061  a5		%	;'and' it against prev calculated value
@@ -206,8 +211,8 @@ XE05B:	OR	80H		; e05b  f6 80		v.	;A |= 1000$0000b	80 84 88 8C
 	SET	6,L		; e071  cb f5		Ku	;L |= 0100$0000b
 	JR	XE08B		; e073  18 16		..
 ;
-XE075:	LD	E,14H		; e075  1e 14		..
-	LD	A,22H		; e077  3e 22		>"
+XE075:	LD	E,14H		; e075  1e 14		..	;E = 0001$0100b
+	LD	A,22H		; e077  3e 22		>"	;A = 0010$0010b
 	SUB	B		; e079  90		.
 	JR	NC,XE081	; e07a  30 05		0.
 	ADD	A,23H		; e07c  c6 23		F#
@@ -221,8 +226,9 @@ XE081:	LD	A,L		; e081  7d		}
 	AND	0F0H		; e087  e6 f0		fp
 	ADD	A,D		; e089  82		.
 	LD	D,A		; e08a  57		W
-XE08B:	LD	A,D		; e08b  7a		z
-	LD	(XF078),A	; e08c  32 78 f0	2xp
+XE08B:	LD	A,D		; e08b  7a		z	;set expected sync2 from D
+				; e08c  32 78 f0	2xp
+	LD	(expected_sync2),A	
 	LD	A,E		; e08f  7b		{
 	CP	B		; e090  b8		8
 	JR	NC,XE095	; e091  30 02		0.
@@ -231,7 +237,7 @@ XE095:	LD	A,L		; e095  7d		}
 XE096:	LD	(v_drvctrl),A	; e096  32 74 f0	2tp	;save L into v_drvctrl
 	DI			; e099  f3		s
 	LD	DE,(var_1)	; e09a  ed 5b 12 e9	m[.i
-XE09E:	CALL	get_var_1		; e09e  cd fb e1	M{a
+XE09E:	CALL	get_var_1	; e09e  cd fb e1	M{a
 	LD	A,(XE6BC)	; e0a1  3a bc e6	:<f
 	AND	7FH		; e0a4  e6 7f		f.
 	JR	NZ,XE09E	; e0a6  20 f6		 v
@@ -257,13 +263,13 @@ XE0C0:	PUSH	HL		; e0c0  e5		e
 	LD	A,(HL)		; e0cb  7e		~
 	XOR	59H		; e0cc  ee 59		nY
 	PUSH	HL		; e0ce  e5		e
-	CALL	Z,XE2F3		; e0cf  cc f3 e2	Lsb
+	CALL	Z,check_first_sec		; e0cf  cc f3 e2	Lsb
 	POP	HL		; e0d2  e1		a
 	POP	AF		; e0d3  f1		q
-	CALL	XE2FC		; e0d4  cd fc e2	M|b
+	CALL	check_trk0_safe		; e0d4  cd fc e2	M|b
 	LD	A,(v_drvctrl)	; e0d7  3a 74 f0	:tp	;read v_drvctrl
 	OUT	(81H),A		; e0da  d3 81		S.	;load drive control reg
-	CALL	XE2E1		; e0dc  cd e1 e2	Mab
+	CALL	wait_rotation		; e0dc  cd e1 e2	Mab
 	POP	BC		; e0df  c1		A
 	POP	HL		; e0e0  e1		a
 	OR	A		; e0e1  b7		7
@@ -299,17 +305,19 @@ get_next_sector:
 	INC	A		; e100  3c		<	;get requested sector
 	JR	find_sector	; e101  18 e1		.a	;get next sector if sector not at 0
 ;
-XE103:				; e103
-	POP	BC		; e103  c1		A
+calc_sync2:			; e103
+	POP	BC		; e103  c1		A	;increment B
 	INC	B		; e104  04		.
-	LD	A,(XF078)	; e105  3a 78 f0	:xp
+				; e105  3a 78 f0	:xp	;increment sync2
+	LD	A,(expected_sync2)
 	INC	A		; e108  3c		<
-	LD	(XF078),A	; e109  32 78 f0	2xp
-	POP	AF		; e10c  f1		q
+				; e109  32 78 f0	2xp
+	LD	(expected_sync2),A
+	POP	AF		; e10c  f1		q	;decrement *(SP+1)
 	DEC	A		; e10d  3d		=
 	PUSH	AF		; e10e  f5		u
 	JR	NZ,XE0E2	; e10f  20 d1		 Q
-;A=error code?
+;A=??
 ;DE=????
 XE111:				; e111
 	LD	(var_1),DE	; e111  ed 53 12 e9	mS.i
@@ -349,7 +357,7 @@ read_sync:			; e14d
 	IN	A,(81H)			; e151  db 81		[.	;input sync1
 	CP	0FBH			; e153  fe fb		~{	;validate
 	JP	NZ,serial_data_err	; e155  c2 85 e2	B.b
-	LD	A,(XF078)	; e158  3a 78 f0	:xp
+	LD	A,(expected_sync2)	; e158  3a 78 f0	:xp
 	LD	B,A		; e15b  47		G
 	IN	A,(80H)		; e15c  db 80		[.	;input sync2
 	CP	B		; e15e  b8		8
@@ -382,7 +390,7 @@ read_crc:			; e184
 	IN	A,(80H)		; e184  db 80		[.	;input crc
 	XOR	C		; e186  a9		)	;compare with calculated
 	IN	A,(82H)		; e187  db 82		[.	;clear disk read
-	JP	Z,XE103		; e189  ca 03 e1	J.a	;jump if crcs match
+	JP	Z,calc_sync2	; e189  ca 03 e1	J.a	;jump if crcs match
 read_crc_err:			; e18c
 	LD	A,2		; e18c  3e 02		>.
 	JP	XE111		; e18e  c3 11 e1	C.a
@@ -423,7 +431,8 @@ write_preamble:			; e1b4
 	OUT	(80H),A		; e1be  d3 80		S.	;output sync1
 	EX	(SP),HL		; e1c0  e3		c
 	EX	(SP),HL		; e1c1  e3		c
-	LD	A,(XF078)	; e1c2  3a 78 f0	:xp
+				; e1c2  3a 78 f0	:xp
+	LD	A,(expected_sync2)
 	OUT	(80H),A		; e1c5  d3 80		S.	;output sync2
 	POP	HL		; e1c7  e1		a
 ;HL=srcptr
@@ -445,7 +454,7 @@ write_blk:			; e1c8
 	DJNZ	write_blk	; e1d9  10 ed		.m	;loop
 	LD	A,C		; e1db  79		y
 	OUT	(80H),A		; e1dc  d3 80		S.	;write crc
-	JP	XE103		; e1de  c3 03 e1	C.a
+	JP	calc_sync2	; e1de  c3 03 e1	C.a
 ;
 disabled_0:			; e1e1	
 	IN	A,(0E0H)	; e1e1  db e0		[`	;input status 1
@@ -639,7 +648,7 @@ sector_stable_loop:
 ;
 ;doesnt take HL A
 ;takes C
-XE2E1:				; e2e1
+wait_rotation:			; e2e1
 	LD	HL,var_0	; e2e1  21 e1 e6	!af
 	LD	A,(HL)		; e2e4  7e		~	;old_value = var_0
 	LD	(HL),C		; e2e5  71		q	;var_0 = C
@@ -652,29 +661,30 @@ wait_index_mark:		; e2ed
 	RET	Z		; e2f0  c8		H	;if its 0, return
 	JR	wait_index_mark	; e2f1  18 fa		.z
 ;
-XE2F3:				; e2f3
+check_first_sec:		; e2f3
 	PUSH	HL		; e2f3  e5		e
-	CALL	XE2E1		; e2f4  cd e1 e2	Mab
+	CALL	wait_rotation	; e2f4  cd e1 e2	Mab
 	CALL	secmark_1	; e2f7  cd 1f e2	M.b
 	POP	HL		; e2fa  e1		a
-	XOR	A		; e2fb  af		/
-XE2FC:	LD	B,A		; e2fc  47		G
-	SUB	(HL)		; e2fd  96		.
-	LD	(HL),B		; e2fe  70		p
-	RET	Z		; e2ff  c8		H
-	LD	L,20H		; e300  2e 20		. 
+	XOR	A		; e2fb  af		/	;A = 0
+check_trk0_safe:
+	LD	B,A		; e2fc  47		G	;B = A
+	SUB	(HL)		; e2fd  96		.	;Z = *HL - 1
+	LD	(HL),B		; e2fe  70		p	;*HL = B
+	RET	Z		; e2ff  c8		H	;return if Z
+	LD	L,20H		; e300  2e 20		. 	;step outwards
 	LD	H,A		; e302  67		g
 	JP	P,step		; e303  f2 10 e3	r.c
 	CPL			; e306  2f		/
-	INC	A		; e307  3c		<
-	LD	H,A		; e308  67		g
+	INC	A		; e307  3c		<	;A++
+	LD	H,A		; e308  67		g	;protect A in H
 	IN	A,(0E0H)	; e309  db e0		[`	;input status 1
 	AND	20H		; e30b  e6 20		f 	;check track 0
 	RET	NZ		; e30d  c0		@	;return if on track 0
-	LD	L,0		; e30e  2e 00		..
+	LD	L,0		; e30e  2e 00		..	;step inwards
 step:	LD	A,(v_drvctrl)	; e310  3a 74 f0	:tp	;read v_drvctrl
-	AND	0CFH		; e313  e6 cf		fO	;set step out and pulse off
-	OR	L		; e315  b5		5
+	AND	0CFH		; e313  e6 cf		fO	;set clear step direction and pulse off
+	OR	L		; e315  b5		5	;set step direction
 	LD	L,A		; e316  6f		o	;protect in L
 step_loop:			; e317
 	LD	A,L		; e317  7d		}	;restore drvctrl byte from L
@@ -706,15 +716,21 @@ XE33F:				; e33f
 	EI			; e345  fb		{
 	RET			; e346  c9		I
 ;
-;takes BC DE HL A
+;fn read blocks
+;A  = number of blocks
+;B  =
+;C  = drive control?
+;D  = sector num
+;E  = track num
+;HL = destdir
 bios_call_17:			; e347
-	LD	(XF076),A	; e347  32 76 f0	2vp	;protect acc in var
-XE34A:	LD	A,(XE6E9)	; e34a  3a e9 e6	:if	;read 0x0a
-XE34D:	LD	(XF077),A	; e34d  32 77 f0	2wp	;write A
+	LD	(read_n_blks),A	; e347  32 76 f0	2vp	;protect acc in var
+XE34A:	LD	A,(read_max_blk); e34a  3a e9 e6	:if	;read 0x0a
+XE34D:	LD	(read_blk_i),A	; e34d  32 77 f0	2wp	;write A
 	PUSH	HL		; e350  e5		e	;protect HL,DE,BC
 	PUSH	DE		; e351  d5		U
 	PUSH	BC		; e352  c5		E
-	LD	A,(XF076)	; e353  3a 76 f0	:vp	;restore input acc
+	LD	A,(read_n_blks)	; e353  3a 76 f0	:vp	;restore input acc
 	AND	0FH		; e356  e6 0f		f.	;get LSB
 	CALL	XE03F		; e358  cd 3f e0	M?`
 	POP	BC		; e35b  c1		A	;restore HL,DE,BC
@@ -735,7 +751,7 @@ XE370:	XOR	A		; e370  af		/	;A=0
 XE372:	LD	(XE3D3),A	; e372  32 d3 e3	2Sc
 	CP	4		; e375  fe 04		~.
 	JR	NC,XE37F	; e377  30 06		0.
-	LD	A,(XF077)	; e379  3a 77 f0	:wp
+	LD	A,(read_blk_i)	; e379  3a 77 f0	:wp
 	DEC	A		; e37c  3d		=
 	JR	NZ,XE34D	; e37d  20 ce		 N
 XE37F:	LD	A,C		; e37f  79		y
@@ -798,7 +814,7 @@ XE3D3:	DB	'  D '			; e3d3	20 20 55 20	  D
 XE3D7:	DB	'  S '			; e3d7	20 20 53 20	  S 
 	DB	'  '			; e3db  20 20		  
 XE3DE:	DB	' ',0			; e3de  20 00	   	 .
-	DB	0dh, 0ah, 80h		; e3df	0d 0a 80	...
+	DB	0dh, 0ah, 80h		; e3df	0d 0a		..
 
 ;*****************************************************************************
 ;				more code
@@ -1212,7 +1228,7 @@ var_0:	DB	01h		; e6e1  01		.
 
 XE6E6:	DW	e6e2h		;e6e6  e2 e6		bf
 XE6E8:	DB	01h		;e6e8  01		.
-XE6E9:	DB	0ah		;e6e9  0a		.
+read_max_blk:	DB	0ah		;e6e9  0a		.
 
 ;*****************************************************************************
 ;				code block
@@ -1287,9 +1303,9 @@ XF070	EQU	0F070H			;data
 XF072	EQU	0F072H			;data
 XF073	EQU	0F073H			;data
 v_drvctrl	EQU	0F074H		;data
-XF076	EQU	0F076H			;data
-XF077	EQU	0F077H			;data
-XF078	EQU	0F078H			;data
+read_n_blks	EQU	0F076H			;data
+read_blk_i	EQU	0F077H			;data
+expected_sync2	EQU	0F078H			;data
 
 
 ;data
