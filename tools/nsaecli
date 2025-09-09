@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 # nsaectl file
-nsaectl=$1
+nsaectl_override=$1
+nsaectl="${nsaectl_override:-nsaectl}"
 
 # setup history
 histfile="${XDG_CACHE_HOME:-$HOME/.cache}/nsaecli_history"
@@ -46,6 +47,10 @@ do
                 ;;
             clear)
                 clear
+                continue
+                ;;
+            sleep)
+                sleep 1
                 continue
                 ;;
         esac # is rediculous
