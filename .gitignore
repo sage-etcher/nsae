@@ -1,1 +1,8 @@
 nsae.log
+tools/write_binary
+tools/write_binary.c
+test.sh
+test.txt
+test-nsaectl
+**.log
+disks/2/
