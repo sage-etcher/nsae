@@ -31,6 +31,8 @@ int ram_load_prom_from_file (ram_t *self, char *file);
 uint8_t ram_read (ram_t *self, uint32_t addr);
 int ram_write (ram_t *self, uint32_t addr, uint8_t data);
 
+void ram_inspect (ram_t *self, uint32_t addr, uint32_t n);
+
 
 #ifdef __cplusplus
 }

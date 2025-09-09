@@ -22,6 +22,8 @@ int crt_init (crt_t *self, ram_t *p_ram, uint32_t vram_offset);
 
 void crt_draw (crt_t *self);
 
+void crt_status (crt_t *self);
+
 
 #ifdef __cplusplus
 }

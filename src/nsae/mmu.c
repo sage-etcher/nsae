@@ -11,8 +11,6 @@
 #include <stdio.h>
 #include <string.h>
 
-static uint32_t mmu_decode (mmu_t *self, uint16_t addr);
-
 
 int
 mmu_init (mmu_t *self, uint8_t slot_bit, ram_t *p_ram)
@@ -51,7 +49,7 @@ mmu_load_page (mmu_t *self, uint8_t slot, uint8_t page)
     log_mmu ("nsae: mmu: mapped page %1x into slot %1x\n", page, slot);
 }
 
-static uint32_t
+uint32_t
 mmu_decode (mmu_t *self, uint16_t addr)
 {
     assert (self != NULL);
@@ -101,6 +99,23 @@ mmu_write (mmu_t *self, uint16_t addr, uint8_t data)
     log_mmu ("nsae: mmu: write %04x (%05x) %02x\n", addr, abs_addr, data);
 
     ram_write (self->p_ram, abs_addr, data);
+}
+
+void
+mmu_status (mmu_t *self)
+{
+    log_info ("0: %1x %05x 0x0000\n", 
+            self->slots[0],
+            self->bases[self->slots[0]]);
+    log_info ("1: %1x %05x 0x4000\n", 
+            self->slots[1],
+            self->bases[self->slots[1]]);
+    log_info ("2: %1x %05x 0x8000\n", 
+            self->slots[2],
+            self->bases[self->slots[2]]);
+    log_info ("3: %1x %05x 0xC000\n", 
+            self->slots[3],
+            self->bases[self->slots[3]]);
 }
 
 

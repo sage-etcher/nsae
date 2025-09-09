@@ -1,6 +1,7 @@
 
 #include "crt.h"
 
+#include "log.h"
 #include "ram.h"
 
 #include <GL/glew.h>
@@ -69,6 +70,15 @@ crt_draw (crt_t *self)
 
     /* set display flag */
     self->vrefresh = true;
+}
+
+void
+crt_status (crt_t *self)
+{
+    log_info ("blank: %1d\tvrefresh: %1d\tscroll_reg: %d\n",
+            self->blank,
+            self->vrefresh,
+            self->scroll_reg);
 }
 
 /* end of file */

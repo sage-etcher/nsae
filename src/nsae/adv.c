@@ -432,4 +432,20 @@ adv_out (adv_t *self, uint8_t port, uint8_t data, uint16_t pc)
 }
 
 
+void
+adv_status (adv_t *self)
+{
+    log_info ("kb_mi: %1d\tkb_nmi: %1d\tcrt_mi: %1d\thw_interupt: %1d\n",
+            self->kb_mi,
+            self->kb_nmi,
+            self->crt_mi,
+            self->hw_interupt);
+    log_info ("cmd_ack: %1d\tctrl: %02x\tstat1: %02x\tstat2: %02x\n",
+            self->cmd_ack,
+            self->ctrl_reg,
+            self->stat1_reg,
+            self->stat2_reg);
+}
+
+
 /* end of file */

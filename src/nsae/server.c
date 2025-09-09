@@ -265,8 +265,7 @@ server_handle_ipc (nsae_t *self)
 
     case NSAE_CMD_STATUS:
         log_verbose ("nsae: server: status\n");
-        log_info ("step: %d\n", self->step);
-        log_info ("pause: %d\n", self->pause);
+        nsae_status (self);
         break;
 
     /* log */
@@ -347,43 +346,7 @@ server_handle_ipc (nsae_t *self)
 
     case NSAE_CMD_FD_STATUS:
         log_verbose ("nsae: server: fd_status\n");
-
-        log_info ("power:     %1d\tmotor:   %1d\tdisk:    %1d\tside:  %1d\n",
-                self->adv.fdc.powered,
-                self->adv.fdc.motor_enabled,
-                self->adv.fdc.disk,
-                self->adv.fdc.side);
-        log_info ("track0:    %1d\tspulse:  %1d\tsmark:   %1d\tsdata: %1d\n",
-                self->adv.fdc.track_zero,
-                self->adv.fdc.step_pulse,
-                self->adv.fdc.sector_mark,
-                self->adv.fdc.serial_data);
-        log_info ("direction: %1d\tprecomp: %1d\tread:    %1d\twrite: %1d\n",
-                self->adv.fdc.step_direction,
-                self->adv.fdc.precompensation,
-                self->adv.fdc.read_mode,
-                self->adv.fdc.write_mode);
-        log_info ("preamble: %2d\tsync:    %1d\tindex: %3d\tt: %2d\n",
-                self->adv.fdc.preamble,
-                self->adv.fdc.sync,
-                self->adv.fdc.index,
-                self->adv.fdc.sector_mark_hold);
-        log_info ("disk 0: %4s\tt: %2d\ts: %2d\twp: %1d\t%s\n",
-                (!self->adv.fdc.disk_loaded[0] ? "    " :
-                    (self->adv.fdc.disk_type[0] == FD_SSDD ? "SSDD" :
-                     self->adv.fdc.disk_type[0] == FD_DSDD ? "DSDD" : "????")),
-                self->adv.fdc.track[0],
-                self->adv.fdc.sector[0],
-                self->adv.fdc.hard_ro,
-                (!self->adv.fdc.disk_loaded[0] ? "none" : self->adv.fdc.filename[0]));
-        log_info ("disk 1: %4s\tt: %2d\ts: %2d\twp: %1d\t%s\n",
-                (!self->adv.fdc.disk_loaded[1] ? "    " :
-                    (self->adv.fdc.disk_type[1] == FD_SSDD ? "SSDD" :
-                     self->adv.fdc.disk_type[1] == FD_DSDD ? "DSDD" : "????")),
-                self->adv.fdc.track[1],
-                self->adv.fdc.sector[1],
-                self->adv.fdc.hard_ro,
-                (!self->adv.fdc.disk_loaded[1] ? "none" : self->adv.fdc.filename[1]));
+        fdc_status (&self->adv.fdc);
         break;
 
 
@@ -443,19 +406,7 @@ server_handle_ipc (nsae_t *self)
 
     case NSAE_CMD_KB_STATUS:
         log_verbose ("nsae: server: kb_status\n");
-        log_info ("overflow: %1d\tdata_flag: %1d\treset: %1d\n",
-                self->adv.kb.overflow,
-                self->adv.kb.data_flag,
-                self->adv.kb.reset);
-        log_info ("cursor_lock: %1d\tcaps_lock: %1d\tautorepeat: %1d\n", 
-                self->adv.kb.cursor_lock,
-                self->adv.kb.caps_lock,
-                self->adv.kb.autorepeat);
-        log_info ("buf[]: %02x %02x %02x %02x %02x %02x %02x\n", 
-                self->adv.kb.buf[0], self->adv.kb.buf[1], self->adv.kb.buf[2],
-                self->adv.kb.buf[3], self->adv.kb.buf[4], self->adv.kb.buf[5],
-                self->adv.kb.buf[6]);
-        log_info ("buf_cnt: %1d\n", self->adv.kb.buf_cnt);
+        kb_status (&self->adv.kb);
         break;
 
 
@@ -468,26 +419,14 @@ server_handle_ipc (nsae_t *self)
     /* crt display */
     case NSAE_CMD_CRT_STATUS:
         log_verbose ("nsae: server: crt_status\n");
-        log_info ("blank: %1d\tvrefresh: %1d\tscroll_reg: %d\n",
-                self->adv.crt.blank,
-                self->adv.crt.vrefresh,
-                self->adv.crt.scroll_reg);
+        crt_status (&self->adv.crt);
         break;
 
 
     /* system advantage */
     case NSAE_CMD_ADV_STATUS:
         log_verbose ("nsae: server: adv_status\n");
-        log_info ("kb_mi: %1d\tkb_nmi: %1d\tcrt_mi: %1d\thw_interupt: %1d\n",
-                self->adv.kb_mi,
-                self->adv.kb_nmi,
-                self->adv.crt_mi,
-                self->adv.hw_interupt);
-        log_info ("cmd_ack: %1d\tctrl: %02x\tstat1: %02x\tstat2: %02x\n",
-                self->adv.cmd_ack,
-                self->adv.ctrl_reg,
-                self->adv.stat1_reg,
-                self->adv.stat2_reg);
+        adv_status (&self->adv);
         break;
 
     case NSAE_CMD_ADV_OUT:
@@ -504,63 +443,14 @@ server_handle_ipc (nsae_t *self)
     /* cpu z80 */
     case NSAE_CMD_CPU_STATUS:
         log_verbose ("nsae: server: cpu_status\n");
-        log_info ("status: %d\talternates: %04x %04x %04x %04x\n",
-                self->adv.cpu.state.status,
-                self->adv.cpu.state.alternates[0],
-                self->adv.cpu.state.alternates[1],
-                self->adv.cpu.state.alternates[2],
-                self->adv.cpu.state.alternates[3]
-        );
-        log_info ("AF: %02x %02x\tBC: %02x %02x\tDE: %02x %02x\tHL: %02x %02x\n",
-                self->adv.cpu.state.registers.byte[Z80_A],
-                self->adv.cpu.state.registers.byte[Z80_F],
-                self->adv.cpu.state.registers.byte[Z80_B],
-                self->adv.cpu.state.registers.byte[Z80_C],
-                self->adv.cpu.state.registers.byte[Z80_D],
-                self->adv.cpu.state.registers.byte[Z80_E],
-                self->adv.cpu.state.registers.byte[Z80_H],
-                self->adv.cpu.state.registers.byte[Z80_L]
-        );
-        log_info ("IX: %04x\tIY: %04x\tSP: %04x *%02x\tPC: %04x *%02x\n",
-                self->adv.cpu.state.registers.word[Z80_IX],
-                self->adv.cpu.state.registers.word[Z80_IY],
-                self->adv.cpu.state.registers.word[Z80_SP],
-                mmu_read (&self->adv.mmu, self->adv.cpu.state.registers.word[Z80_SP]),
-                self->adv.cpu.state.pc,
-                mmu_read (&self->adv.mmu, self->adv.cpu.state.pc)
-        );
-        log_info ("I: %04x  R: %04x  IFF1: %04x  IFF2: %04x  IM: %04x\n",
-                self->adv.cpu.state.i,
-                self->adv.cpu.state.r,
-                self->adv.cpu.state.iff1,
-                self->adv.cpu.state.iff2,
-                self->adv.cpu.state.im
-        );
+        cpu_status (&self->adv.cpu, &self->adv.mmu);
         break;
 
 
     /* raw ram */
     case NSAE_CMD_RAM_READ:
         log_verbose ("nsae: server: ram_read %05x %zu\n", abs_addr, n);
-        for (uint32_t iter = abs_addr; iter < abs_addr + n; iter = (iter & ~0xf) + 0x10)
-        {
-            log_info ("ram (%05x): ", iter & ~0xf);
-            for (int i = 0; i < 0x10; i++)
-            {
-                log_info ("%02x ", ram_read (&self->adv.ram, (iter & ~0xf) + i));
-                if (((i+1) % 4) == 0)
-                {
-                    log_info (" ");
-                }
-            }
-            log_info ("\t");
-            for (int i = 0; i < 0x10; i++)
-            {
-                data = ram_read (&self->adv.ram, (iter & ~0xf) + i);
-                log_info ("%c", (isprint (data) ? data : '.'));
-            }
-            log_info ("\n");
-        }
+        ram_inspect (&self->adv.ram, abs_addr, n);
         break;
 
     case NSAE_CMD_RAM_WRITE:
@@ -579,25 +469,8 @@ server_handle_ipc (nsae_t *self)
     /* memory multipliexer */
     case NSAE_CMD_MMU_READ:
         log_verbose ("nsae: server: mmu_read %04x %zu\n", addr, n);
-        for (uint16_t iter = addr; iter < addr + n; iter = (iter & ~0xf) + 0x10)
-        {
-            log_info ("mmu (%04x):  ", iter & ~0xf);
-            for (int i = 0; i < 0x10; i++)
-            {
-                log_info ("%02x ", mmu_read (&self->adv.mmu, (iter & ~0xf) + i));
-                if (((i+1) % 4) == 0)
-                {
-                    log_info (" ");
-                }
-            }
-            log_info ("\t");
-            for (int i = 0; i < 0x10; i++)
-            {
-                data = mmu_read (&self->adv.mmu, (iter & ~0xf) + i);
-                log_info ("%c", (isprint (data) ? data : '.'));
-            }
-            log_info ("\n");
-        }
+        abs_addr = mmu_decode (&self->adv.mmu, addr);
+        ram_inspect (&self->adv.ram, abs_addr, n);
         break;
 
     case NSAE_CMD_MMU_WRITE:
@@ -612,18 +485,7 @@ server_handle_ipc (nsae_t *self)
 
     case NSAE_CMD_MMU_STATUS:
         log_verbose ("nsae: server: mmu_status\n");
-        log_info ("0: %1x %05x 0x0000\n", 
-                self->adv.mmu.slots[0],
-                self->adv.mmu.bases[self->adv.mmu.slots[0]]);
-        log_info ("1: %1x %05x 0x4000\n", 
-                self->adv.mmu.slots[1],
-                self->adv.mmu.bases[self->adv.mmu.slots[1]]);
-        log_info ("2: %1x %05x 0x8000\n", 
-                self->adv.mmu.slots[2],
-                self->adv.mmu.bases[self->adv.mmu.slots[2]]);
-        log_info ("3: %1x %05x 0xC000\n", 
-                self->adv.mmu.slots[3],
-                self->adv.mmu.bases[self->adv.mmu.slots[3]]);
+        mmu_status (&self->adv.mmu);
         break;
     }
 

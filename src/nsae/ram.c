@@ -4,6 +4,7 @@
 #include "ram.h"
 
 #include <assert.h>
+#include <ctype.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -102,6 +103,40 @@ ram_write (ram_t *self, uint32_t addr, uint8_t data)
     self->m[addr] = data;
 
     return 0;
+}
+
+void
+ram_inspect (ram_t *self, uint32_t addr, uint32_t n)
+{
+    uint32_t base = addr & ~0x0000f;
+    uint32_t end  = addr + n;
+
+    for (uint32_t row = base; row < end; row += 0x0000f)
+    {
+        /* line label */
+        log_info ("(%05x): ", row);
+
+        /* print hex */
+        for (uint32_t col = 0; col < 0x10; col++)
+        {
+            log_info ("%02x ", ram_read (self, row + col));
+            if (((col+1) % 4) == 0)
+            {
+                log_info (" ");
+            }
+        }
+
+        /* print ascii */
+        log_info ("\t");
+        for (uint32_t col = 0; col < 0x10; col++)
+        {
+            uint8_t data = ram_read (self, row + col);
+            log_info ("%c", (isprint (data) ? data : '.'));
+        }
+
+        /* end of line */
+        log_info ("\n");
+    }
 }
 
 

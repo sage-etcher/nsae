@@ -24,9 +24,12 @@ int mmu_init (mmu_t *self, uint8_t slot_bit, ram_t *p_ram);
 void mmu_init_page (mmu_t *self, uint8_t page, uint16_t mask, uint32_t base);
 void mmu_load_page (mmu_t *self, uint8_t slot, uint8_t page);
 
+uint32_t mmu_decode (mmu_t *self, uint16_t addr);
 uint8_t *mmu_deref (mmu_t *self, uint16_t addr);
 uint8_t mmu_read (mmu_t *self, uint16_t addr);
 void mmu_write (mmu_t *self, uint16_t addr, uint8_t data);
+
+void mmu_status (mmu_t *self);
 
 #ifdef __cplusplus
 }

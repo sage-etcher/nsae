@@ -118,5 +118,23 @@ kb_get_msb (kb_t *self)
     return msb;
 }
 
+void
+kb_status (kb_t *self)
+{
+    log_info ("overflow: %1d\tdata_flag: %1d\treset: %1d\n",
+            self->overflow,
+            self->data_flag,
+            self->reset);
+    log_info ("cursor_lock: %1d\tcaps_lock: %1d\tautorepeat: %1d\n", 
+            self->cursor_lock,
+            self->caps_lock,
+            self->autorepeat);
+    log_info ("buf[]: %02x %02x %02x %02x %02x %02x %02x\n", 
+            self->buf[0], self->buf[1], self->buf[2],
+            self->buf[3], self->buf[4], self->buf[5],
+            self->buf[6]);
+    log_info ("buf_cnt: %1d\n", self->buf_cnt);
+}
+
 
 /* end of file */

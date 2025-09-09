@@ -262,4 +262,11 @@ nsae_main_loop (int val, void *cb_data)
 
 }
 
+void
+nsae_status (nsae_t *self)
+{
+    log_info ("step: %d\n", self->step);
+    log_info ("pause: %d\n", self->pause);
+}
+
 /* end of file */

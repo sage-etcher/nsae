@@ -33,6 +33,8 @@ typedef struct {
 
 int nsae_start (nsae_t *self, int *p_argc, char **argv);
 
+void nsae_status (nsae_t *self);
+
 #ifdef __cplusplus
 }
 #endif

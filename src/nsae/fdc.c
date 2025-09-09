@@ -473,4 +473,46 @@ fdc_write (fdc_t *self, uint8_t data)
     *p_addr = data;
 }
 
+void
+fdc_status (fdc_t *self)
+{
+    log_info ("power:     %1d\tmotor:   %1d\tdisk:    %1d\tside:  %1d\n",
+            self->powered,
+            self->motor_enabled,
+            self->disk,
+            self->side);
+    log_info ("track0:    %1d\tspulse:  %1d\tsmark:   %1d\tsdata: %1d\n",
+            self->track_zero,
+            self->step_pulse,
+            self->sector_mark,
+            self->serial_data);
+    log_info ("direction: %1d\tprecomp: %1d\tread:    %1d\twrite: %1d\n",
+            self->step_direction,
+            self->precompensation,
+            self->read_mode,
+            self->write_mode);
+    log_info ("preamble: %2d\tsync:    %1d\tindex: %3d\tt: %2d\n",
+            self->preamble,
+            self->sync,
+            self->index,
+            self->sector_mark_hold);
+    log_info ("disk 0: %4s\tt: %2d\ts: %2d\twp: %1d\t%s\n",
+            (!self->disk_loaded[0] ? "    " :
+                (self->disk_type[0] == FD_SSDD ? "SSDD" :
+                 self->disk_type[0] == FD_DSDD ? "DSDD" : "????")),
+            self->track[0],
+            self->sector[0],
+            self->hard_ro,
+            (!self->disk_loaded[0] ? "none" : self->filename[0]));
+    log_info ("disk 1: %4s\tt: %2d\ts: %2d\twp: %1d\t%s\n",
+            (!self->disk_loaded[1] ? "    " :
+                (self->disk_type[1] == FD_SSDD ? "SSDD" :
+                 self->disk_type[1] == FD_DSDD ? "DSDD" : "????")),
+            self->track[1],
+            self->sector[1],
+            self->hard_ro,
+            (!self->disk_loaded[1] ? "none" : self->filename[1]));
+}
+
+
 /* end of file */

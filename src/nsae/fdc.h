@@ -90,6 +90,8 @@ void fdc_write (fdc_t *self, uint8_t data);
 uint32_t fdc_calc_disk_offset (uint8_t side, uint8_t track, uint8_t sector, 
         uint16_t i);
 
+void fdc_status (fdc_t *self);
+
 #ifdef __cplusplus
 }
 #endif

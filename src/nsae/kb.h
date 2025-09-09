@@ -32,6 +32,8 @@ uint8_t kb_pop (kb_t *self);
 uint8_t kb_get_lsb (kb_t *self);
 uint8_t kb_get_msb (kb_t *self);
 
+void kb_status (kb_t *self);
+
 #ifdef __cplusplus
 }
 #endif
