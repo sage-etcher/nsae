@@ -18,7 +18,7 @@ fdc_init (fdc_t *self)
 
     memset (self, 0, sizeof (*self));
     self->powered = true;
-    self->last_sector = FD_SECTORS - 1;
+    self->sector_prn = 0xf;
 
     return 0;
 }
@@ -170,11 +170,17 @@ fdc_secmark_high (fdc_t *self)
     //log_fdc ("nsae: fdc: sector_mark low\n");
 
     self->sector_mark = false;
-    self->sector_mark_hold = 40;
-    //self->sector_mark_hold = 3300;
 
-    /* it is only ready after the sectormark leaves */
-    self->serial_data = true;
+    if (self->sector[self->disk] == 0xf)
+    {
+        self->sector_mark_hold = 10;
+        self->serial_data = false;
+    }
+    else
+    {
+        self->sector_mark_hold = 40;
+        self->serial_data = true;
+    }
 }
 
 
@@ -274,11 +280,14 @@ fdc_step (fdc_t *self)
 void
 fdc_next_sector (fdc_t *self)
 {
-    self->last_sector = self->sector[self->disk];
+    self->sector_prn = self->sector[self->disk];
+    if (self->sector_prn == 9)
+    {
+        self->sector_prn = 0x0f;
+    }
+
     self->sector[self->disk]++;
     self->sector[self->disk] %= FD_SECTORS;
-
-    //log_debug ("at sector: %2d\n", self->sector[self->disk]);
 }
 
 
@@ -292,12 +301,7 @@ fdc_get_sector (fdc_t *self)
         return 0x0e;
     }
 
-    if (self->last_sector == 9)
-    {
-        return 0x0f;
-    }
-
-    return self->last_sector;
+    return self->sector_prn;
 }
 
 uint8_t
@@ -324,7 +328,6 @@ fdc_read_sync2 (fdc_t *self)
 uint32_t 
 fdc_calc_disk_offset (uint8_t side, uint8_t track, uint8_t sector, uint16_t i)
 {
-
     uint32_t abs_track = (side * FD_TRACKS) + track;
     uint32_t abs_sector = (abs_track * FD_SECTORS) + sector;
     uint32_t offset = (abs_sector * FD_BLKSIZE) + i;
@@ -363,8 +366,15 @@ uint8_t
 fdc_read (fdc_t *self)
 {
     assert (self != NULL);
-
+    
     if (!self->read_mode) return 0x00;
+
+    if (self->sector[self->disk] >= FD_SECTORS)
+    {
+        log_error ("nsae: fdc: trying to read from bad sector -- %d\n",
+                self->sector[self->disk]);
+        return 0x00;
+    }
 
     if (self->sync == 1)
     {
@@ -409,6 +419,13 @@ fdc_write (fdc_t *self, uint8_t data)
     assert (self != NULL);
 
     if (!self->write_mode) return;
+
+    if (self->sector[self->disk] >= FD_SECTORS)
+    {
+        log_error ("nsae: fdc: trying to write to bad sector -- %d\n",
+                self->sector[self->disk]);
+        return;
+    }
 
     /* preamble 33 bytes */
     if (self->preamble < 33)
