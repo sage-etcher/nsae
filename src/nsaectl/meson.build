@@ -32,11 +32,12 @@ nsaectl = executable('nsaectl', [
   ],
   dependencies : [
     log_dep,
+    nsaecmd_dep,
     nsaeipc_dep,
   ],
   install : true,
 )
 
-debug_server = executable('debug_server', 'debug_server.c', dependencies: nsaeipc_dep)
+#debug_server = executable('debug_server', 'debug_server.c', dependencies: nsaeipc_dep)
 
 # end of file
