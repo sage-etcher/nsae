@@ -217,6 +217,10 @@ nsae_update (void *cb_data)
     }
 
     i += adv_run (adv, cycles, self);
+    if (self->pause)
+    {
+        cpu_status (&adv->cpu, &adv->mmu);
+    }
 }
 
 static void
