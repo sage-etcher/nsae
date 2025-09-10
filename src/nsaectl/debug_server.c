@@ -10,186 +10,193 @@
 int
 main (void)
 {
-#define BUF_MAX 128
-    char buf[BUF_MAX+1];
+    int rc = 0;
     int exit_flag = 0;
 
+    uint32_t packet_size = 0;
+    nsae_packet_t *packet = NULL;
+
+
     nsae_ipc_init (NSAE_IPC_SERVER, NULL, NULL);
+
     while (!exit_flag)
     {
-        uint8_t cmd = 0;
-        int rc = nsae_ipc_recieve ((uint8_t *)&cmd, sizeof (uint8_t));
-        if (rc <= 0) 
+        /* wait for packet_size */
+        packet_size = 0;
+        rc = nsae_ipc_recieve (&packet_size, sizeof (uint32_t));
+        if (rc <= 0)
         {
             sleep (1);
-            continue; 
+            continue;
         }
 
-        uint8_t fd_num = 0;
-        uint8_t fd_side = 0;
-        uint8_t fd_track = 0;
-        uint8_t fd_sec = 0;
-        uint8_t kb_state = 0;
-        uint8_t kb_keycode = 0;
-        size_t filename_len = 0;
-        uint8_t slot = 0;
-        uint8_t page = 0;
-        uint16_t addr = 0;
-        uint32_t abs_addr = 0;
-        uint8_t port = 0;
-        uint8_t data = 0;
-        size_t n = 0;
-
-        switch (cmd)
+        /* enforce minimum packet size */
+        if (packet_size < sizeof (nsae_packet_t))
         {
-        case NSAE_CMD_EXIT: 
-            exit_flag = 1; 
-            puts ("exit"); 
-            break;
+            printf ("packet_size cannot be less than %zu\n", 
+                    sizeof (nsae_packet_t));
+            exit_flag = 1;
+            continue;
+        }
 
-        case NSAE_CMD_BRKPNT_SET:
-        case NSAE_CMD_BRKPNT_REMOVE:
-            nsae_ipc_recieve_block ((uint8_t *)&addr, sizeof (uint16_t));
+        /* wait for full packet */
+        packet = realloc (packet, packet_size);
+        rc = nsae_ipc_recieve_block (packet, packet_size);
 
-            printf ("breakpoint %s %04x\n", 
-                    (cmd == NSAE_CMD_BRKPNT_SET    ? "set"    :
-                     cmd == NSAE_CMD_BRKPNT_REMOVE ? "remove" : "unknown"),
-                    (unsigned)addr);
-            break;
-
-        case NSAE_CMD_BRKPNT_LIST:
-            printf ("breakpoint list\n");
-            break;
-
-        case NSAE_CMD_FD_EJECT:
-        case NSAE_CMD_FD_STATUS:
-            nsae_ipc_recieve_block ((uint8_t *)&fd_num, sizeof (uint8_t));
-            printf ("%s %u\n",
-                    (cmd == NSAE_CMD_FD_EJECT ? "fd_eject" : "fd_status"),
-                    fd_num);
-            break;
-
-        case NSAE_CMD_FD_BLK_READ:
-            nsae_ipc_recieve_block ((uint8_t *)&fd_num, sizeof (uint8_t));
-            nsae_ipc_recieve_block ((uint8_t *)&fd_side, sizeof (uint8_t));
-            nsae_ipc_recieve_block ((uint8_t *)&fd_track, sizeof (uint8_t));
-            nsae_ipc_recieve_block ((uint8_t *)&fd_sec, sizeof (uint8_t));
-
-            printf ("fd_blkread %d %d %d %d\n", 
-                    (int)fd_num, (int)fd_side, (int)fd_track, (int)fd_sec);
-            break;
-
+        /* enforce that (sizeof (nsae_packet_t) + buflen) == packet_size */
+        switch (packet->cmd)
+        {
+        case NSAE_CMD_LOG_OUTPUT:
         case NSAE_CMD_FD_LOAD:
         case NSAE_CMD_FD_SAVE:
-            nsae_ipc_recieve_block ((uint8_t *)&fd_num, sizeof (uint8_t));
-            nsae_ipc_recieve_block ((uint8_t *)&filename_len, sizeof (size_t));
-            nsae_ipc_recieve_block ((uint8_t *)buf, filename_len);
-            buf[BUF_MAX] = '\0';
-
-            printf ("%s %u %zu %s\n", 
-                    (cmd == NSAE_CMD_FD_LOAD ? "load_fd" :
-                     cmd == NSAE_CMD_FD_SAVE ? "save_fd" : "unknown"),
-                    (unsigned)fd_num, filename_len, buf);
-            break;
-
         case NSAE_CMD_HD_LOAD:
         case NSAE_CMD_HD_SAVE:
         case NSAE_CMD_PROM_LOAD:
-            nsae_ipc_recieve_block ((uint8_t *)&filename_len, sizeof (size_t));
-            nsae_ipc_recieve_block ((uint8_t *)buf, filename_len);
+            if (packet_size != (packet->v_buflen + sizeof (nsae_packet_t)))
+            {
+                pritnf ("packet_size buflen mismatch\n");
+                exit_flag = 1;
+                continue;
+            }
+            break;
+        }
 
-            printf ("%s %zu %s\n", 
-                    (cmd == NSAE_CMD_HD_LOAD   ? "load_hd"   :
-                     cmd == NSAE_CMD_HD_SAVE   ? "save_hd"   :
-                     cmd == NSAE_CMD_PROM_LOAD ? "prom_load" : "unknown"),
-                    filename_len, buf);
+        /* evaluate the packet */
+        switch (packet->cmd)
+        {
+        case NSAE_CMD_NOP:
+        case NSAE_CMD_RESTART:
+        case NSAE_CMD_PAUSE:
+        case NSAE_CMD_CONTINUE:
+        case NSAE_CMD_BRKPNT_LIST:
+        case NSAE_CMD_STEP:
+        case NSAE_CMD_RUN:
+        case NSAE_CMD_STATUS:
+        case NSAE_CMD_TERSE:
+        case NSAE_CMD_VERBOSE:
+        case NSAE_CMD_DEBUG:
+        case NSAE_CMD_HD_EJECT:
+        case NSAE_CMD_KB_POP:
+        case NSAE_CMD_KB_STATUS:
+        case NSAE_CMD_IO_STATUS:
+        case NSAE_CMD_CRT_STATUS:
+        case NSAE_CMD_ADV_STATUS:
+        case NSAE_CMD_MMU_STATUS:
+            printf ("%02x\n", packet->cmd);
             break;
 
-        case NSAE_CMD_KB_PUSH:
-            nsae_ipc_recieve_block ((uint8_t *)&kb_keycode, sizeof (uint8_t));
-            printf ("kb_push %02x\n", (unsigned)kb_keycode);
+        case NSAE_CMD_EXIT:
+            exit_flag = 1;
+            continue;
+
+        case NSAE_CMD_BRKPNT_SET:
+        case NSAE_CMD_BRKPNT_REMOVE:
+            printf ("%02x %04x\n", packet->cmd, packet->v_addr16);
             break;
 
-
+        case NSAE_CMD_LOG_CPU:
+        case NSAE_CMD_LOG_MMU:
+        case NSAE_CMD_LOG_RAM:
+        case NSAE_CMD_LOG_FDC:
+        case NSAE_CMD_LOG_CRT:
+        case NSAE_CMD_LOG_KB:
+        case NSAE_CMD_LOG_MOBO:
         case NSAE_CMD_KB_OVERFLOW:
         case NSAE_CMD_KB_CAPS:
         case NSAE_CMD_KB_CURSOR:
         case NSAE_CMD_KB_DATA:
         case NSAE_CMD_KB_INTERUPT:
-            nsae_ipc_recieve_block ((uint8_t *)&kb_state, sizeof (uint8_t));
-            printf ("%s %d\n", 
-                    (cmd == NSAE_CMD_KB_OVERFLOW ? "kb_overflow" :
-                     cmd == NSAE_CMD_KB_CAPS     ? "kb_caps"     :
-                     cmd == NSAE_CMD_KB_CURSOR   ? "kb_cursor"   :
-                     cmd == NSAE_CMD_KB_DATA     ? "kb_data"     :
-                     cmd == NSAE_CMD_KB_INTERUPT ? "kb_interupt" : "unknown"),
-                    (int)kb_state);
+            printf ("%02x %02x\n", packet->cmd, packet->v_state);
             break;
 
-        case NSAE_CMD_RAM_READ:
-            nsae_ipc_recieve_block ((uint8_t *)&abs_addr, sizeof (uint32_t));
-            nsae_ipc_recieve_block ((uint8_t *)&n, sizeof (size_t));
-            printf ("ram_read %08x %zu\n", abs_addr, n);
+        case NSAE_CMD_LOG_OUTPUT:
+        case NSAE_CMD_HD_LOAD:
+        case NSAE_CMD_HD_SAVE:
+        case NSAE_CMD_PROM_LOAD:
+            printf ("%02x %d %.*s\n",
+                    packet->cmd,
+                    packet->v_buflen,
+                    packet->v_buflen, packet->buf);
             break;
 
-        case NSAE_CMD_RAM_WRITE:
-            nsae_ipc_recieve_block ((uint8_t *)&abs_addr, sizeof (uint32_t));
-            nsae_ipc_recieve_block ((uint8_t *)&data, sizeof (uint8_t));
-            printf ("ram_write %08x %02x\n", abs_addr, data);
+        case NSAE_CMD_FD_EJECT:
+            printf ("%02x %02x\n", packet->cmd, packet->v_fd_num);
             break;
 
-        case NSAE_CMD_MMU_READ:
-            nsae_ipc_recieve_block ((uint8_t *)&addr, sizeof (uint16_t));
-            nsae_ipc_recieve_block ((uint8_t *)&n, sizeof (size_t));
-            printf ("mmu_read %04x %zu\n", addr, n);
+        case NSAE_CMD_FD_LOAD:
+        case NSAE_CMD_FD_SAVE:
+            printf ("%02x %02x %d %.*s\n", 
+                    packet->cmd, 
+                    packet->v_fd_num,
+                    packet->v_buflen,
+                    packet->v_buflen, packet->buf);
             break;
 
-        case NSAE_CMD_MMU_WRITE:
-            nsae_ipc_recieve_block ((uint8_t *)&addr, sizeof (uint16_t));
-            nsae_ipc_recieve_block ((uint8_t *)&data, sizeof (uint8_t));
-            printf ("mmu_write %04x %02x\n", addr, data);
-            break;
-
-        case NSAE_CMD_MMU_LOAD:
-            nsae_ipc_recieve_block ((uint8_t *)&slot, sizeof (uint8_t));
-            nsae_ipc_recieve_block ((uint8_t *)&page, sizeof (uint8_t));
-            printf ("mmu_load %x %x\n", (unsigned)slot, (unsigned)page);
-            break;
-        
-        case NSAE_CMD_ADV_IN:
-            nsae_ipc_recieve_block ((uint8_t *)&port, sizeof (uint8_t));
-            printf ("adv_in %02x", port);
+        case NSAE_CMD_KB_PUSH:
+            printf ("%02x %02x '%c'\n",
+                    packet->cmd,
+                    packet->v_keycode,
+                    packet->v_keycode);
             break;
 
         case NSAE_CMD_ADV_OUT:
-            nsae_ipc_recieve_block ((uint8_t *)&port, sizeof (uint8_t));
-            nsae_ipc_recieve_block ((uint8_t *)&data, sizeof (uint8_t));
-            printf ("adv_out %02x %02x", port, data);
+            printf ("%02x %02x %02x\n",
+                    packet->cmd,
+                    packet->v_port,
+                    packet->v_data);
             break;
 
-        case NSAE_CMD_RESTART:      puts ("restart"); break;
-        case NSAE_CMD_PAUSE:        puts ("pause"); break;
-        case NSAE_CMD_CONTINUE:     puts ("continue"); break;
-        case NSAE_CMD_STEP:         puts ("step"); break;
-        case NSAE_CMD_RUN:          puts ("run"); break;
-        case NSAE_CMD_STATUS:       puts ("status"); break;
-        case NSAE_CMD_HD_EJECT:     puts ("eject hd"); break;
-        case NSAE_CMD_KB_POP:       puts ("kb_pop"); break;
-        case NSAE_CMD_KB_STATUS:    puts ("kb_status"); break;
-        case NSAE_CMD_IO_STATUS:    puts ("io_status"); break;
-        case NSAE_CMD_CRT_STATUS:   puts ("crt_status"); break;
-        case NSAE_CMD_ADV_STATUS:   puts ("adv_status"); break;
-        case NSAE_CMD_CPU_STATUS:   puts ("cpu_status"); break;
-        case NSAE_CMD_MMU_STATUS:   puts ("mmu_status"); break;
+        case NSAE_CMD_ADV_IN:
+            printf ("%02x %02x\n", packet->cmd, packet->v_port);
+            break;
+
+        case NSAE_CMD_RAM_READ:
+            printf ("%02x %08x %08x\n",
+                    packet->cmd,
+                    packet->v_addr32,
+                    packet->v_span32);
+            break;
+
+        case NSAE_CMD_RAM_WRITE:
+            printf ("%02x %08x %02x\n",
+                    packet->cmd,
+                    packet->v_addr32,
+                    packet->v_data);
+            break;
+
+        case NSAE_CMD_MMU_READ:
+            printf ("%02x %04x %04x\n",
+                    packet->cmd,
+                    packet->v_addr16,
+                    packet->v_span16);
+            break;
+
+        case NSAE_CMD_RAM_WRITE:
+            printf ("%02x %04x %02x\n",
+                    packet->cmd,
+                    packet->v_addr16,
+                    packet->v_data);
+            break;
+
+        case NSAE_CMD_MMU_LOAD:
+            printf ("%02x %02x %02x\n",
+                    packet->cmd,
+                    packet->v_slot,
+                    packet->v_page);
+            break;
 
         default:
-            printf ("unkown command 0x%02x", cmd);
-            return 1;
+            printf ("unkown command %02x", cmd);
+            exit_flag = 1;
+            break;
         }
-
-
     }
 
+    free (packet);
+
     nsae_ipc_free (NSAE_IPC_SERVER);
+
     return 0;
 }
+
+/* end of file */
