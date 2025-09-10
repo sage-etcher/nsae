@@ -24,6 +24,74 @@
 #define USAGE_STR ___SRC_NSAECTL_NSAECTL_HELP
 #define USAGE_LEN ___SRC_NSAECTL_NSAECTL_HELP_LEN
 
+typedef struct {
+    uint8_t cmd;
+    int min_args;
+    int max_args;
+} concmd_t;
+
+void
+build_dictionary (void)
+{
+    dict_t *hash = dict_new (NSAE_CMD_COUNT);
+
+    dict_set ("exit",          concmd_new (NSAE_CMD_EXIT,          0, 0));
+    dict_set ("restart",       concmd_new (NSAE_CMD_RESTART,       0, 0));
+    dict_set ("pause",         concmd_new (NSAE_CMD_PAUSE,         0, 0));
+    dict_set ("continue",      concmd_new (NSAE_CMD_CONTINUE,      0, 0));
+    dict_set ("brkpnt_set",    concmd_new (NSAE_CMD_BRKPNT_SET,    0, 0));
+    dict_set ("brkpnt_remove", concmd_new (NSAE_CMD_BRKPNT_REMOVE, 0, 0));
+    dict_set ("brkpnt_list",   concmd_new (NSAE_CMD_BRKPNT_LIST,   0, 0));
+    dict_set ("step",          concmd_new (NSAE_CMD_STEP,          0, 0));
+    dict_set ("run",           concmd_new (NSAE_CMD_RUN,           0, 0));
+    dict_set ("status",        concmd_new (NSAE_CMD_STATUS,        0, 0));
+    dict_set ("log_cpu",       concmd_new (NSAE_CMD_LOG_CPU,       0, 0));
+    dict_set ("log_mmu",       concmd_new (NSAE_CMD_LOG_MMU,       0, 0));
+    dict_set ("log_ram",       concmd_new (NSAE_CMD_LOG_RAM,       0, 0));
+    dict_set ("log_fdc",       concmd_new (NSAE_CMD_LOG_FDC,       0, 0));
+    dict_set ("log_crt",       concmd_new (NSAE_CMD_LOG_CRT,       0, 0));
+    dict_set ("log_kb",        concmd_new (NSAE_CMD_LOG_KB,        0, 0));
+    dict_set ("log_mobo",      concmd_new (NSAE_CMD_LOG_MOBO,      0, 0));
+    dict_set ("log_terse",     concmd_new (NSAE_CMD_LOG_TERSE,     0, 0));
+    dict_set ("log_verbose",   concmd_new (NSAE_CMD_LOG_VERBOSE,   0, 0));
+    dict_set ("log_debug",     concmd_new (NSAE_CMD_LOG_DEBUG,     0, 0));
+    dict_set ("log_output",    concmd_new (NSAE_CMD_LOG_OUTPUT,    0, 0));
+    dict_set ("fd_eject",      concmd_new (NSAE_CMD_FD_EJECT,      0, 0));
+    dict_set ("fd_load",       concmd_new (NSAE_CMD_FD_LOAD,       0, 0));
+    dict_set ("fd_save",       concmd_new (NSAE_CMD_FD_SAVE,       0, 0));
+    dict_set ("fd_blk_read",   concmd_new (NSAE_CMD_FD_BLK_READ, 0, 0));
+    dict_set ("fd_status",     concmd_new (NSAE_CMD_FD_STATUS, 0, 0));
+    dict_set ("hd_eject",      concmd_new (NSAE_CMD_HD_EJECT, 0, 0));
+    dict_set ("hd_load",       concmd_new (NSAE_CMD_HD_LOAD, 0, 0));
+    dict_set ("hd_save",       concmd_new (NSAE_CMD_HD_SAVE, 0, 0));
+    dict_set ("hd_status",     concmd_new (NSAE_CMD_HD_STATUS, 0, 0));
+    dict_set ("kb_push",       concmd_new (NSAE_CMD_KB_PUSH, 0, 0));
+    dict_set ("kb_pop",        concmd_new (NSAE_CMD_KB_POP, 0, 0));
+    dict_set ("kb_overflow",   concmd_new (NSAE_CMD_KB_OVERFLOW, 0, 0));
+    dict_set ("kb_caps",       concmd_new (NSAE_CMD_KB_CAPS, 0, 0));
+    dict_set ("kb_cursor",     concmd_new (NSAE_CMD_KB_CURSOR, 0, 0));
+    dict_set ("kb_data",       concmd_new (NSAE_CMD_KB_DATA, 0, 0));
+    dict_set ("kb_interupt",   concmd_new (NSAE_CMD_KB_INTERUPT, 0, 0));
+    dict_set ("kb_status",     concmd_new (NSAE_CMD_KB_STATUS, 0, 0));
+    dict_set ("io_status",     concmd_new (NSAE_CMD_IO_STATUS, 0, 0));
+    dict_set ("crt_status",    concmd_new (NSAE_CMD_CRT_STATUS, 0, 0));
+    dict_set ("adv_out",       concmd_new (NSAE_CMD_ADV_OUT, 0, 0));
+    dict_set ("adv_in",        concmd_new (NSAE_CMD_ADV_IN, 0, 0));
+    dict_set ("adv_status",    concmd_new (NSAE_CMD_ADV_STATUS, 0, 0));
+    dict_set ("cpu_status",    concmd_new (NSAE_CMD_CPU_STATUS, 0, 0));
+    dict_set ("ram_read",      concmd_new (NSAE_CMD_RAM_READ, 0, 0));
+    dict_set ("ram_write",     concmd_new (NSAE_CMD_RAM_WRITE, 0, 0));
+    dict_set ("prom_load",     concmd_new (NSAE_CMD_PROM_LOAD, 0, 0));
+    dict_set ("mmu_read",      concmd_new (NSAE_CMD_MMU_READ, 0, 0));
+    dict_set ("mmu_write",     concmd_new (NSAE_CMD_MMU_WRITE, 0, 0));
+    dict_set ("mmu_load",      concmd_new (NSAE_CMD_MMU_LOAD, 0, 0));
+    dict_set ("mmu_status",    concmd_new (NSAE_CMD_MMU_STATUS, 0, 0));
+
+
+}
+
+
+
 
 int
 main (int argc, char **argv)
