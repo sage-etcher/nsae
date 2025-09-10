@@ -1,7 +1,7 @@
 
+#define LOG_CATEGORY LC_MMU
 #include "mmu.h"
 
-#include "log.h"
 #include "nslog.h"
 #include "ram.h"
 
@@ -46,7 +46,7 @@ mmu_load_page (mmu_t *self, uint8_t slot, uint8_t page)
 
     self->slots[slot] = page;
 
-    log_mmu ("nsae: mmu: mapped page %1x into slot %1x\n", page, slot);
+    log_debug ("nsae: mmu: mapped page %1x into slot %1x\n", page, slot);
 }
 
 uint32_t
@@ -70,7 +70,7 @@ mmu_decode (mmu_t *self, uint16_t addr)
         ((uint32_t)rel_addr & self->masks[page_num]) + self->bases[page_num],
     };
 
-    log_mmu ("nsae: mmu: decode %04x (%05x)\n", addr, abs_addr);
+    log_debug ("nsae: mmu: decode %04x (%05x)\n", addr, abs_addr);
 
     return abs_addr;
 }
@@ -83,7 +83,7 @@ mmu_read (mmu_t *self, uint16_t addr)
 
     uint32_t abs_addr = mmu_decode (self, addr);
 
-    log_mmu ("nsae: mmu: read %04x (%05x)\n", addr, abs_addr);
+    log_debug ("nsae: mmu: read %04x (%05x)\n", addr, abs_addr);
 
     return ram_read (self->p_ram, abs_addr);
 }
@@ -96,7 +96,7 @@ mmu_write (mmu_t *self, uint16_t addr, uint8_t data)
 
     uint32_t abs_addr = mmu_decode (self, addr);
 
-    log_mmu ("nsae: mmu: write %04x (%05x) %02x\n", addr, abs_addr, data);
+    log_debug ("nsae: mmu: write %04x (%05x) %02x\n", addr, abs_addr, data);
 
     ram_write (self->p_ram, abs_addr, data);
 }

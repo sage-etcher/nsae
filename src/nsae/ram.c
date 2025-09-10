@@ -1,7 +1,8 @@
 
-#include "log.h"
-#include "nslog.h"
+#define LOG_CATEGORY LC_RAM
 #include "ram.h"
+
+#include "nslog.h"
 
 #include <assert.h>
 #include <ctype.h>
@@ -30,7 +31,7 @@ ram_init (ram_t *self, uint8_t prom[], size_t n)
 int
 ram_load_prom (ram_t *self, uint8_t prom[], size_t n)
 {
-    log_ram ("nsae: ram: loading prom\n");
+    log_debug ("nsae: ram: loading prom\n");
     if (n > RAM_PROM_SIZE)
     {
         log_error ("nsae: ram: failed to initialize: prom too large\n");
@@ -50,7 +51,7 @@ ram_load_prom_from_file (ram_t *self, char *file)
 
     assert (file != NULL);
     
-    log_ram ("nsae: ram: loading prom from file %s\n", file);
+    log_debug ("nsae: ram: loading prom from file %s\n", file);
 
     fp = fopen (file, "rb");
     if (fp == NULL)
@@ -81,7 +82,7 @@ ram_read (ram_t *self, uint32_t addr)
     assert (self != NULL);
     assert (addr < RAM_SIZE);
 
-    log_ram ("nsae: ram: read from 0x%08x\n", addr);
+    log_debug ("nsae: ram: read from 0x%08x\n", addr);
 
     return self->m[addr];
 }
@@ -91,8 +92,8 @@ ram_write (ram_t *self, uint32_t addr, uint8_t data)
 {
     assert (self != NULL);
     assert (addr < RAM_SIZE);
-    
-    log_ram ("nsae: ram: write 0x%02x to 0x%08x\n", addr, data);
+
+    log_debug ("nsae: ram: write 0x%02x to 0x%08x\n", addr, data);
 
     if (addr >= RAM_BASE_PROM)
     {

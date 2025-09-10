@@ -26,8 +26,9 @@ typedef enum {
     NSAE_CMD_LOG_CRT,       /* 2     cmd state                     */
     NSAE_CMD_LOG_KB,        /* 2     cmd state                     */
     NSAE_CMD_LOG_MOBO,      /* 2     cmd state                     */
-    NSAE_CMD_LOG_VERBOSE,   /* 2     cmd state                     */
-    NSAE_CMD_LOG_DEBUG,     /* 2     cmd state                     */
+    NSAE_CMD_LOG_TERSE,     /* 1     cmd                           */
+    NSAE_CMD_LOG_VERBOSE,   /* 1     cmd                           */
+    NSAE_CMD_LOG_DEBUG,     /* 1     cmd                           */
     NSAE_CMD_LOG_OUTPUT,    /* 5/9+  cmd filename_len file         */
 
     /* floppydisk */
@@ -95,6 +96,10 @@ typedef enum {
  * uint8_t  state;          // 1
  * uint8_t  slot;           // 1
  */
+
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 
 typedef struct {
     size_t length;

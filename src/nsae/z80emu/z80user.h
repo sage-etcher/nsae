@@ -89,11 +89,13 @@ extern "C" {
  * "traps" to simulate system calls. 
  */
 
+#define LOG_CATEGORY LC_NSAE
+
 #include "adv.h"
 #include "breakpoints.h"
-#include "log.h"
 #include "mmu.h"
 #include "nsae.h"
+#include "nslog.h"
 
 #include <assert.h>
 #include <stddef.h>

@@ -1,7 +1,8 @@
 
+#define LOG_CATEGORY LC_CRT
 #include "crt.h"
 
-#include "log.h"
+#include "nslog.h"
 #include "ram.h"
 
 #include <GL/glew.h>

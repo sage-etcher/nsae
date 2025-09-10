@@ -1,7 +1,7 @@
 
+#define LOG_CATEGORY LC_KB
 #include "kb.h"
 
-#include "log.h"
 #include "nslog.h"
 
 #include <assert.h>
@@ -44,12 +44,12 @@ kb_push (kb_t *self, uint8_t key)
 {
     assert (self != NULL);
 
-    log_kb ("nsae: kb: push %02x '%c'\n", key, key);
+    log_debug ("nsae: kb: push %02x '%c'\n", key, key);
 
     /* set overflow */
     if (self->buf_cnt >= KB_BUF_MAX)
     {
-        log_kb ("nsae: kb: overflow\n");
+        log_debug ("nsae: kb: overflow\n");
         self->overflow = true;
         return;
     }
@@ -69,7 +69,7 @@ kb_pop (kb_t *self)
     /* save bottom value */
     uint8_t key = self->buf[0];
 
-    log_kb ("nsae: kb: pop  %02x '%c'\n", key, key);
+    log_debug ("nsae: kb: pop  %02x '%c'\n", key, key);
 
     /* shift buf left 1 */
     if (self->buf_cnt != 0)
@@ -96,7 +96,7 @@ kb_get_lsb (kb_t *self)
 
     uint8_t lsb = self->buf[0] & 0x0f;
 
-    log_kb ("nsae: kb: reading lsb 0x%02x\n", lsb);
+    log_debug ("nsae: kb: reading lsb 0x%02x\n", lsb);
 
     return lsb;
 }
@@ -113,7 +113,7 @@ kb_get_msb (kb_t *self)
 
     uint8_t msb = (kb_pop (self) & 0xf0) >> 4;
 
-    log_kb ("nsae: kb: reading msb 0x%02x\n", msb);
+    log_debug ("nsae: kb: reading msb 0x%02x\n", msb);
 
     return msb;
 }

@@ -1,10 +1,10 @@
 
+#define LOG_CATEGORY LC_NSAE
 #include "nsae.h"
 
 #include "adv.h"
 #include "crt.h"
 #include "kb.h"
-#include "log.h"
 #include "nsaeipc.h"
 #include "nslog.h"
 #include "server.h"
@@ -19,23 +19,6 @@
 #include <stdbool.h>
 #include <time.h>
 #include <unistd.h>
-
-FILE *g_log_fp = NULL;
-
-bool g_log_info = true;
-bool g_log_verbose = true;
-bool g_log_debug = true;
-bool g_log_warning = true;
-bool g_log_error = true;
-
-bool g_log_cpu = false;
-bool g_log_mmu = false;
-bool g_log_ram = false;
-bool g_log_fdc = false;
-bool g_log_crt = false;
-bool g_log_kb = false;
-bool g_log_mobo = false;
-
 
 static int gl_init (float win_width, float win_height,
                     float emu_width, float emu_height);
@@ -52,14 +35,14 @@ gl_init (float win_width, float win_height, float emu_width, float emu_height)
     GLenum glew_error = glewInit ();
     if (glew_error != GLEW_OK)
     {
-        log_error ("nsae: glew: initialization error: %s\n",
+        log_fatal ("nsae: glew: initialization error: %s\n",
                 glewGetErrorString (glew_error));
         return 1;
     }
 
     if (!GLEW_VERSION_1_2)
     {
-        log_error ("nsae: glew: insuffient OpenGL version, requires >=1.2\n");
+        log_fatal ("nsae: glew: insuffient OpenGL version, requires >=1.2\n");
         return 2;
     }
 
@@ -79,7 +62,7 @@ gl_init (float win_width, float win_height, float emu_width, float emu_height)
     GLenum gl_error = glGetError ();
     if (gl_error != GL_NO_ERROR)
     {
-        log_error ("nsae: opengl: initialization error: %s\n",
+        log_fatal ("nsae: opengl: initialization error: %s\n",
                 gluErrorString (gl_error));
         return 1;
     }
@@ -101,12 +84,13 @@ nsae_start (nsae_t *self, int *p_argc, char **argv)
     self->exit = false;
 
     int rc = 0;
+    log_init (LC_COUNT);
     rc |= nsae_ipc_init (NSAE_IPC_SERVER, NULL, NULL);
     rc |= adv_init (&self->adv);
 
     if (rc != 0)
     {
-        log_error ("nsae: failed to initialize\n");
+        log_fatal ("nsae: failed to initialize\n");
         return 1;
     }
 
@@ -142,6 +126,7 @@ nsae_start (nsae_t *self, int *p_argc, char **argv)
 
     /* cleanup */
     nsae_ipc_free (NSAE_IPC_SERVER);
+    log_quit ();
 
     return 0;
 }

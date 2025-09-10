@@ -1,9 +1,10 @@
 
+#define LOG_CATEGORY LC_GENERAL
 #include "client.h"
 
-#include "log.h"
-#include "nsaeipc.h"
 #include "nsaecmd.h"
+#include "nsaeipc.h"
+#include "nslog.h"
 
 #include <stdarg.h>
 #include <stddef.h>
@@ -62,8 +63,6 @@ vsend_cmd (uint8_t cmd, va_list args)
         case NSAE_CMD_LOG_CRT:      /* cmd state */
         case NSAE_CMD_LOG_KB:       /* cmd state */
         case NSAE_CMD_LOG_MOBO:     /* cmd state */
-        case NSAE_CMD_LOG_VERBOSE:  /* cmd state */
-        case NSAE_CMD_LOG_DEBUG:    /* cmd state */
         case NSAE_CMD_FD_EJECT:     /* cmd fd_num */
         case NSAE_CMD_FD_STATUS:    /* cmd fd_num */
         case NSAE_CMD_KB_PUSH:      /* cmd keycode */
@@ -134,6 +133,9 @@ vsend_cmd (uint8_t cmd, va_list args)
         case NSAE_CMD_STEP:
         case NSAE_CMD_RUN:
         case NSAE_CMD_STATUS:
+        case NSAE_CMD_LOG_TERSE:
+        case NSAE_CMD_LOG_VERBOSE:
+        case NSAE_CMD_LOG_DEBUG:
         case NSAE_CMD_HD_EJECT:
         case NSAE_CMD_KB_POP:
         case NSAE_CMD_KB_STATUS:

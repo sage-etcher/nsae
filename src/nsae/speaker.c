@@ -1,7 +1,8 @@
 
+#define LOG_CATEGORY LC_SPEAKER
 #include "speaker.h"
 
-#include "log.h"
+#include "nslog.h"
 
 #include <assert.h>
 #include <stddef.h>

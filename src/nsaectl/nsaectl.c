@@ -1,10 +1,11 @@
 
+#define LOG_CATEGORY LC_GENERAL
 #include "client.h"
-#include "log.h"
 #include "nsaecmd.h"
 #include "nsaeipc.h"
 #include "nsaectl_help.h"
 #include "nsaectl_version.h"
+#include "nslog.h"
 
 #include <assert.h>
 #include <stdbool.h>
@@ -24,21 +25,14 @@
 #define USAGE_LEN ___SRC_NSAECTL_NSAECTL_HELP_LEN
 
 
-FILE *g_log_fp = NULL;
-
-bool g_log_info    = true;
-bool g_log_verbose = false;
-bool g_log_debug   = false;
-bool g_log_warning = false;
-bool g_log_error   = true;
-
-
 int
 main (int argc, char **argv)
 {
     int opt = 0;
     char *custom_server = NULL;
     char *custom_client = NULL;
+
+    log_init (LC_COUNT);
 
     /* global options */
     while ((opt = getopt (argc, argv, "f:F:htvV")) != -1)
@@ -54,13 +48,11 @@ main (int argc, char **argv)
             break;
 
         case 't': /* terse */
-            g_log_warning = false;
-            g_log_verbose = false;
+            log_set (LOG_INFO);
             break;
 
         case 'v': /* verbose */
-            g_log_warning = true;
-            g_log_verbose = true;
+            log_set (LOG_VERBOSE);
             break;
 
         case 'V': /* version */
@@ -98,6 +90,7 @@ main (int argc, char **argv)
         [NSAE_CMD_LOG_CRT]       = "log_crt",
         [NSAE_CMD_LOG_KB]        = "log_kb",
         [NSAE_CMD_LOG_MOBO]      = "log_mobo",
+        [NSAE_CMD_LOG_TERSE]     = "log_terse",
         [NSAE_CMD_LOG_VERBOSE]   = "log_verbose",
         [NSAE_CMD_LOG_DEBUG]     = "log_debug",
         [NSAE_CMD_LOG_OUTPUT]    = "log_output",
@@ -190,8 +183,9 @@ main (int argc, char **argv)
         [NSAE_CMD_LOG_CRT]       = 2,
         [NSAE_CMD_LOG_KB]        = 2,
         [NSAE_CMD_LOG_MOBO]      = 2,
-        [NSAE_CMD_LOG_VERBOSE]   = 2,
-        [NSAE_CMD_LOG_DEBUG]     = 2,
+        [NSAE_CMD_LOG_TERSE]     = 1,
+        [NSAE_CMD_LOG_VERBOSE]   = 1,
+        [NSAE_CMD_LOG_DEBUG]     = 1,
         [NSAE_CMD_LOG_OUTPUT]    = 2,
 
         [NSAE_CMD_FD_EJECT]      = 2,
@@ -267,8 +261,6 @@ main (int argc, char **argv)
     case NSAE_CMD_LOG_CRT:      /* cmd state */
     case NSAE_CMD_LOG_KB:       /* cmd state */
     case NSAE_CMD_LOG_MOBO:     /* cmd state */
-    case NSAE_CMD_LOG_VERBOSE:  /* cmd state */
-    case NSAE_CMD_LOG_DEBUG:    /* cmd state */
     case NSAE_CMD_FD_EJECT:     /* cmd fd_num */
     case NSAE_CMD_KB_PUSH:      /* cmd keycode */
     case NSAE_CMD_KB_OVERFLOW:  /* cmd state */
@@ -322,6 +314,9 @@ main (int argc, char **argv)
     case NSAE_CMD_STEP:
     case NSAE_CMD_RUN:
     case NSAE_CMD_STATUS:
+    case NSAE_CMD_LOG_TERSE:
+    case NSAE_CMD_LOG_VERBOSE:
+    case NSAE_CMD_LOG_DEBUG:
     case NSAE_CMD_FD_STATUS:
     case NSAE_CMD_HD_EJECT:
     case NSAE_CMD_KB_POP:
@@ -341,6 +336,8 @@ main (int argc, char **argv)
 
     log_verbose ("nsaectl: closing connection to server\n");
     nsae_ipc_free (NSAE_IPC_CLIENT);
+
+    log_quit ();
 
     return 0;
 }

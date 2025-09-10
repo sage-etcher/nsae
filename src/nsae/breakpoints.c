@@ -1,7 +1,8 @@
 
+#define LOG_CATEGORY LC_NSAE
 #include "breakpoints.h"
 
-#include "log.h"
+#include "nslog.h"
 
 #include <assert.h>
 #include <stdbool.h>

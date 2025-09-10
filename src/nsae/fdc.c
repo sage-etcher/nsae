@@ -1,7 +1,7 @@
 
+#define LOG_CATEGORY LC_FDC
 #include "fdc.h"
 
-#include "log.h"
 #include "nslog.h"
 
 #include <assert.h>
@@ -125,7 +125,7 @@ void
 fdc_load_drvctrl (fdc_t *self, uint8_t data)
 {
     assert (self != NULL);
-    //log_fdc ("nsae: fdc: 0x%02x load drive control\n", data);
+    //log_debug ("nsae: fdc: 0x%02x load drive control\n", data);
 
     /* bit 5 precompensation and step_direction */
     self->step_direction = (data >> 5) & 0x01;
@@ -149,7 +149,7 @@ fdc_load_drvctrl (fdc_t *self, uint8_t data)
 static void 
 fdc_secmark_low (fdc_t *self)
 {
-    //log_fdc ("nsae: fdc: sector_mark high\n");
+    //log_debug ("nsae: fdc: sector_mark high\n");
 
     fdc_set_read (self, false);     /* cleared on the 0-1 */
     fdc_set_write (self, false);    /* cleared on leading edge */
@@ -167,7 +167,7 @@ fdc_secmark_low (fdc_t *self)
 static void 
 fdc_secmark_high (fdc_t *self)
 {
-    //log_fdc ("nsae: fdc: sector_mark low\n");
+    //log_debug ("nsae: fdc: sector_mark low\n");
 
     self->sector_mark = false;
 
@@ -213,7 +213,7 @@ void
 fdc_set_read (fdc_t *self, bool state)
 {
     assert (self != NULL);
-    //log_fdc ("nsae: fdc: %d set disk read\n", state);
+    //log_debug ("nsae: fdc: %d set disk read\n", state);
     self->read_mode = state;
     self->index = 0;
     self->sync = 0;
@@ -223,7 +223,7 @@ void
 fdc_set_write (fdc_t *self, bool state)
 {
     assert (self != NULL);
-    //log_fdc ("nsae: fdc: %d set disk write\n", state);
+    //log_debug ("nsae: fdc: %d set disk write\n", state);
     self->write_mode = state;
     self->index = 0;
     self->sync = 0;
@@ -233,7 +233,7 @@ void
 fdc_start_motor (fdc_t *self)
 {
     assert (self != NULL);
-    log_fdc ("nsae: fdc: start motor\n");
+    log_debug ("nsae: fdc: start motor\n");
     self->motor_enabled = true;
 }
 
@@ -241,7 +241,7 @@ void
 fdc_stop_motor (fdc_t *self)
 {
     assert (self != NULL);
-    log_fdc ("nsae: fdc: stop motor\n");
+    log_debug ("nsae: fdc: stop motor\n");
     self->motor_enabled = false;
 }
 
@@ -250,7 +250,7 @@ fdc_step (fdc_t *self)
 {
     assert (self != NULL);
 
-    log_fdc ("nsae: fdc: step\n");
+    log_debug ("nsae: fdc: step\n");
 
     uint8_t *p_track = &self->track[self->disk];
 
@@ -378,7 +378,7 @@ fdc_read (fdc_t *self)
 
     if (self->sync == 1)
     {
-        log_fdc ("nsae: fdc: read sync 2\n");
+        log_debug ("nsae: fdc: read sync 2\n");
         self->sync = 2;
         return fdc_read_sync2 (self);
     }
@@ -391,7 +391,7 @@ fdc_read (fdc_t *self)
     /* crc */
     if (self->index >= FD_BLKSIZE)
     {
-        log_fdc ("nsae: fdc: read crc\n");
+        log_debug ("nsae: fdc: read crc\n");
         fdc_secmark_low (self);
 
         /* calculate crc */
@@ -399,7 +399,7 @@ fdc_read (fdc_t *self)
     }
 
     /* data */
-    log_fdc ("nsae: fdc: read data 0x%02x from D%d Si%d T%2d Sec%2d I%2d (0x%08x)\n",
+    log_debug ("nsae: fdc: read data 0x%02x from D%d Si%d T%2d Sec%2d I%2d (0x%08x)\n",
             data, 
             self->disk,
             self->side,
@@ -430,7 +430,7 @@ fdc_write (fdc_t *self, uint8_t data)
     /* preamble 33 bytes */
     if (self->preamble < 33)
     {
-        log_fdc ("nsae: fdc: write preamble %d %d\n", data, self->preamble);
+        log_debug ("nsae: fdc: write preamble %d %d\n", data, self->preamble);
         if (data != 0x00)
         {
             log_error ("nsae: fdc: bad preamble, data not 0x00\n");
@@ -442,7 +442,7 @@ fdc_write (fdc_t *self, uint8_t data)
     /* sync1 byte */
     if (self->sync == 0)
     {
-        log_fdc ("nsae: fdc: write sync1 %d\n", data);
+        log_debug ("nsae: fdc: write sync1 %d\n", data);
         if (data != 0xfb)
         {
             log_error ("nsae: fdc: bad sync1 byte\n");
@@ -454,7 +454,7 @@ fdc_write (fdc_t *self, uint8_t data)
     /* sync2 byte */
     if (self->sync == 1)
     {
-        log_fdc ("nsae: fdc: write sync2 %d\n", data);
+        log_debug ("nsae: fdc: write sync2 %d\n", data);
         if (data != fdc_read_sync2 (self))
         {
             log_error ("nsae: fdc: bad sync2 byte\n");
@@ -466,7 +466,7 @@ fdc_write (fdc_t *self, uint8_t data)
     /* crc */
     if (self->index >= FD_BLKSIZE)
     {
-        log_fdc ("nsae: fdc: write crc %d\n", data);
+        log_debug ("nsae: fdc: write crc %d\n", data);
         fdc_secmark_low (self);
         return;
     }
@@ -476,7 +476,7 @@ fdc_write (fdc_t *self, uint8_t data)
     uint32_t offset = sec_base + self->index;
     uint8_t *p_addr = &self->data[self->disk][offset];
 
-    log_fdc ("nsae: fdc: write data 0x%02x to D%d Si%d T%2d Sec%2d I%2d (%08x)\n",
+    log_debug ("nsae: fdc: write data 0x%02x to D%d Si%d T%2d Sec%2d I%2d (%08x)\n",
             data, 
             self->disk,
             self->side,

@@ -1,9 +1,9 @@
 
+#define LOG_CATEGORY LC_SERVER
 #include "server.h"
 
 #include "adv.h"
 #include "fdc.h"
-#include "log.h"
 #include "mmu.h"
 #include "nsae.h"
 #include "nsaecmd.h"
@@ -95,8 +95,6 @@ server_handle_ipc (nsae_t *self)
     case NSAE_CMD_LOG_CRT:
     case NSAE_CMD_LOG_KB:
     case NSAE_CMD_LOG_MOBO:
-    case NSAE_CMD_LOG_VERBOSE:
-    case NSAE_CMD_LOG_DEBUG:
         nsae_ipc_recieve_block ((uint8_t *)&log_state, sizeof (uint8_t));
         break;
 
@@ -174,10 +172,10 @@ server_handle_ipc (nsae_t *self)
         return 1;
     }
 
-    if (log_state >= 2)
+    if (log_state >= LOG_COUNT)
     {
-        log_error ("nsae: server: log_state out of range 0-1 -- %u\n", 
-                log_state);
+        log_error ("nsae: server: log_state out of range 0-%d -- %u\n", 
+                log_state, LOG_COUNT);
         free (file);
         return 1;
     }
@@ -271,53 +269,58 @@ server_handle_ipc (nsae_t *self)
     /* log */
     case NSAE_CMD_LOG_CPU:
         log_verbose ("nsae: server: log_cpu %d\n", log_state);
-        g_log_cpu = log_state;
+        log_set_cat (LC_CPU, log_state);
         break;
 
     case NSAE_CMD_LOG_MMU:
         log_verbose ("nsae: server: log_mmu %d\n", log_state);
-        g_log_mmu = log_state;
+        log_set_cat (LC_MMU, log_state);
         break;
 
     case NSAE_CMD_LOG_RAM:
         log_verbose ("nsae: server: log_ram %d\n", log_state);
-        g_log_ram = log_state;
+        log_set_cat (LC_RAM, log_state);
         break;
 
     case NSAE_CMD_LOG_FDC:
         log_verbose ("nsae: server: log_fdc %d\n", log_state);
-        g_log_fdc= log_state;
+        log_set_cat (LC_FDC, log_state);
         break;
 
     case NSAE_CMD_LOG_CRT:
         log_verbose ("nsae: server: log_crt %d\n", log_state);
-        g_log_crt = log_state;
+        log_set_cat (LC_CRT, log_state);
         break;
 
     case NSAE_CMD_LOG_KB:
         log_verbose ("nsae: server: log_kb %d\n", log_state);
-        g_log_kb = log_state;
+        log_set_cat (LC_KB, log_state);
         break;
 
     case NSAE_CMD_LOG_MOBO:
         log_verbose ("nsae: server: log_mobo %d\n", log_state);
-        g_log_mobo = log_state;
+        log_set_cat (LC_ADV, log_state);
+        break;
+
+    case NSAE_CMD_LOG_TERSE:
+        log_verbose ("nsae: server: log_terse\n");
+        log_set (LOG_INFO);
         break;
 
     case NSAE_CMD_LOG_VERBOSE:
-        log_verbose ("nsae: server: log_verbose %d\n", log_state);
-        g_log_verbose = log_state;
+        log_verbose ("nsae: server: log_verbose\n");
+        log_set (LOG_VERBOSE);
         break;
 
     case NSAE_CMD_LOG_DEBUG:
-        log_verbose ("nsae: server: log_debug %d\n", log_state);
-        g_log_debug = log_state;
+        log_verbose ("nsae: server: log_debug\n");
+        log_set (LOG_DEBUG);
         break;
 
     case NSAE_CMD_LOG_OUTPUT:
         log_verbose ("nsae: server: log_output %s\n", file);
-        g_log_fp = fopen (file, "a+");
-        if (g_log_fp == NULL)
+        g_log_file_stream = fopen (file, "a+");
+        if (g_log_file_stream == NULL)
         {
             log_error ("nsae: server: cannot open -- %s\n", file);
         }
