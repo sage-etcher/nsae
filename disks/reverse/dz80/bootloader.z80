@@ -211,20 +211,26 @@ XE05B:	OR	80H		; e05b  f6 80		v.	;toggle unused bit7 on (maybe for clear_read?)
 	SET	6,L		; e071  cb f5		Ku	;L |= 0100$0000b
 	JR	XE08B		; e073  18 16		..
 ;
-XE075:	LD	E,14H		; e075  1e 14		..	;E = 0001$0100b
-	LD	A,22H		; e077  3e 22		>"	;A = 0010$0010b
-	SUB	B		; e079  90		.
-	JR	NC,XE081	; e07a  30 05		0.
-	ADD	A,23H		; e07c  c6 23		F#
-	LD	B,A		; e07e  47		G
-	SET	6,L		; e07f  cb f5		Ku
-XE081:	LD	A,L		; e081  7d		}
-	AND	40H		; e082  e6 40		f@
+;doesnt take E A
+;takes B D L
+;B = 00		track?
+;D = 00		sector?
+;L = 81 drvctrl?
+XE075:	LD	E,20D		; e075  1e 14		..	;E = 0x14
+	LD	A,34D		; e077  3e 22		>"	;A = 0x22	;max track?
+	SUB	B		; e079  90		.	;A = track - TRACK_MAX
+	JR	NC,XE081	; e07a  30 05		0.	;if A < 0:
+	ADD	A,35D		; e07c  c6 23		F#	;	A += TRACK_MAX
+	LD	B,A		; e07e  47		G	;	set B to max
+	SET	6,L		; e07f  cb f5		Ku	;	set diskside 1
+	;esure track (B) = 35 to 70
+XE081:	LD	A,L		; e081  7d		}	;get drive control
+	AND	40H		; e082  e6 40		f@	;get disk side
 	OR	B		; e084  b0		0
-	RRCA			; e085  0f		.
+	RRCA			; e085  0f		.	;A>>2	rotate
 	RRCA			; e086  0f		.
-	AND	0F0H		; e087  e6 f0		fp
-	ADD	A,D		; e089  82		.
+	AND	0F0H		; e087  e6 f0		fp	;isolate msb
+	ADD	A,D		; e089  82		.	;A+=D
 	LD	D,A		; e08a  57		W
 XE08B:	LD	A,D		; e08b  7a		z	;set expected sync2 from D
 				; e08c  32 78 f0	2xp
@@ -237,7 +243,7 @@ XE095:	LD	A,L		; e095  7d		}
 XE096:	LD	(v_drvctrl),A	; e096  32 74 f0	2tp	;save L into v_drvctrl
 	DI			; e099  f3		s
 	LD	DE,(var_1)	; e09a  ed 5b 12 e9	m[.i
-XE09E:	CALL	get_var_1	; e09e  cd fb e1	M{a
+XE09E:	CALL	set_var_1	; e09e  cd fb e1	M{a
 	LD	A,(XE6BC)	; e0a1  3a bc e6	:<f
 	AND	7FH		; e0a4  e6 7f		f.
 	JR	NZ,XE09E	; e0a6  20 f6		 v
@@ -263,13 +269,14 @@ XE0C0:	PUSH	HL		; e0c0  e5		e
 	LD	A,(HL)		; e0cb  7e		~
 	XOR	59H		; e0cc  ee 59		nY
 	PUSH	HL		; e0ce  e5		e
-	CALL	Z,check_first_sec		; e0cf  cc f3 e2	Lsb
+				; e0cf  cc f3 e2	Lsb
+	CALL	Z,check_first_sec
 	POP	HL		; e0d2  e1		a
 	POP	AF		; e0d3  f1		q
-	CALL	check_trk0_safe		; e0d4  cd fc e2	M|b
+	CALL	check_trk0_safe	; e0d4  cd fc e2	M|b
 	LD	A,(v_drvctrl)	; e0d7  3a 74 f0	:tp	;read v_drvctrl
 	OUT	(81H),A		; e0da  d3 81		S.	;load drive control reg
-	CALL	wait_rotation		; e0dc  cd e1 e2	Mab
+	CALL	wait_rotation	; e0dc  cd e1 e2	Mab
 	POP	BC		; e0df  c1		A
 	POP	HL		; e0e0  e1		a
 	OR	A		; e0e1  b7		7
@@ -342,7 +349,7 @@ read_disk:			; e128
 	AND	0F7H		; e132  e6 f7		fw	;unset aquire (start disk read)
 	OUT	(0F8H),A	; e134  d3 f8		Sx	;send to control register
 	OUT	(82H),A		; e136  d3 82		S.	;set disk read
-	LD	HL,XDF09	; e138  21 09 00	!..
+	LD	HL,0009h	; e138  21 09 00	!..
 	CALL	wait_dcr	; e13b  cd 07 e2	M.b
 	LD	A,(v_ctrlreg)	; e13e  3a c1 e6	:Af	;read v_ctrlreg
 	OUT	(0F8H),A	; e141  d3 f8		Sx	;send to control register
@@ -361,8 +368,8 @@ read_sync:			; e14d
 	LD	B,A		; e15b  47		G
 	IN	A,(80H)		; e15c  db 80		[.	;input sync2
 	CP	B		; e15e  b8		8
-	LD	(XF079),A	; e15f  32 79 f0	2yp
-	LD	BC,XDF00	; e162  01 00 00	...
+	LD	(last_sync2),A	; e15f  32 79 f0	2yp
+	LD	BC,0		; e162  01 00 00	...
 	RET	Z		; e165  c8		H
 	CP	0FBH		; e166  fe fb		~{
 	RET	Z		; e168  c8		H
@@ -475,7 +482,7 @@ XE1EB:				; e1eb
 	POP	AF		; e1f9  f1		q
 	RET			; e1fa  c9		I
 ;
-get_var_1:				; e1fb
+set_var_1:				; e1fb
 	LD	(var_1),DE	; e1fb  ed 53 12 e9	mS.i
 	RET			; e1ff  c9		I
 ;
@@ -556,7 +563,7 @@ secmark_0_loop:			; e24d
 get_sector_a:			; e25c
 	CALL	secmark_1	; e25c  cd 1f e2	M.b	;wait for secmark off
 get_sector_b:			; e25f
-	CALL	get_var_1	; e25f  cd fb e1	M{a
+	CALL	set_var_1	; e25f  cd fb e1	M{a
 	CALL	secmark_0	; e262  cd 4a e2	MJb	;wait for secmark on
 	CALL	sector_stable	; e265  cd d6 e2	MVb	;get previous sector in A
 	INC	A		; e268  3c		<	;get current sector
@@ -598,7 +605,7 @@ wait_2:				; e299
 	PUSH	HL		; e299  e5		e	;protect HL
 wait_2_loop:			; e29a
 	PUSH	BC		; e29a  c5		E	;protect BC (counter)
-	CALL	get_var_1		; e29b  cd fb e1	M{a
+	CALL	set_var_1	; e29b  cd fb e1	M{a
 	LD	HL,0E096H	; e29e  21 96 01	!..	;HL=0xe096
 	CALL	wait_dcr	; e2a1  cd 07 e2	M.b	;wait
 	POP	BC		; e2a4  c1		A	;restore counter
@@ -883,7 +890,7 @@ XE453:	LD	A,(XE6F6)	; e453  3a f6 e6	:vf
 	ADD	HL,BC		; e45d  09		.
 	LD	(HL),A		; e45e  77		w
 	AND	0CH		; e45f  e6 0c		f.
-	LD	HL,XDF00	; e461  21 00 00	!..
+	LD	HL,0		; e461  21 00 00	!..
 	RET	NZ		; e464  c0		@
 	CALL	XE473		; e465  cd 73 e4	Msd
 	DEC	HL		; e468  2b		+
@@ -909,7 +916,7 @@ XE47D:	ADD	HL,BC		; e47d  09		.
 	RET			; e486  c9		I
 ;
 XE487:				; e487
-	LD	HL,XDF00	; e487  21 00 00	!..
+	LD	HL,0		; e487  21 00 00	!..
 	XOR	A		; e48a  af		/
 	LD	(XDF04),A	; e48b  32 04 00	2..
 	RET			; e48e  c9		I
@@ -1309,7 +1316,7 @@ expected_sync2	EQU	0F078H			;data
 
 
 ;data
-XF079	EQU	0F079H
+last_sync2	EQU	0F079H
 stack_bak	EQU	0F07AH
 fn_stack_3	EQU	0F0AEH	;
 fn_stack_2	EQU	0F0B0H	;DS	0x02
