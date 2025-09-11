@@ -1,10 +1,9 @@
 
 #define LOG_CATEGORY LC_GENERAL
-//#include "client.h"
 #include "nsaecmd.h"
-#include "nsaeipc.h"
 #include "nsaectl_help.h"
 #include "nsaectl_version.h"
+#include "nsaeipc.h"
 #include "nslog.h"
 
 #include <stb_ds.h>
@@ -39,7 +38,6 @@ typedef struct {
     concmd_t value;
 } concmd_hash_t;
 
-
 concmd_hash_t *
 get_keywords (void)
 {
@@ -47,57 +45,57 @@ get_keywords (void)
     concmd_hash_t *hash = NULL;
 
     concmd_hash_t cmd_arr[] = {
-        { .key = "exit",          .value = { NSAE_CMD_EXIT,          0, 0 } },
-        { .key = "restart",       .value = { NSAE_CMD_RESTART,       0, 0 } },
-        { .key = "pause",         .value = { NSAE_CMD_PAUSE,         0, 0 } },
-        { .key = "continue",      .value = { NSAE_CMD_CONTINUE,      0, 0 } },
-        { .key = "brkpnt_set",    .value = { NSAE_CMD_BRKPNT_SET,    1, 1 } },
-        { .key = "brkpnt_remove", .value = { NSAE_CMD_BRKPNT_REMOVE, 1, 1 } },
-        { .key = "brkpnt_list",   .value = { NSAE_CMD_BRKPNT_LIST,   0, 0 } },
-        { .key = "step",          .value = { NSAE_CMD_STEP,          0, 0 } },
-        { .key = "run",           .value = { NSAE_CMD_RUN,           0, 0 } },
-        { .key = "status",        .value = { NSAE_CMD_STATUS,        0, 0 } },
-        { .key = "log_cpu",       .value = { NSAE_CMD_LOG_CPU,       1, 1 } },
-        { .key = "log_mmu",       .value = { NSAE_CMD_LOG_MMU,       1, 1 } },
-        { .key = "log_ram",       .value = { NSAE_CMD_LOG_RAM,       1, 1 } },
-        { .key = "log_fdc",       .value = { NSAE_CMD_LOG_FDC,       1, 1 } },
-        { .key = "log_crt",       .value = { NSAE_CMD_LOG_CRT,       1, 1 } },
-        { .key = "log_kb",        .value = { NSAE_CMD_LOG_KB,        1, 1 } },
-        { .key = "log_mobo",      .value = { NSAE_CMD_LOG_MOBO,      1, 1 } },
-        { .key = "log_terse",     .value = { NSAE_CMD_LOG_TERSE,     0, 0 } },
-        { .key = "log_verbose",   .value = { NSAE_CMD_LOG_VERBOSE,   0, 0 } },
-        { .key = "log_debug",     .value = { NSAE_CMD_LOG_DEBUG,     0, 0 } },
-        { .key = "log_output",    .value = { NSAE_CMD_LOG_OUTPUT,    1, 1 } },
-        { .key = "fd_eject",      .value = { NSAE_CMD_FD_EJECT,      1, 1 } },
-        { .key = "fd_load",       .value = { NSAE_CMD_FD_LOAD,       2, 2 } },
-        { .key = "fd_save",       .value = { NSAE_CMD_FD_SAVE,       2, 2 } },
-        { .key = "fd_blk_read",   .value = { NSAE_CMD_FD_BLK_READ,   4, 4 } },
-        { .key = "fd_status",     .value = { NSAE_CMD_FD_STATUS,     0, 0 } },
-        { .key = "hd_eject",      .value = { NSAE_CMD_HD_EJECT,      0, 0 } },
-        { .key = "hd_load",       .value = { NSAE_CMD_HD_LOAD,       1, 1 } },
-        { .key = "hd_save",       .value = { NSAE_CMD_HD_SAVE,       1, 1 } },
-        { .key = "hd_status",     .value = { NSAE_CMD_HD_STATUS,     0, 0 } },
-        { .key = "kb_push",       .value = { NSAE_CMD_KB_PUSH,       1, 1 } },
-        { .key = "kb_pop",        .value = { NSAE_CMD_KB_POP,        0, 0 } },
-        { .key = "kb_overflow",   .value = { NSAE_CMD_KB_OVERFLOW,   1, 1 } },
-        { .key = "kb_caps",       .value = { NSAE_CMD_KB_CAPS,       1, 1 } },
-        { .key = "kb_cursor",     .value = { NSAE_CMD_KB_CURSOR,     1, 1 } },
-        { .key = "kb_data",       .value = { NSAE_CMD_KB_DATA,       1, 1 } },
-        { .key = "kb_interupt",   .value = { NSAE_CMD_KB_INTERUPT,   1, 1 } },
-        { .key = "kb_status",     .value = { NSAE_CMD_KB_STATUS,     0, 0 } },
-        { .key = "io_status",     .value = { NSAE_CMD_IO_STATUS,     0, 0 } },
-        { .key = "crt_status",    .value = { NSAE_CMD_CRT_STATUS,    0, 0 } },
-        { .key = "adv_out",       .value = { NSAE_CMD_ADV_OUT,       2, 2 } },
-        { .key = "adv_in",        .value = { NSAE_CMD_ADV_IN,        1, 1 } },
-        { .key = "adv_status",    .value = { NSAE_CMD_ADV_STATUS,    0, 0 } },
-        { .key = "cpu_status",    .value = { NSAE_CMD_CPU_STATUS,    0, 0 } },
-        { .key = "ram_read",      .value = { NSAE_CMD_RAM_READ,      2, 2 } },
-        { .key = "ram_write",     .value = { NSAE_CMD_RAM_WRITE,     2, 2 } },
-        { .key = "prom_load",     .value = { NSAE_CMD_PROM_LOAD,     1, 1 } },
-        { .key = "mmu_read",      .value = { NSAE_CMD_MMU_READ,      2, 2 } },
-        { .key = "mmu_write",     .value = { NSAE_CMD_MMU_WRITE,     2, 2 } },
-        { .key = "mmu_load",      .value = { NSAE_CMD_MMU_LOAD,      2, 2 } },
-        { .key = "mmu_status",    .value = { NSAE_CMD_MMU_STATUS,    0, 0 } },
+        { "exit",        { NSAE_CMD_EXIT,          0, 0 } },
+        { "restart",     { NSAE_CMD_RESTART,       0, 0 } },
+        { "pause",       { NSAE_CMD_PAUSE,         0, 0 } },
+        { "continue",    { NSAE_CMD_CONTINUE,      0, 0 } },
+        { "br_set",      { NSAE_CMD_BRKPNT_SET,    1, 1 } },
+        { "br_remove",   { NSAE_CMD_BRKPNT_REMOVE, 1, 1 } },
+        { "br_list",     { NSAE_CMD_BRKPNT_LIST,   0, 0 } },
+        { "step",        { NSAE_CMD_STEP,          0, 0 } },
+        { "run",         { NSAE_CMD_RUN,           0, 0 } },
+        { "status",      { NSAE_CMD_STATUS,        0, 0 } },
+        { "log_cpu",     { NSAE_CMD_LOG_CPU,       1, 1 } },
+        { "log_mmu",     { NSAE_CMD_LOG_MMU,       1, 1 } },
+        { "log_ram",     { NSAE_CMD_LOG_RAM,       1, 1 } },
+        { "log_fdc",     { NSAE_CMD_LOG_FDC,       1, 1 } },
+        { "log_crt",     { NSAE_CMD_LOG_CRT,       1, 1 } },
+        { "log_kb",      { NSAE_CMD_LOG_KB,        1, 1 } },
+        { "log_mobo",    { NSAE_CMD_LOG_MOBO,      1, 1 } },
+        { "log_terse",   { NSAE_CMD_LOG_TERSE,     0, 0 } },
+        { "log_verbose", { NSAE_CMD_LOG_VERBOSE,   0, 0 } },
+        { "log_debug",   { NSAE_CMD_LOG_DEBUG,     0, 0 } },
+        { "log_output",  { NSAE_CMD_LOG_OUTPUT,    1, 1 } },
+        { "fd_eject",    { NSAE_CMD_FD_EJECT,      1, 1 } },
+        { "fd_load",     { NSAE_CMD_FD_LOAD,       2, 2 } },
+        { "fd_save",     { NSAE_CMD_FD_SAVE,       2, 2 } },
+        { "fd_blk_read", { NSAE_CMD_FD_BLK_READ,   4, 4 } },
+        { "fd_status",   { NSAE_CMD_FD_STATUS,     0, 0 } },
+        { "hd_eject",    { NSAE_CMD_HD_EJECT,      0, 0 } },
+        { "hd_load",     { NSAE_CMD_HD_LOAD,       1, 1 } },
+        { "hd_save",     { NSAE_CMD_HD_SAVE,       1, 1 } },
+        { "hd_status",   { NSAE_CMD_HD_STATUS,     0, 0 } },
+        { "kb_push",     { NSAE_CMD_KB_PUSH,       1, 1 } },
+        { "kb_pop",      { NSAE_CMD_KB_POP,        0, 0 } },
+        { "kb_overflow", { NSAE_CMD_KB_OVERFLOW,   1, 1 } },
+        { "kb_caps",     { NSAE_CMD_KB_CAPS,       1, 1 } },
+        { "kb_cursor",   { NSAE_CMD_KB_CURSOR,     1, 1 } },
+        { "kb_data",     { NSAE_CMD_KB_DATA,       1, 1 } },
+        { "kb_interupt", { NSAE_CMD_KB_INTERUPT,   1, 1 } },
+        { "kb_status",   { NSAE_CMD_KB_STATUS,     0, 0 } },
+        { "io_status",   { NSAE_CMD_IO_STATUS,     0, 0 } },
+        { "crt_status",  { NSAE_CMD_CRT_STATUS,    0, 0 } },
+        { "adv_out",     { NSAE_CMD_ADV_OUT,       2, 2 } },
+        { "adv_in",      { NSAE_CMD_ADV_IN,        1, 1 } },
+        { "adv_status",  { NSAE_CMD_ADV_STATUS,    0, 0 } },
+        { "cpu_status",  { NSAE_CMD_CPU_STATUS,    0, 0 } },
+        { "ram_read",    { NSAE_CMD_RAM_READ,      1, 2 } },
+        { "ram_write",   { NSAE_CMD_RAM_WRITE,     2, 2 } },
+        { "prom_load",   { NSAE_CMD_PROM_LOAD,     1, 1 } },
+        { "mmu_read",    { NSAE_CMD_MMU_READ,      1, 2 } },
+        { "mmu_write",   { NSAE_CMD_MMU_WRITE,     2, 2 } },
+        { "mmu_load",    { NSAE_CMD_MMU_LOAD,      2, 2 } },
+        { "mmu_status",  { NSAE_CMD_MMU_STATUS,    0, 0 } },
     };
     concmd_t default_cmd = (concmd_t){ NSAE_CMD_COUNT, 0, 0 };
 
@@ -261,7 +259,7 @@ main (int argc, char **argv)
 
     case NSAE_CMD_RAM_READ:
         packet->v_addr32 = strtol (argv[0], NULL, 0);
-        packet->v_span32 = strtol (argv[1], NULL, 0);
+        packet->v_span32 = (argc < 1) ? 1 : strtol (argv[1], NULL, 0);
         break;
 
     case NSAE_CMD_RAM_WRITE:
@@ -271,7 +269,7 @@ main (int argc, char **argv)
 
     case NSAE_CMD_MMU_READ:
         packet->v_addr16 = strtol (argv[0], NULL, 0);
-        packet->v_span16 = strtol (argv[1], NULL, 0);
+        packet->v_span16 = (argc < 1) ? 1 : strtol (argv[1], NULL, 0);
         break;
 
     case NSAE_CMD_MMU_WRITE:
