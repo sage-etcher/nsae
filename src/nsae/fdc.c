@@ -318,7 +318,7 @@ fdc_read_sync2 (fdc_t *self)
     assert (self != NULL);
 
     uint8_t a = self->sector[self->disk];
-    uint8_t b = ((uint16_t)self->track[self->disk] << 4) & 0x00f0;
+    uint8_t b = ((uint16_t)self->track[self->disk] << 6) & 0x00f0;
     uint8_t c = b | a;
 
     return c;
