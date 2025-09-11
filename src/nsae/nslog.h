@@ -6,6 +6,7 @@
 
 enum {
     LC_ADV,
+    LC_BREAKPOINTS,
     LC_CPU,
     LC_CRT,
     LC_FDC,
@@ -19,6 +20,7 @@ enum {
     LC_SERVER,
     LC_SIO,
     LC_SPEAKER,
+    LC_WATCHPOINTS,
     LC_COUNT,
 };
 

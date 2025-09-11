@@ -96,6 +96,7 @@ extern "C" {
 #include "mmu.h"
 #include "nsae.h"
 #include "nslog.h"
+#include "watchpoints.h"
 
 #include <assert.h>
 #include <stddef.h>
@@ -104,6 +105,7 @@ extern "C" {
 #define BR_CTX ((breakpoints_t *)&NSAE_CTX->br)
 #define ADV_CTX ((adv_t *)&NSAE_CTX->adv)
 #define MMU_CTX ((mmu_t *)&ADV_CTX->mmu)
+#define WP_CTX ((watchpoints_t *)&NSAE_CTX->wp)
 
 #define Z80_READ_BYTE(address, x)                                       \
 {                                                                       \
@@ -111,19 +113,7 @@ extern "C" {
         (x) = mmu_read (MMU_CTX, address);                              \
 }
 
-#define Z80_FETCH_BYTE(address, x)                                      \
-{                                                                       \
-        Z80_READ_BYTE((address), (x))                                   \
-        if (!NSAE_CTX->resuming && br_lookup (BR_CTX, address) != -1)   \
-        {                                                               \
-                NSAE_CTX->pause = true;                                 \
-                log_verbose ("breakpoint met %04x\n", address);         \
-                                                                        \
-                /* required source modification (z80emu.c changelog) */ \
-                goto breakpoint_met;                                    \
-        }                                                               \
-        NSAE_CTX->resuming = false;                                     \
-}
+#define Z80_FETCH_BYTE(address, x) Z80_READ_BYTE((address), (x))
 
 #define Z80_READ_WORD(address, x)                                       \
 {                                                                       \
@@ -132,12 +122,24 @@ extern "C" {
         (x) |= mmu_read (MMU_CTX, (address) + 1) << 8;                  \
 }
 
-#define Z80_FETCH_WORD(address, x)              Z80_READ_WORD((address), (x))
+#define Z80_FETCH_WORD(address, x) Z80_READ_WORD((address), (x))
+
+#define WATCHPOINT_MET(address, x)                                      \
+{                                                                       \
+        log_verbose ("watchpoint met at %04x for %04x %04x\n",          \
+                pc, address, x);                                        \
+        NSAE_CTX->pause = true;                                         \
+}
 
 #define Z80_WRITE_BYTE(address, x)                                      \
 {                                                                       \
         assert (context != NULL);                                       \
         mmu_write (MMU_CTX, address, x);                                \
+                                                                        \
+        if (wp_lookup (WP_CTX, address, MMU_CTX))                       \
+        {                                                               \
+                WATCHPOINT_MET (address, x);                            \
+        }                                                               \
 }
 
 #define Z80_WRITE_WORD(address, x)                                      \
@@ -145,11 +147,26 @@ extern "C" {
         assert (context != NULL);                                       \
         mmu_write (MMU_CTX, address, x);                                \
         mmu_write (MMU_CTX, (address) + 1, (x) >> 8);                   \
+                                                                        \
+        if (wp_lookup (WP_CTX, address, MMU_CTX) ||                     \
+            wp_lookup (WP_CTX, address+1, MMU_CTX))                     \
+        {                                                               \
+                WATCHPOINT_MET (address, x);                            \
+        }                                                               \
 }
 
-#define Z80_READ_WORD_INTERRUPT(address, x)     Z80_READ_WORD((address), (x))
+#define Z80_READ_WORD_INTERRUPT(address, x)                             \
+{                                                                       \
+        assert (context != NULL);                                       \
+        mmu_write (MMU_CTX, address, x);                                \
+}
 
-#define Z80_WRITE_WORD_INTERRUPT(address, x)    Z80_WRITE_WORD((address), (x))
+#define Z80_WRITE_WORD_INTERRUPT(address, x)                            \
+{                                                                       \
+        assert (context != NULL);                                       \
+        mmu_write (MMU_CTX, address, x);                                \
+        mmu_write (MMU_CTX, (address) + 1, (x) >> 8);                   \
+}
 
 #define Z80_INPUT_BYTE(port, x)                                         \
 {                                                                       \

@@ -119,6 +119,26 @@ server_handle_ipc (nsae_t *self)
         }
         break;
 
+    case NSAE_CMD_WP_SET:
+        log_verbose ("nsae: server: watchpoint set %05x %04x %02x %02x\n",
+                packet->v_addr32, packet->v_data16, packet->v_wp_match, 
+                packet->v_wp_type);
+        wp_set (&self->wp, packet->v_addr32, packet->v_data16,
+                packet->v_wp_match, packet->v_wp_type);
+        break;
+
+    case NSAE_CMD_WP_REMOVE:
+        log_verbose ("nsae: server: watchpoint remove %02x\n",
+                packet->v_data);
+        wp_remove (&self->wp, packet->v_data);
+        break;
+
+    case NSAE_CMD_WP_LIST:
+        log_verbose ("nsae: server: watchpoint list\n");
+        log_info ("watchpoint list:\n");
+        wp_list (&self->wp);
+        break;
+
     case NSAE_CMD_STEP: 
         log_verbose ("nsae: server: step\n");
         self->step = true;

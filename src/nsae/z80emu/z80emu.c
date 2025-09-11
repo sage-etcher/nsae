@@ -7,6 +7,10 @@
  */
 
 /* NSAE Changelog:
+ * 2025 September 11 -- Handle emergency exit points inline
+ *     removed breakpoint_met label
+ *     altered sources to include handling of early exit in emulate both pre
+ *     and post command execution.
  * 2025 August 28 -- Added breakpoint_met label
  *     implementing breakpoints using the defined macros proved insufficient
  *     we cannot panick and `goto stop_emulation` as the Z80_FETCH_BYTE()
@@ -247,7 +251,6 @@ int Z80Emulate (Z80_STATE *state, int number_cycles, void *context)
 	elapsed_cycles = 0;
 	pc = state->pc;
         Z80_FETCH_BYTE(pc, opcode);
-breakpoint_met:
         state->pc = pc + 1;
 
         return emulate(state, opcode, elapsed_cycles, number_cycles, context);
@@ -274,6 +277,12 @@ static int emulate (Z80_STATE * state,
                 int     instruction;
 
                 Z80_FETCH_BYTE(pc, opcode);
+                if (br_lookup (BR_CTX, pc) != -1)
+                {
+                    NSAE_CTX->pause = true;
+                    log_info ("breakpoint met %04x\n", pc);
+                    goto stop_emulation;
+                }
                 pc++;
 
 start_emulation:                
@@ -2611,13 +2620,17 @@ emulate_next_instruction:
 
                 }
 
+                if (NSAE_CTX->pause)
+                {
+                    goto stop_emulation;
+                }
+
                 if (elapsed_cycles >= number_cycles)
 
                         goto stop_emulation;
 
         }
 
-breakpoint_met:
 stop_emulation:
 
         state->r = (state->r & 0x80) | (r & 0x7f);

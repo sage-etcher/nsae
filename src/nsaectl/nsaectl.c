@@ -52,6 +52,9 @@ get_keywords (void)
         { "br_set",      { NSAE_CMD_BRKPNT_SET,    1, 1 } },
         { "br_remove",   { NSAE_CMD_BRKPNT_REMOVE, 1, 1 } },
         { "br_list",     { NSAE_CMD_BRKPNT_LIST,   0, 0 } },
+        { "wp_set",      { NSAE_CMD_WP_SET,        1, 4 } },
+        { "wp_remove",   { NSAE_CMD_WP_REMOVE,     1, 1 } },
+        { "wp_list",     { NSAE_CMD_WP_LIST,       0, 0 } },
         { "step",        { NSAE_CMD_STEP,          0, 0 } },
         { "run",         { NSAE_CMD_RUN,           0, 0 } },
         { "status",      { NSAE_CMD_STATUS,        0, 0 } },
@@ -199,6 +202,28 @@ main (int argc, char **argv)
         packet->v_addr16 = strtol (argv[0], NULL, 0);
         break;
 
+    case NSAE_CMD_WP_SET:
+        packet->v_addr32 = strtol (argv[0], NULL, 0);
+        if (argc <= 1)
+        {
+            /* if no data is given, match any updates to that address */
+            packet->v_data16= 0;
+            packet->v_wp_type = 0;
+            packet->v_wp_match = 0;
+        }
+        else
+        {
+            /* otherwise default to matching when equal to data */
+            packet->v_data16   = strtol (argv[1], NULL, 0);
+            packet->v_wp_match = (argc <= 2) ? 1 : strtol (argv[2], NULL, 0);
+            packet->v_wp_type  = (argc <= 3) ? 0 : strtol (argv[3], NULL, 0);
+        }
+        break;
+
+    case NSAE_CMD_WP_REMOVE:
+        packet->v_data = strtol (argv[0], NULL, 0);
+        break;
+
     case NSAE_CMD_LOG_CPU:
     case NSAE_CMD_LOG_MMU:
     case NSAE_CMD_LOG_RAM:
@@ -287,6 +312,7 @@ main (int argc, char **argv)
     case NSAE_CMD_PAUSE:
     case NSAE_CMD_CONTINUE:
     case NSAE_CMD_BRKPNT_LIST:
+    case NSAE_CMD_WP_LIST:
     case NSAE_CMD_STEP:
     case NSAE_CMD_RUN:
     case NSAE_CMD_STATUS:

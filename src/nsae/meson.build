@@ -22,6 +22,7 @@ nsae_bin = executable('nsae', [
     'server.c',
     'sio.c',
     'speaker.c',
+    'watchpoints.c',
     'z80emu/z80emu.c',
     advprom_h,
   ],

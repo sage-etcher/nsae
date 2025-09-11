@@ -11,6 +11,7 @@ extern "c" {
 
 #include "adv.h"
 #include "breakpoints.h"
+#include "watchpoints.h"
 
 
 #define NSAE_BREAKPOINT_MAX 256
@@ -18,6 +19,7 @@ extern "c" {
 typedef struct {
     adv_t adv;
     breakpoints_t br;
+    watchpoints_t wp;
 
     int width;
     int height;
