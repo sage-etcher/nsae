@@ -24,43 +24,6 @@
  *  16+     abstract buffer data
  */
 
-#if 0
-typedef struct {
-    uint8_t cmd;
-    union {
-        uint32_t span32;
-        struct {
-            union {
-                uint8_t data;
-                uint8_t fd_num;
-                uint8_t slot;
-                uint8_t state;
-                uint8_t keycode;
-            };
-            union {
-                uint8_t port;
-                uint8_t fd_side;
-                uint8_t page;
-            };
-            union {
-                uint16_t span16;
-                struct {
-                    uint8_t fd_track;
-                    uint8_t fd_sector;
-                };
-            };
-        };
-    };
-    union {
-        uint32_t addr32;
-        uint16_t addr16;
-        uint32_t buflen;
-    };
-    uint8_t buf[];
-} nsae_packet_renny_nina_t;
-#endif
-
-
 typedef struct {
     uint8_t cmd;
     uint8_t x[3];  /* unused padding */
