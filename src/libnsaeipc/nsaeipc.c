@@ -133,25 +133,28 @@ nsae_ipc_free (int mode)
 }
 
 int
-nsae_ipc_send (uint8_t buf[], size_t n)
+nsae_ipc_send (void *buf, size_t n)
 {
     if (s_send == NULL) return -1;
+    if (buf == NULL) return -1;
     int rc = write (*s_send, buf, n);
     return rc;
 }
 
 int
-nsae_ipc_recieve (uint8_t buf[], size_t n)
+nsae_ipc_recieve (void *buf, size_t n)
 {
     if (s_recieve == NULL) return -1;
+    if (buf == NULL) return -1;
     int rc = read (*s_recieve, buf, n);
     return rc;
 }
 
 int
-nsae_ipc_recieve_block (uint8_t buf[], size_t n)
+nsae_ipc_recieve_block (void *buf, size_t n)
 {
     if (s_recieve == NULL) return -1;
+    if (buf == NULL) return -1;
 
     int b = 0;
     while ((b = read (*s_recieve, buf, n)) == 0) { }
@@ -159,9 +162,10 @@ nsae_ipc_recieve_block (uint8_t buf[], size_t n)
 }
 
 int
-nsae_ipc_send_block (uint8_t buf[], size_t n)
+nsae_ipc_send_block (void *buf, size_t n)
 {
     if (s_send == NULL) return -1;
+    if (buf == NULL) return -1;
 
     int b = 0;
     while ((b = write (*s_send, buf, n)) == 0) 

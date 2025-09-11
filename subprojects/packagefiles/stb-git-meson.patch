@@ -1,0 +1,14 @@
+diff '--color=auto' -ruN stb.orig/meson.build stb/meson.build
+--- stb.orig/meson.build	1969-12-31 19:00:00.000000000 -0500
++++ stb/meson.build	2025-09-10 17:18:11.487006173 -0400
+@@ -0,0 +1,10 @@
++
++project('stb', 'c', version : 'git')
++
++stb_inc = include_directories('.')
++stb_dep = declare_dependency(
++  include_directories : stb_inc,
++)
++
++# vim: ts=2 sts=2 sw=2 et
++# end of file

@@ -4,6 +4,8 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <stddef.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 
@@ -54,7 +56,7 @@ main (void)
         case NSAE_CMD_PROM_LOAD:
             if (packet_size != (packet->v_buflen + sizeof (nsae_packet_t)))
             {
-                pritnf ("packet_size buflen mismatch\n");
+                printf ("packet_size buflen mismatch\n");
                 exit_flag = 1;
                 continue;
             }
@@ -64,31 +66,6 @@ main (void)
         /* evaluate the packet */
         switch (packet->cmd)
         {
-        case NSAE_CMD_NOP:
-        case NSAE_CMD_RESTART:
-        case NSAE_CMD_PAUSE:
-        case NSAE_CMD_CONTINUE:
-        case NSAE_CMD_BRKPNT_LIST:
-        case NSAE_CMD_STEP:
-        case NSAE_CMD_RUN:
-        case NSAE_CMD_STATUS:
-        case NSAE_CMD_TERSE:
-        case NSAE_CMD_VERBOSE:
-        case NSAE_CMD_DEBUG:
-        case NSAE_CMD_HD_EJECT:
-        case NSAE_CMD_KB_POP:
-        case NSAE_CMD_KB_STATUS:
-        case NSAE_CMD_IO_STATUS:
-        case NSAE_CMD_CRT_STATUS:
-        case NSAE_CMD_ADV_STATUS:
-        case NSAE_CMD_MMU_STATUS:
-            printf ("%02x\n", packet->cmd);
-            break;
-
-        case NSAE_CMD_EXIT:
-            exit_flag = 1;
-            continue;
-
         case NSAE_CMD_BRKPNT_SET:
         case NSAE_CMD_BRKPNT_REMOVE:
             printf ("%02x %04x\n", packet->cmd, packet->v_addr16);
@@ -132,6 +109,15 @@ main (void)
                     packet->v_buflen, packet->buf);
             break;
 
+        case NSAE_CMD_FD_BLK_READ:
+            printf ("%02x %02x %02x %02x %02x\n", 
+                    packet->cmd,
+                    packet->v_fd_num,
+                    packet->v_fd_side,
+                    packet->v_fd_track,
+                    packet->v_fd_sector);
+            break;
+
         case NSAE_CMD_KB_PUSH:
             printf ("%02x %02x '%c'\n",
                     packet->cmd,
@@ -171,7 +157,7 @@ main (void)
                     packet->v_span16);
             break;
 
-        case NSAE_CMD_RAM_WRITE:
+        case NSAE_CMD_MMU_WRITE:
             printf ("%02x %04x %02x\n",
                     packet->cmd,
                     packet->v_addr16,
@@ -184,11 +170,36 @@ main (void)
                     packet->v_slot,
                     packet->v_page);
             break;
+        
+        case NSAE_CMD_EXIT:
+            exit_flag = 1;
+            /* fall through */
+        case NSAE_CMD_NOP:
+        case NSAE_CMD_RESTART:
+        case NSAE_CMD_PAUSE:
+        case NSAE_CMD_CONTINUE:
+        case NSAE_CMD_BRKPNT_LIST:
+        case NSAE_CMD_STEP:
+        case NSAE_CMD_RUN:
+        case NSAE_CMD_STATUS:
+        case NSAE_CMD_LOG_TERSE:
+        case NSAE_CMD_LOG_VERBOSE:
+        case NSAE_CMD_LOG_DEBUG:
+        case NSAE_CMD_HD_EJECT:
+        case NSAE_CMD_KB_POP:
+        case NSAE_CMD_KB_STATUS:
+        case NSAE_CMD_IO_STATUS:
+        case NSAE_CMD_CRT_STATUS:
+        case NSAE_CMD_ADV_STATUS:
+        case NSAE_CMD_CPU_STATUS:
+        case NSAE_CMD_MMU_STATUS:
+            printf ("%02x\n", packet->cmd);
+            break;
 
         default:
-            printf ("unkown command %02x", cmd);
+            printf ("unkown command %02x", packet->cmd);
             exit_flag = 1;
-            break;
+            continue;
         }
     }
 

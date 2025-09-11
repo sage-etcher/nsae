@@ -2,28 +2,66 @@
 #ifndef NSAECMD_H
 #define NSAECMD_H
 
+#include <stdint.h>
+
+/*  virtual "union" sketch
+ *   0      packet_size
+ *   1      "
+ *   2      "
+ *   3      "
+ *   4      cmd
+ *   5
+ *   6
+ *   7
+ *   8      span32  data    data    fd_num      slot    state   keycode
+ *   9      "               port    fd_side     page
+ *  10      "               span16  fd_track
+ *  11      "               "       fd_sector
+ *  12      addr32  addr32  addr16  buflen
+ *  13      "               "       "
+ *  14      "                       "
+ *  15      "                       "
+ *  16+     abstract buffer data
+ */
+
 #if 0
-    virtual "union" sketch
-     0      packet_size
-     1      "
-     2      "
-     3      "
-     4      cmd
-     5
-     6
-     7
-     8      span32  data    data    fd_num      slot    state   keycode
-     9      "               port    fd_side     page
-    10      "               span16  fd_track
-    11      "               "       fd_sector
-    12      addr32  addr32  addr16  buflen
-    13      "               "       "
-    14      "                       "
-    15      "                       "
-    16+     abstract buffer data
+typedef struct {
+    uint8_t cmd;
+    union {
+        uint32_t span32;
+        struct {
+            union {
+                uint8_t data;
+                uint8_t fd_num;
+                uint8_t slot;
+                uint8_t state;
+                uint8_t keycode;
+            };
+            union {
+                uint8_t port;
+                uint8_t fd_side;
+                uint8_t page;
+            };
+            union {
+                uint16_t span16;
+                struct {
+                    uint8_t fd_track;
+                    uint8_t fd_sector;
+                };
+            };
+        };
+    };
+    union {
+        uint32_t addr32;
+        uint16_t addr16;
+        uint32_t buflen;
+    };
+    uint8_t buf[];
+} nsae_packet_renny_nina_t;
 #endif
 
-struct {
+
+typedef struct {
     uint8_t cmd;
     uint8_t x[3];  /* unused padding */
     union {
@@ -56,9 +94,9 @@ struct {
 
 #define v_fd_sector a.u8[3]     /* 3        */
 
+#define v_buflen    b.u32       /* 4 - 7    */
 #define v_addr32    b.u32       /* 4 - 7    */
 #define v_addr16    b.u16[0]    /* 4 - 5    */
-#define v_buflen    b.u32       /* 4 - 7    */
 
 /* cmd types */
 typedef enum {
