@@ -6,3 +6,6 @@ test.txt
 test-nsaectl
 **.log
 disks/2/
+.cache/
+subprojects/.wraplock
+subprojects/stb/
