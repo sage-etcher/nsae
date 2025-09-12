@@ -12,6 +12,11 @@ project('NorthStar Advantage Emulator', 'c',
   meson_version : '>= 1.1',
 )
 
+#subprojects
+stb_proj = subproject('stb')
+stb_dep = stb_proj.get_variable('stb_dep')
+
+#arguments
 add_project_arguments([
     '-D_POSIX_C_SOURCE=200809L',
     '-Wno-gnu-binary-literal',
@@ -20,7 +25,12 @@ add_project_arguments([
   language : 'c',
 )
 
+if get_option('debug')
+  add_project_arguments(['-D_DEBUG'], language : 'c')
+endif
 
+
+#subdirectories
 subdir('resources')
 subdir('src')
 

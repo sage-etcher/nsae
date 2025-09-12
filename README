@@ -6,7 +6,7 @@
 - FreeGLUT
 - GLU
 - GLEW
-- OpenGL 1.2
+- OpenGL 1.0
 
 ## Build Dependencies
 

@@ -1,0 +1,76 @@
+Usage: nsaectl [-f fifo] [-htvV] (adv_in <port> | adv_out <port> <data> |
+           adv_status | br_list | br_remove <pc_address> |
+           br_set <pc_address> | continue | cpu_state | crt_state | exit |
+           fd_blkread <fd_num> <side> <track> <sector> | fd_eject <fd_num> |
+           fd_load <fd_num> <file> | fd_save <fd_num> <file> | fd_status |
+           hd_eject | hd_load <file> | hd_save <file> | hd_status |
+           kb_caps <state> | kb_cursor <state> | kb_data <state> |
+           kb_interupt <state> | kb_overflow <state> | kb_push <keycode> |
+           kb_pop | mmu_load <slot> <page> | mmu_read <addr> <n> | mmu_status |
+           mmu_write <addr> <data> | io_status | pause | prom_load <file> |
+           ram_read <abs_addr> <n> | ram_write <abs_addr> <data> | restart |
+           run | status | step)
+
+options:
+  -f fifo  specify an alternate fifo for sending data to the server.
+  -F fifo  specify an alternate fifo for recieving data from the server.
+  -t       log only essential information (the default)
+  -v       log more information
+  -V       show version page
+  -h       show this page
+
+modes:
+  adv_in <port>             read from port
+  adv_out <port> <data>     write data to port
+  adv_status                display avantage (motherboard) state
+  br_list                   list all breakpoints
+  br_remove <pc_address>    remove a breakpoint
+  br_set <pc_address>       add a new breakpoint
+  continue                  continue executation after a breakpoint/pause.
+  cpu_status                display cpu state
+  crt_status                display crt display's state
+  exit                      close out of the emulator.
+  fd_blkread <fd_num> <side> <track> <sector>
+                            read a block (512 bytes) from floppy disk
+  fd_eject <fd_num>         remove floppy from fd_num specified drive.
+  fd_load <fd_num> <file>   load floppy from file into drive fd_num.
+  fd_save <fd_num> <file>   save floppy into file from drive fd_num.
+  fd_status                 display floppy drive control state
+  hd_eject                  remove system hard disk.
+  hd_load <file>            load hard disk from file into system hard disk.
+  hd_save <file>            save hard disk into file from system hard disk.
+  hd_status                 display hard disk state
+  kb_caps <state>           set/unset capslock
+  kb_cursor <state>         set/unset cursorlock
+  kb_data <state>           set/unset kb data flag
+  kb_interupt <state>       set/unset kb interupt flag (reset)
+  kb_overflow <state>       set/unset kb overflow flag
+  kb_push <keycode>         push a keycode onto the keyboard buffer
+  kb_pop                    pop a key off of the keyboard buffer
+  kb_status <state>         display keyboard state
+  mmu_load <slot> <page>    load an mmu slot with a page of memory
+  mmu_read <addr> <n>       derefernce addr in the mmu, read n bytes
+  mmu_status                display memory multiplexer state
+  mmu_write <addr> <data>   dereference addr in the mmu, write into location
+                              data
+  io_status                 display io board state
+  pause                     halt execution.
+  prom_load <file>          load a file into the PROM, overwrite default
+  ram_read <abs_addr> <n>   read from raw memory n bytes at abs_addr
+  ram_write <abs_addr> <data>
+                            write data into abs_addr of raw memory.
+  restart                   restart the emulator, reinitialize the system.
+  run                       start executing code from the current PC.
+  status                    view information about the emulator's state.
+  step                      single step the emulator 1 instruction.
+
+fifo is the path to a named pipe to which nsaectrl can talk with nsae
+over.
+
+pc_address is a 16bit address at which if loaded into the program-counter,
+will halt the emulator for debugging purposes.
+
+fd_num is an integer index in the range of 0-1 for selecting which floppy disk
+drive to interact with.
+
+file is a path to a floppy/hard disk image to be loaded/saved into.
