@@ -41,8 +41,7 @@ crt_draw (crt_t *self)
     /* if blank display, dont update */
     if (self->blank) return;
 
-    /* green */
-    glColor3f (0.f, 1.f, 0.f);
+    glColor3f (0.2f, 1.0f, 0.2f);   /* P1 (apple II green) #33FF33 */
 
     /* for each pixel */
     for (int y = 0; y < WIDTH; y++)
