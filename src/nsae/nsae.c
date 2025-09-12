@@ -76,8 +76,8 @@ nsae_start (nsae_t *self, int *p_argc, char **argv)
     assert (self != NULL);
 
     /* initialize emulator */
-    self->width  = 640;
-    self->height = 480;
+    self->width  = 640 * 2;
+    self->height = 480 * 2;
     self->max_fps = 60;
 
     self->pause = true;
