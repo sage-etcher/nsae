@@ -176,7 +176,7 @@ bios_20:			; e03c				;0
 ;D  = sector num
 ;E  = track num
 ;HL = destdir
-XE03F:				; e03f				;takes A C
+fd_read_n:			; e03f				;takes A C
 	LD	(stack_bak),SP	; e03f  ed 73 7a f0	mszp	;backup stack pointer
 	LD	SP,fn_stack_2	; e043  31 b0 f0	10p	;set custom stack pointer
 	PUSH	AF		; e046  f5		u	;protect af,hl,de
@@ -189,16 +189,17 @@ XE03F:				; e03f				;takes A C
 	AND	7		; e051  e6 07		f.
 	LD	C,A		; e053  4f		O
 	CP	3		; e054  fe 03		~.	;if disk1 and disk2 are not both selected
-	JR	C,XE05B		; e056  38 03		8.	;    jump to XE05B
+	JR	C,fd_read_n_0	; e056  38 03		8.	;    jump to XE05B
 	RLA			; e058  17		.	;extract disk2 and unused bit2 (shifted left 1)
 	AND	0CH		; e059  e6 0c		f.	;
-XE05B:	OR	80H		; e05b  f6 80		v.	;toggle unused bit7 on (maybe for clear_read?)
+fd_read_n_0:			; e05b
+	OR	80H		; e05b  f6 80		v.	;toggle unused bit7 on (maybe for clear_read?)
 	LD	L,A		; e05d  6f		o	;L = A
 	LD	A,(XE6F6)	; e05e  3a f6 e6	:vf	;read XE6F6
 	AND	L		; e061  a5		%	;'and' it against prev calculated value
 								;			00 80 04 84 08 88 0C 8C
-	JR	Z,XE075		; e062  28 11		(.	;if the read value is 0, jump to XE075
-	LD	E,28H		; e064  1e 28		.(	;E = 28h
+	JR	Z,calc_sync2	; e062  28 11		(.	;if A & L == 0, jump to XE075
+	LD	E,28H		; e064  1e 28		.(	;E = 28h/40d
 	LD	A,B		; e066  78		x	;A = B
 	ADD	A,A		; e067  87		.	;A = pow(A, 5)
 	ADD	A,A		; e068  87		.
@@ -207,24 +208,27 @@ XE05B:	OR	80H		; e05b  f6 80		v.	;toggle unused bit7 on (maybe for clear_read?)
 	OR	D		; e06b  b2		2	;A |= D
 	LD	D,A		; e06c  57		W	;D = A
 	RR	B		; e06d  cb 18		K.	;B rrot 1
-	JR	NC,XE08B	; e06f  30 1a		0.	;if B0 was 0 jump to XE08B
+	JR	NC,set_sync2	; e06f  30 1a		0.	;if B0 was 0 jump to XE08B
 	SET	6,L		; e071  cb f5		Ku	;L |= 0100$0000b
-	JR	XE08B		; e073  18 16		..
+	JR	set_sync2		; e073  18 16		..
 ;
 ;doesnt take E A
 ;takes B D L
-;B = 00		track?
-;D = 00		sector?
-;L = 81 drvctrl?
-XE075:	LD	E,20D		; e075  1e 14		..	;E = 0x14
-	LD	A,34D		; e077  3e 22		>"	;A = 0x22	;max track?
+;B = 00	track?
+;D = 00	sector?
+;E = 
+;L = 81	drvctrl?
+calc_sync2:			; e075
+	LD	E,20D		; e075  1e 14		..	;E = 0x14
+	LD	A,34D		; e077  3e 22		>"	;A = 0x22 max track?
 	SUB	B		; e079  90		.	;A = track - TRACK_MAX
-	JR	NC,XE081	; e07a  30 05		0.	;if A < 0:
+	JR	NC,calc_sync2_0	; e07a  30 05		0.	;if A < 0:
 	ADD	A,35D		; e07c  c6 23		F#	;	A += TRACK_MAX
 	LD	B,A		; e07e  47		G	;	set B to max
 	SET	6,L		; e07f  cb f5		Ku	;	set diskside 1
-	;esure track (B) = 35 to 70
-XE081:	LD	A,L		; e081  7d		}	;get drive control
+								;esure track (B) = 35 to 70
+calc_sync2_0:			; e081
+	LD	A,L		; e081  7d		}	;get drive control
 	AND	40H		; e082  e6 40		f@	;get disk side
 	OR	B		; e084  b0		0
 	RRCA			; e085  0f		.	;A>>2	rotate
@@ -232,7 +236,8 @@ XE081:	LD	A,L		; e081  7d		}	;get drive control
 	AND	0F0H		; e087  e6 f0		fp	;isolate msb
 	ADD	A,D		; e089  82		.	;A+=D
 	LD	D,A		; e08a  57		W
-XE08B:	LD	A,D		; e08b  7a		z	;set expected sync2 from D
+set_sync2:
+	LD	A,D		; e08b  7a		z	;set expected sync2 from D
 				; e08c  32 78 f0	2xp
 	LD	(expected_sync2),A	
 	LD	A,E		; e08f  7b		{
@@ -248,7 +253,8 @@ XE09E:	CALL	set_var_1	; e09e  cd fb e1	M{a
 	AND	7FH		; e0a4  e6 7f		f.
 	JR	NZ,XE09E	; e0a6  20 f6		 v
 	PUSH	BC		; e0a8  c5		E
-	CALL	XE28A		; e0a9  cd 8a e2	M.b
+				; e0a9  cd 8a e2	M.b
+	CALL	get_sector_safe_store
 	LD	A,(v_drvctrl)	; e0ac  3a 74 f0	:tp	;read v_drvctrl
 	OUT	(81H),A		; e0af  d3 81		S.	;load drive control reg
 	POP	BC		; e0b1  c1		A
@@ -312,7 +318,7 @@ get_next_sector:
 	INC	A		; e100  3c		<	;get requested sector
 	JR	find_sector	; e101  18 e1		.a	;get next sector if sector not at 0
 ;
-calc_sync2:			; e103
+inc_sync2:			; e103
 	POP	BC		; e103  c1		A	;increment B
 	INC	B		; e104  04		.
 				; e105  3a 78 f0	:xp	;increment sync2
@@ -397,7 +403,7 @@ read_crc:			; e184
 	IN	A,(80H)		; e184  db 80		[.	;input crc
 	XOR	C		; e186  a9		)	;compare with calculated
 	IN	A,(82H)		; e187  db 82		[.	;clear disk read
-	JP	Z,calc_sync2	; e189  ca 03 e1	J.a	;jump if crcs match
+	JP	Z,inc_sync2	; e189  ca 03 e1	J.a	;jump if crcs match
 read_crc_err:			; e18c
 	LD	A,2		; e18c  3e 02		>.
 	JP	XE111		; e18e  c3 11 e1	C.a
@@ -461,7 +467,7 @@ write_blk:			; e1c8
 	DJNZ	write_blk	; e1d9  10 ed		.m	;loop
 	LD	A,C		; e1db  79		y
 	OUT	(80H),A		; e1dc  d3 80		S.	;write crc
-	JP	calc_sync2	; e1de  c3 03 e1	C.a
+	JP	inc_sync2	; e1de  c3 03 e1	C.a
 ;
 disabled_0:			; e1e1	
 	IN	A,(0E0H)	; e1e1  db e0		[`	;input status 1
@@ -593,7 +599,7 @@ serial_data_err:		; e285
 	LD	A,1		; e285  3e 01		>.
 	JP	XE111		; e287  c3 11 e1	C.a
 ;
-XE28A:				; e28a
+get_sector_safe_store:		; e28a
 	CALL	get_sector_safe	; e28a  cd a9 e2	M)b	;get sector
 	CP	0EH		; e28d  fe 0e		~.	;check if motor off
 	RET	NZ		; e28f  c0		@	;return if motor is on
@@ -739,11 +745,18 @@ XE34D:	LD	(read_blk_i),A	; e34d  32 77 f0	2wp	;write A
 	PUSH	BC		; e352  c5		E
 	LD	A,(read_n_blks)	; e353  3a 76 f0	:vp	;restore input acc
 	AND	0FH		; e356  e6 0f		f.	;get LSB
-	CALL	XE03F		; e358  cd 3f e0	M?`
-	POP	BC		; e35b  c1		A	;restore HL,DE,BC
-	POP	DE		; e35c  d1		Q
+								;A  = number of blocks
+								;B  =
+								;C  = drive control?
+								;D  = sector num
+								;E  = track num
+								;HL = destdir
+	CALL	fd_read_n	; e358  cd 3f e0	M?`
+								;A = error type
+	POP	BC		; e35b  c1		A	;B = sector123, C = disk number
+	POP	DE		; e35c  d1		Q	;D = sector0
 	POP	HL		; e35d  e1		a
-	JR	NZ,XE372	; e35e  20 12		 .
+	JR	NZ,set_derrtype	; e35e  20 12		 .	;if nz; throw error
 	LD	A,E		; e360  7b		{
 	OR	A		; e361  b7		7
 	JR	NZ,XE370	; e362  20 0c		 .
@@ -755,73 +768,105 @@ XE34D:	LD	(read_blk_i),A	; e34d  32 77 f0	2wp	;write A
 XE370:	XOR	A		; e370  af		/	;A=0
 	RET			; e371  c9		I
 ;
-XE372:	LD	(XE3D3),A	; e372  32 d3 e3	2Sc
-	CP	4		; e375  fe 04		~.
-	JR	NC,XE37F	; e377  30 06		0.
-	LD	A,(read_blk_i)	; e379  3a 77 f0	:wp
-	DEC	A		; e37c  3d		=
-	JR	NZ,XE34D	; e37d  20 ce		 N
-XE37F:	LD	A,C		; e37f  79		y
-	AND	0FH		; e380  e6 0f		f.
-	LD	(XE3D7),A	; e382  32 d7 e3	2Wc
-	LD	A,B		; e385  78		x
-	PUSH	HL		; e386  e5		e
+;A = error_type
+;C = disk_number
+;D = sector_num0
+;B = sector_num123
+"\n\rT ${A} D ${C & 0x0f} S ${C / 10 % 10}${C % 10}${B}${D}"
+set_derrtype:			; e372
+	LD	(disk_errtyp),A	; e372  32 d3 e3	2Sc	;write error type
+	CP	4		; e375  fe 04		~.	;compare A-4
+	JR	NC,set_derrdisk	; e377  30 06		0.	;if A <= 4, jump
+	LD	A,(read_blk_i)	; e379  3a 77 f0	:wp	;A = last read block
+	DEC	A		; e37c  3d		=	;A--;
+	JR	NZ,XE34D	; e37d  20 ce		 N	;if A != 0xff jump
+set_derrdisk:			; e37f
+	LD	A,C		; e37f  79		y	;A = disknumber
+	AND	0FH		; e380  e6 0f		f.	;A &= 0x0f
+	LD	(disk_errdisk),A; e382  32 d7 e3	2Wc	;write error disk
+	LD	A,B		; e385  78		x	;A = B
+	PUSH	HL		; e386  e5		e	;protect BC DE HL
 	PUSH	DE		; e387  d5		U
 	PUSH	BC		; e388  c5		E
-	LD	HL,XE3DE	; e389  21 de e3	!^c
-	LD	(HL),D		; e38c  72		r
-	DEC	HL		; e38d  2b		+
-	CALL	XE3A8		; e38e  cd a8 e3	M(c
-	LD	A,C		; e391  79		y
-	CALL	XE3A8		; e392  cd a8 e3	M(c
-	LD	(HL),C		; e395  71		q
-	LD	HL,disk_errmsg	; e396  21 cf e3	!Oc
-	LD	A,(XE3D3)	; e399  3a d3 e3	:Sc
+	LD	HL,disk_errsec0	; e389  21 de e3	!^c	;HL = error_sector0
+	LD	(HL),D		; e38c  72		r	;(HL--) = D
+	DEC	HL		; e38d  2b		+	;HL--
+	CALL	moddiv_10	; e38e  cd a8 e3	M(c	;(HL--) = A%10
+	LD	A,C		; e391  79		y	;A = A/10
+	CALL	moddiv_10	; e392  cd a8 e3	M(c	;(HL--) = A%10
+	LD	(HL),C		; e395  71		q	;(HL) = A/10
+	LD	HL,disk_errmsg	; e396  21 cf e3	!Oc	;HL = diskerrmsg_ptr
+	LD	A,(disk_errtyp)	; e399  3a d3 e3	:Sc	;A = error type
 	CALL	XE3B4		; e39c  cd b4 e3	M4c
-	POP	BC		; e39f  c1		A
+	POP	BC		; e39f  c1		A	;restore BC DE HL
 	POP	DE		; e3a0  d1		Q
 	POP	HL		; e3a1  e1		a
-	JP	NZ,XE34A	; e3a2  c2 4a e3	BJc
-	XOR	A		; e3a5  af		/
+	JP	NZ,XE34A	; e3a2  c2 4a e3	BJc	;if no match try disk access again
+	XOR	A		; e3a5  af		/	;A = 0
 	SCF			; e3a6  37		7
 	RET			; e3a7  c9		I
 ;
-XE3A8:				; e3a8
-	LD	C,0FFH		; e3a8  0e ff		..
-XE3AA:	SUB	0AH		; e3aa  d6 0a		V.
-	INC	C		; e3ac  0c		.
-	JR	NC,XE3AA	; e3ad  30 fb		0{
-	ADD	A,0AH		; e3af  c6 0a		F.
-	LD	(HL),A		; e3b1  77		w
-	DEC	HL		; e3b2  2b		+
-	RET			; e3b3  c9		I
+;A = number
+;HL = destination pointer
+;return HL=HL-1
+;return A = A%10
+;return C = A/10
+moddiv_10:			; e3a8
+	LD	C,0FFH		; e3a8  0e ff		..	;C = 0xff
+moddiv_10_loop:			; e3aa
+	SUB	0AH		; e3aa  d6 0a		V.	;A -= 10
+	INC	C		; e3ac  0c		.	;C++
+				; e3ad  30 fb		0{	;jump if C != 0
+	JR	NC,moddiv_10_loop
+	ADD	A,0AH		; e3af  c6 0a		F.	;A += 10
+	LD	(HL),A		; e3b1  77		w	;(HL) = A
+	DEC	HL		; e3b2  2b		+	;HL--
+	RET			; e3b3  c9		I	;return
 ;
+;maybe print string? unkown
 XE3B4:				; e3b4
-	OR	A		; e3b4  b7		7
-	CALL	XE6EA		; e3b5  cd ea e6	Mjf
+	OR	A		; e3b4  b7		7	;do nothing
+	CALL	ret_1		; e3b5  cd ea e6	Mjf
 	OR	A		; e3b8  b7		7
 	CALL	NZ,XEA17	; e3b9  c4 17 ea	D.j
-	XOR	A		; e3bc  af		/
-	CALL	XE6EA		; e3bd  cd ea e6	Mjf
-	OR	A		; e3c0  b7		7
-	CALL	Z,bios_3	; e3c1  cc 09 e0	L.`
-	CP	3		; e3c4  fe 03		~.
-	JP	Z,bios_1	; e3c6  ca 03 e0	J.`
-	LD	B,A		; e3c9  47		G
-	LD	A,(XE6F9)	; e3ca  3a f9 e6	:yf
-	CP	B		; e3cd  b8		8
+	XOR	A		; e3bc  af		/	;A=0
+	CALL	ret_1		; e3bd  cd ea e6	Mjf
+	OR	A		; e3c0  b7		7	;F ~= A
+	CALL	Z,bios_3	; e3c1  cc 09 e0	L.`	;always call bios_3
+	CP	3		; e3c4  fe 03		~.	;F ~= A-3
+	JP	Z,bios_1	; e3c6  ca 03 e0	J.`	;if A == 3; call bios_1
+	LD	B,A		; e3c9  47		G	;B = A
+	LD	A,(XE6F9)	; e3ca  3a f9 e6	:yf	;read XE6F9
+	CP	B		; e3cd  b8		8	;compare against bios_1 return
 	RET			; e3ce  c9		I
 ;
 ;*****************************************************************************
 ;				data block
 ;*****************************************************************************
 disk_errmsg:				; e3cf
-	DB	0dh,0ah,'T '		; e3cf  0d 0a 54 20	..T 
-XE3D3:	DB	'  D '			; e3d3	20 20 55 20	  D 
-XE3D7:	DB	'  S '			; e3d7	20 20 53 20	  S 
-	DB	'  '			; e3db  20 20		  
-XE3DE:	DB	' ',0			; e3de  20 00	   	 .
-	DB	0dh, 0ah, 80h		; e3df	0d 0a		..
+	DB	0dh			; e3cf  0d	.
+	DB	0ah			; e3d0  0a	.
+	DB	'T'			; e3d1  54	T
+	DB	' '			; e3d2  20	 
+disk_errtyp:				; e3d3
+	DB	' '			; e3d3  20	 
+	DB	' '			; e3d4  20	 
+	DB	'D'			; e3d5  55	D
+	DB	' '			; e3d6  20	 
+disk_errdisk:				; e3d7
+	DB	' '			; e3d7  20	 
+	DB	' '			; e3d8  20	 
+	DB	'S'			; e3d9  53	S
+	DB	' '			; e3da  20	 
+disk_errsec3:				; e3db
+	DB	' '			; e3db  20	 
+disk_errsec2:				; e3dc
+	DB	' '			; e3dc  20	 
+disk_errsec1:				; e3dd
+	DB	' '			; e3dd  20	 
+disk_errsec0:				; e3de
+	DB	' '			; e3de  20	 
+	DB	0			; e3df  00	.
 
 ;*****************************************************************************
 ;				more code
@@ -1240,7 +1285,7 @@ read_max_blk:	DB	0ah		;e6e9  0a		.
 ;*****************************************************************************
 ;				code block
 ;*****************************************************************************
-XE6EA:				; e6ea
+ret_1:				; e6ea
 	RET			; e6ea  c9		I
 	NOP			; e6eb  00		.
 	NOP			; e6ec  00		.
