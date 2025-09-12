@@ -171,16 +171,8 @@ fdc_secmark_high (fdc_t *self)
 
     self->sector_mark = false;
 
-    if (self->sector[self->disk] == 0xf)
-    {
-        self->sector_mark_hold = 10;
-        self->serial_data = false;
-    }
-    else
-    {
-        self->sector_mark_hold = 40;
-        self->serial_data = true;
-    }
+    self->sector_mark_hold = 100;
+    self->serial_data = true;
 }
 
 
@@ -428,12 +420,12 @@ fdc_write (fdc_t *self, uint8_t data)
     }
 
     /* preamble 33 bytes */
-    if (self->preamble < 33)
+    if (self->preamble <= 33)
     {
         log_debug ("nsae: fdc: write preamble %d %d\n", data, self->preamble);
         if (data != 0x00)
         {
-            log_error ("nsae: fdc: bad preamble, data not 0x00\n");
+            log_error ("nsae: fdc: bad preamble, data not 0x00 -- %02x\n", data);
         }
         self->preamble++;
         return;
@@ -442,10 +434,10 @@ fdc_write (fdc_t *self, uint8_t data)
     /* sync1 byte */
     if (self->sync == 0)
     {
-        log_debug ("nsae: fdc: write sync1 %d\n", data);
+        log_debug ("nsae: fdc: write sync1 %02x\n", data);
         if (data != 0xfb)
         {
-            log_error ("nsae: fdc: bad sync1 byte\n");
+            log_error ("nsae: fdc: bad sync1 byte -- %02x\n", data);
         }
         self->sync++;
         return;
@@ -454,10 +446,10 @@ fdc_write (fdc_t *self, uint8_t data)
     /* sync2 byte */
     if (self->sync == 1)
     {
-        log_debug ("nsae: fdc: write sync2 %d\n", data);
+        log_debug ("nsae: fdc: write sync2 %02x\n", data);
         if (data != fdc_read_sync2 (self))
         {
-            log_error ("nsae: fdc: bad sync2 byte\n");
+            log_error ("nsae: fdc: bad sync2 byte -- %02x\n", data);
         }
         self->sync++;
         return;
@@ -466,7 +458,7 @@ fdc_write (fdc_t *self, uint8_t data)
     /* crc */
     if (self->index >= FD_BLKSIZE)
     {
-        log_debug ("nsae: fdc: write crc %d\n", data);
+        log_debug ("nsae: fdc: write crc %02x\n", data);
         fdc_secmark_low (self);
         return;
     }
