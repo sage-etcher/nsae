@@ -49,7 +49,7 @@ crt_draw (crt_t *self)
     {
         for (int x = 0; x < HEIGHT; x++)
         {
-            uint32_t offset = x * 0x100 + y + self->scroll_reg;
+            uint32_t offset = (x * 0x100) + ((y + self->scroll_reg) & 0xff);
             uint32_t abs_addr = self->vram_offset + offset;
             uint8_t data = ram_read (self->p_ram, abs_addr);
 

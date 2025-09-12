@@ -357,7 +357,7 @@ adv_out (adv_t *self, uint8_t port, uint8_t data, uint16_t pc)
     case 0x90: /* load scroll register */
         log_fn (LC_CRT, LOG_DEBUG, "nsae: crt: %04x: 0x%02x load scroll register\n", 
                 pc, data);
-        self->crt.scroll_reg = data & 0x0f;
+        self->crt.scroll_reg = data;
         return;
 
     case 0xb0: /* clear display flag */
