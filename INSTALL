@@ -1,0 +1,9 @@
+
+build dependencies: meson, xxd
+dependencies: glew, glu, glut
+
+meson setup build
+cd build
+ninja
+meson install
+
