@@ -24,11 +24,14 @@ typedef struct {
     int width;
     int height;
     int max_fps;
+    float cycle_multiplier;
+    float scale_multiplier;
 
     bool step;
     bool resuming;
     bool pause;
     bool exit;
+
 
     struct timeval update_tv;
 } nsae_t;

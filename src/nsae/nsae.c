@@ -76,8 +76,11 @@ nsae_start (nsae_t *self, int *p_argc, char **argv)
     assert (self != NULL);
 
     /* initialize emulator */
-    self->width  = 640 * 2;
-    self->height = 480 * 2;
+    self->scale_multiplier = 1.0f;
+    self->cycle_multiplier = 20.0f;
+
+    self->width  = 640.0 * self->scale_multiplier;
+    self->height = 480.0 * self->scale_multiplier;
     self->max_fps = 60;
 
     self->pause = true;
@@ -192,7 +195,7 @@ nsae_update (void *cb_data)
     if (self->pause) return;
 
     unsigned long CPU_HZ = 4000000; /* 4MHz */
-    unsigned long cycles = CPU_HZ / self->max_fps;
+    unsigned long cycles = self->cycle_multiplier * (CPU_HZ / self->max_fps) ;
     unsigned long i = 0;
 
     if (self->step)
