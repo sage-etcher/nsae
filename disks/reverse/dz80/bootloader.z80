@@ -5,15 +5,15 @@
 	ORG	0DF00H
 ;
 ;*****************************************************************************
-				prom control bytes
+;				prom control bytes
 ;*****************************************************************************
 prom_control_data:
-	db	0xdf,0xc3,0x0a,0xdf 	; df00  df c3 0a df	_C._
-	db	0x00,0x00,0x00,0x00 	; df04  00 00 00 00	....
-	db	0xe7,0x06 		; df08  e7 e6		g.
+	db	0dfh,0c3h,00ah,0dfh 	; df00  df c3 0a df	_C._
+	db	000h,000h,000h,000h 	; df04  00 00 00 00	....
+	db	0e7h,006h 		; df08  e7 e6		g.
 
 ;*****************************************************************************
-				main entry point
+;				main entry point
 ;*****************************************************************************
 init:	JP	start		; df0a  c3 0d df	C._
 start:	DI			; df0d  f3		s
@@ -433,7 +433,7 @@ cmp_blk_err:			; e1aa
 	JP	XE111		; e1ac  c3 11 e1	C.a
 ;
 write_disk:			; e1af
-	LD	BC,0x2200	; e1af  01 00 22	.."	;loop 0x22 times
+	LD	BC,02200h	; e1af  01 00 22	.."	;loop 0x22 times
 	OUT	(83H),A		; e1b2  d3 83		S.	;set disk write
 write_preamble:			; e1b4
 	XOR	A		; e1b4  af		/	;a=0
@@ -772,7 +772,7 @@ XE370:	XOR	A		; e370  af		/	;A=0
 ;C = disk_number
 ;D = sector_num0
 ;B = sector_num123
-"\n\rT ${A} D ${C & 0x0f} S ${C / 10 % 10}${C % 10}${B}${D}"
+;"\n\rT ${A} D ${C & 0x0f} S ${C / 10 % 10}${C % 10}${B}${D}"
 set_derrtype:			; e372
 	LD	(disk_errtyp),A	; e372  32 d3 e3	2Sc	;write error type
 	CP	4		; e375  fe 04		~.	;compare A-4
@@ -1378,4 +1378,5 @@ XF100:	EQU	0F100H
 ;
 	END
 ;
+; vim: filetype=m80 ts=8 sts=8 sw=8 noet
 
