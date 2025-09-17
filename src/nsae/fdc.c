@@ -207,8 +207,9 @@ fdc_set_read (fdc_t *self, bool state)
     assert (self != NULL);
     //log_debug ("nsae: fdc: %d set disk read\n", state);
     self->read_mode = state;
-    self->index = 0;
+    self->preamble = 0;
     self->sync = 0;
+    self->index = 0;
 }
 
 void
@@ -217,8 +218,9 @@ fdc_set_write (fdc_t *self, bool state)
     assert (self != NULL);
     //log_debug ("nsae: fdc: %d set disk write\n", state);
     self->write_mode = state;
-    self->index = 0;
+    self->preamble = 0;
     self->sync = 0;
+    self->index = 0;
 }
 
 void
@@ -355,7 +357,7 @@ fdc_read_sync2 (fdc_t *self)
             self->sector[self->disk],
             self->side);
 
-    log_info ("nsae: fdc: sync2 %02x\n", sync2);
+    log_debug ("nsae: fdc: sync2 %02x\n", sync2);
 
     return sync2;
 }
@@ -364,7 +366,16 @@ fdc_read_sync2 (fdc_t *self)
 uint32_t 
 fdc_calc_disk_offset (uint8_t side, uint8_t track, uint8_t sector, uint16_t i)
 {
-    uint32_t abs_track = (side * FD_TRACKS) + track;
+    uint32_t abs_track = 0;
+    if (side == 1)
+    {
+        abs_track = 2 * FD_TRACKS - 1 - track;
+    }
+    else
+    {
+        abs_track = track;
+    }
+
     uint32_t abs_sector = (abs_track * FD_SECTORS) + sector;
     uint32_t offset = (abs_sector * FD_BLKSIZE) + i;
     return offset;
@@ -466,7 +477,7 @@ fdc_write (fdc_t *self, uint8_t data)
     /* preamble 33 bytes */
     if (self->preamble <= 33)
     {
-        log_info ("nsae: fdc: writing preamble for D %d S %d T %02d S %02d\n", 
+        log_debug ("nsae: fdc: writing preamble for D %d S %d T %02d S %02d\n", 
                 self->disk,
                 self->side,
                 self->track[self->disk],
@@ -479,6 +490,7 @@ fdc_write (fdc_t *self, uint8_t data)
         self->preamble++;
         return;
     }
+
 
     /* sync1 byte */
     if (self->sync == 0)
