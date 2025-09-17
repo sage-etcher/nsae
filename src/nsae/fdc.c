@@ -299,6 +299,11 @@ fdc_get_sector (fdc_t *self)
 uint8_t
 fdc_read_sync1 (fdc_t *self)
 {
+    log_info ("nsae: fdc: reading from D %d S %d T %02d S %02d\n", 
+            self->disk,
+            self->side,
+            self->track[self->disk],
+            self->sector[self->disk]);
     assert (self != NULL);
     self->sync = 1;
     return 0xfb;
@@ -312,6 +317,8 @@ fdc_read_sync2 (fdc_t *self)
     uint8_t a = self->sector[self->disk];
     uint8_t b = ((uint16_t)self->track[self->disk] << 6) & 0x00f0;
     uint8_t c = b | a;
+
+    log_info ("nsae: fdc: sync2 %02x\n", c);
 
     return c;
 }
@@ -422,6 +429,11 @@ fdc_write (fdc_t *self, uint8_t data)
     /* preamble 33 bytes */
     if (self->preamble <= 33)
     {
+        log_info ("nsae: fdc: writing preamble for D %d S %d T %02d S %02d\n", 
+                self->disk,
+                self->side,
+                self->track[self->disk],
+                self->sector[self->disk]);
         log_debug ("nsae: fdc: write preamble %d %d\n", data, self->preamble);
         if (data != 0x00)
         {
