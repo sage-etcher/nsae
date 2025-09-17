@@ -299,14 +299,45 @@ fdc_get_sector (fdc_t *self)
 uint8_t
 fdc_read_sync1 (fdc_t *self)
 {
-    log_info ("nsae: fdc: reading from D %d S %d T %02d S %02d\n", 
+    assert (self != NULL);
+
+    log_debug ("nsae: fdc: reading from D %d S %d T %02d S %d\n", 
             self->disk,
             self->side,
             self->track[self->disk],
             self->sector[self->disk]);
-    assert (self != NULL);
+
     self->sync = 1;
     return 0xfb;
+}
+
+uint8_t
+right_rotate8 (uint8_t n, uint8_t d)
+{
+    const uint8_t ROT_BASE = 8;
+    assert (d < ROT_BASE);
+
+    uint8_t mask = (1 << d) - 1;
+    uint8_t result = (((n & mask) << (ROT_BASE-d)) | ((n & ~mask) >> d));
+
+    return result;
+}
+
+uint8_t
+calc_sync2 (uint8_t track, uint8_t sector, uint8_t side)
+{
+    assert (track  < FD_TRACKS);
+    assert (sector < FD_SECTORS);
+    assert (side   < FD_SIDES);
+
+    uint8_t a = track | (side << 6);
+    uint8_t b = right_rotate8 (a, 2) & 0xf0;
+    uint8_t c = b | sector;
+
+    log_debug ("nsae: fdc: calc_sync2 %d %d %d -> %02x\n",
+            track, sector, side, c);
+
+    return c;
 }
 
 uint8_t
@@ -314,13 +345,19 @@ fdc_read_sync2 (fdc_t *self)
 {
     assert (self != NULL);
 
-    uint8_t a = self->sector[self->disk];
-    uint8_t b = ((uint16_t)self->track[self->disk] << 6) & 0x00f0;
-    uint8_t c = b | a;
+    log_debug ("nsae: fdc: read_sync2 %d %d %d\n",
+            self->track[self->disk],
+            self->sector[self->disk],
+            self->side);
 
-    log_info ("nsae: fdc: sync2 %02x\n", c);
+    uint8_t sync2 = calc_sync2 (
+            self->track[self->disk],
+            self->sector[self->disk],
+            self->side);
 
-    return c;
+    log_info ("nsae: fdc: sync2 %02x\n", sync2);
+
+    return sync2;
 }
 
 
