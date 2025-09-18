@@ -6,7 +6,6 @@
 #include "ram.h"
 
 #include <GL/glew.h>
-#include <GL/freeglut.h>
 
 #include <assert.h>
 #include <stdbool.h>

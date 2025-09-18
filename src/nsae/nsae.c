@@ -10,8 +10,8 @@
 #include "server.h"
 
 #include <GL/glew.h>
+#include <GL/glfw.h>
 #include <GL/glu.h>
-#include <GL/freeglut.h>
 
 #include <assert.h>
 #include <stdint.h>
@@ -23,11 +23,9 @@
 static int gl_init (float win_width, float win_height,
                     float emu_width, float emu_height);
 
-static void nsae_reshape (int width, int height, void *cb_data);
-static void nsae_key_handler (unsigned char key, int x, int y, void *cb_data);
-static void nsae_update (void *cb_data);
-static void nsae_render (void *cb_data);
-static void nsae_main_loop (int val, void *cb_data);
+static void GLFWCALL nsae_key_handler (int a, int b);
+static void nsae_update (nsae_t *self);
+static void nsae_render (nsae_t *self);
 
 static int
 gl_init (float win_width, float win_height, float emu_width, float emu_height)
@@ -57,7 +55,7 @@ gl_init (float win_width, float win_height, float emu_width, float emu_height)
 
     glClearColor (0.f, 0.f, 0.f, 1.f);
     glClear (GL_COLOR_BUFFER_BIT);
-    glutSwapBuffers ();
+    glfwSwapBuffers ();
 
     GLenum gl_error = glGetError ();
     if (gl_error != GL_NO_ERROR)
@@ -97,37 +95,52 @@ nsae_start (nsae_t *self, int *p_argc, char **argv)
         return 1;
     }
 
-    /* initialize freeglut */
-    glutInit (p_argc, argv);
-    glutInitContextVersion (1, 2);
-
-    /* create glut window */
-    glutInitDisplayMode (GLUT_DOUBLE);
-    glutInitWindowSize (self->width, self->height);
-    glutCreateWindow ("NorthStar Advantage Emulator");
-
-    /* TODO: initialize freeglut menu */
-
-    /* initialize opengl */
-    self->width  = glutGet (GLUT_WINDOW_WIDTH);
-    self->height = glutGet (GLUT_WINDOW_HEIGHT);
-
-    rc = gl_init (self->width, self->height, 640, 240);
-    if (rc != 0)
+    /* initialize glfw */
+    if (!glfwInit ())
     {
+        log_fatal ("nsae: glfw: initialization failed\n");
         return 1;
     }
+    glfwOpenWindowHint (GLFW_OPENGL_VERSION_MAJOR, 1);
+    glfwOpenWindowHint (GLFW_OPENGL_VERSION_MINOR, 0);
+    glfwOpenWindowHint (GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    /* initialize glut callbacks */
-    glutReshapeFuncUcall (nsae_reshape, self);
-    glutDisplayFuncUcall (nsae_render, self);
-    glutKeyboardFuncUcall (nsae_key_handler, self);
+    /* create glfw window */
+    glfwOpenWindow (
+            self->width, self->height,
+            0, 1, 0, 0, 0, 0,
+            GLFW_FULLSCREEN);
+    glfwSetWindowTitle ("NorthStar Advantage Emulator");
+
+    /* initialize opengl */
+    glfwGetWindowSize (&self->width, &self->height);
+
+    rc = gl_init (self->width, self->height, 640, 240);
+    if (rc != 0) { return 1; }
+
+    /* initialize glfw callbacks */
+    glfwSetKeyCallback (nsae_key_handler);
 
     /* enter the main loop */
-    glutTimerFuncUcall (1000 / self->max_fps, nsae_main_loop, 0, self);
-    glutMainLoop ();
+    while (glfwGetWindowParam (GLFW_OPENED))
+    {
+        glfwGetWindowSize (&self->width, &self->height);
+        glViewport (0, 0, self->width, self->height);
+        glClear (GL_COLOR_BUFFER_BIT);
+
+        /* process input */
+        nsae_update (self);
+
+        /* render output */
+        nsae_render (self);
+
+        glfwSwapBuffers ();
+    }
 
     /* cleanup */
+    glfwCloseWindow ();
+    glfwTerminate ();
+
     nsae_ipc_free (NSAE_IPC_SERVER);
     log_quit ();
 
@@ -135,30 +148,13 @@ nsae_start (nsae_t *self, int *p_argc, char **argv)
 }
 
 static void
-nsae_reshape (int width, int height, void *cb_data)
+nsae_key_handler (int a, int b)
 {
-    assert (cb_data != NULL);
-    nsae_t *self = cb_data;
-
-    glViewport (0.f, 0.f, width, height);
-    self->width  = width;
-    self->height = height;
-}
-
-static void
-nsae_key_handler (unsigned char key, int x, int y, void *cb_data)
-{
+#if 0
     assert (cb_data != NULL);
     nsae_t *nsae = cb_data;
     adv_t  *adv  = &nsae->adv;
     kb_t   *kb   = &adv->kb;
-
-    //if (key == 'q')
-    //{
-    //    log_debug ("nsae: exit key pressed\n");
-    //    glutLeaveMainLoop ();
-    //    return;
-    //}
 
     if (nsae->pause) return;
 
@@ -179,13 +175,13 @@ nsae_key_handler (unsigned char key, int x, int y, void *cb_data)
     {
         adv->hw_interupt = kb->reset;
     }
+#endif
 }
 
 static void
-nsae_update (void *cb_data)
+nsae_update (nsae_t *self)
 {
-    assert (cb_data != NULL);
-    nsae_t *self = cb_data;
+    assert (self != NULL);
     adv_t  *adv  = &self->adv;
 
     /* handle ipc */
@@ -212,11 +208,10 @@ nsae_update (void *cb_data)
 }
 
 static void
-nsae_render (void *cb_data)
+nsae_render (nsae_t *self)
 {
-    assert (cb_data != NULL);
-    nsae_t *nsae = cb_data;
-    adv_t *adv = &nsae->adv;
+    assert (self != NULL);
+    adv_t *adv = &self->adv;
     crt_t *crt = &adv->crt;
 
     glClear (GL_COLOR_BUFFER_BIT);
@@ -225,33 +220,12 @@ nsae_render (void *cb_data)
         crt_draw (crt);
     glEnd ();
 
-    glutSwapBuffers ();
+    glfwSwapBuffers ();
 
     if (adv->crt_mi)
     {
         adv->stat1_reg |= crt->vrefresh << 2;
     }
-}
-
-static void
-nsae_main_loop (int val, void *cb_data)
-{
-    assert (cb_data != NULL);
-    nsae_t *self = cb_data;
-
-    if (self->exit)
-    {
-        log_verbose ("nsae: exit conditional handled\n");
-        glutLeaveMainLoop ();
-        return;
-    }
-
-    /* queue the next iteration imediately */
-    glutTimerFuncUcall (1000 / self->max_fps, nsae_main_loop, val, self);
-
-    nsae_update (self);
-    nsae_render (self);
-
 }
 
 void
