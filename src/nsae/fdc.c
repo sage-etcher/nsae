@@ -326,8 +326,9 @@ right_rotate8 (uint8_t n, uint8_t d)
 }
 
 uint8_t
-calc_sync2 (uint8_t track, uint8_t sector, uint8_t side)
+calc_sync2_native (uint8_t track, uint8_t sector, uint8_t side)
 {
+    /* sync2 calc as preformed in cp/m bootloader */
     assert (track  < FD_TRACKS);
     assert (sector < FD_SECTORS);
     assert (side   < FD_SIDES);
@@ -336,10 +337,19 @@ calc_sync2 (uint8_t track, uint8_t sector, uint8_t side)
     uint8_t b = right_rotate8 (a, 2) & 0xf0;
     uint8_t c = b | sector;
 
-    log_debug ("nsae: fdc: calc_sync2 %d %d %d -> %02x\n",
-            track, sector, side, c);
-
     return c;
+}
+uint8_t
+calc_sync2_fast (uint8_t track, uint8_t sector, uint8_t side)
+{
+    /* sync2 calc optimized for modern computers, courtesy of @notvelleda <3 */
+    assert (track  < FD_TRACKS);
+    assert (sector < FD_SECTORS);
+    assert (side   < FD_SIDES);
+
+    uint8_t sync2 = ((track & 0x03) << 6) | (side << 4) | sector;
+
+    return sync2;
 }
 
 uint8_t
@@ -347,17 +357,35 @@ fdc_read_sync2 (fdc_t *self)
 {
     assert (self != NULL);
 
-    log_debug ("nsae: fdc: read_sync2 %d %d %d\n",
+    /*
+     * the technical manual lists taking the lower 8bits of
+     * `(track * 16) + sector`, which I stand to claim that according to
+     * northstar written cpm/nsdos/demodiag bootloaders is incorrect.
+     *
+     * here we use: `((track & 0x03) << 6) | (side << 4) | sector`
+     * where track is 0-34 representing the incremental distance from track0
+     * side is 0-1 for top:bottom
+     * sector is 0-9 (all ranges inclusive)
+     *
+     * where each column represents 1 bit, the following reorganization is
+     * required for sync2 calculation.
+     *
+     * side   0  0  0  0  0  0  0  i0
+     * track  0  0  t5 t4 t3 t2 t1 t0
+     * sector 0  0  0  0  s3 s2 s1 s0
+     *
+     * sync2  t1 t0 0  i0 s3 s2 s1 s0
+     */
+    uint8_t sync2 = calc_sync2_fast (
             self->track[self->disk],
             self->sector[self->disk],
             self->side);
 
-    uint8_t sync2 = calc_sync2 (
+    log_debug ("nsae: fdc: sync2 %d %d %d -> %02x\n",
             self->track[self->disk],
             self->sector[self->disk],
-            self->side);
-
-    log_debug ("nsae: fdc: sync2 %02x\n", sync2);
+            self->side,
+            sync2);
 
     return sync2;
 }
