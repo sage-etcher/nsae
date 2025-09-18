@@ -5,9 +5,9 @@ project('NorthStar Advantage Emulator', 'c',
   default_options : [
     'c_std=c99',
     'warning_level=3',
-    'b_pie=true',
-    'b_lundef=false',
-    'b_sanitize=address,undefined',
+    #'b_pie=true',
+    #'b_lundef=false',
+    #'b_sanitize=address,undefined',
   ],
   meson_version : '>= 1.1',
 )
