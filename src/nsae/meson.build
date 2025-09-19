@@ -1,7 +1,7 @@
 
 glew_dep = dependency('glew', required : true)
 glu_dep  = dependency('glu', required : true)
-glfw_dep = dependency('libglfw', required : true)
+glfw_dep = dependency('glfw3', required : true)
 
 nsae_inc = include_directories('.')
 z80emu_inc = include_directories('z80emu')

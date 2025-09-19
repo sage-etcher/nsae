@@ -32,7 +32,6 @@ typedef struct {
     bool pause;
     bool exit;
 
-
     struct timeval update_tv;
 } nsae_t;
 

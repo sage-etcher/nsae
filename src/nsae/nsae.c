@@ -10,8 +10,8 @@
 #include "server.h"
 
 #include <GL/glew.h>
-#include <GL/glfw.h>
 #include <GL/glu.h>
+#include <GLFW/glfw3.h>
 
 #include <assert.h>
 #include <stdint.h>
@@ -20,15 +20,17 @@
 #include <time.h>
 #include <unistd.h>
 
-static int gl_init (float win_width, float win_height,
-                    float emu_width, float emu_height);
+static int gl_init (GLFWwindow *win, float win_width, float win_height,
+                                     float emu_width, float emu_height);
 
-static void GLFWCALL nsae_key_handler (int a, int b);
-static void nsae_update (nsae_t *self);
-static void nsae_render (nsae_t *self);
+static void nsae_key_handler (GLFWwindow *win, int key, int scan, int action, 
+        int mods);
+static void nsae_update (GLFWwindow *win);
+static void nsae_render (GLFWwindow *win);
 
 static int
-gl_init (float win_width, float win_height, float emu_width, float emu_height)
+gl_init (GLFWwindow *win, float win_width, float win_height, 
+        float emu_width, float emu_height)
 {
     GLenum glew_error = glewInit ();
     if (glew_error != GLEW_OK)
@@ -55,7 +57,7 @@ gl_init (float win_width, float win_height, float emu_width, float emu_height)
 
     glClearColor (0.f, 0.f, 0.f, 1.f);
     glClear (GL_COLOR_BUFFER_BIT);
-    glfwSwapBuffers ();
+    glfwSwapBuffers (win);
 
     GLenum gl_error = glGetError ();
     if (gl_error != GL_NO_ERROR)
@@ -101,44 +103,50 @@ nsae_start (nsae_t *self, int *p_argc, char **argv)
         log_fatal ("nsae: glfw: initialization failed\n");
         return 1;
     }
-    glfwOpenWindowHint (GLFW_OPENGL_VERSION_MAJOR, 1);
-    glfwOpenWindowHint (GLFW_OPENGL_VERSION_MINOR, 0);
-    glfwOpenWindowHint (GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     /* create glfw window */
-    glfwOpenWindow (
+    GLFWwindow *win = NULL;
+    win = glfwCreateWindow (
             self->width, self->height,
-            0, 1, 0, 0, 0, 0,
-            GLFW_FULLSCREEN);
-    glfwSetWindowTitle ("NorthStar Advantage Emulator");
+            "NorthStar Advantage Emulator",
+             NULL, NULL);
+    if (win == NULL)
+    {
+        log_fatal ("nsae: glfw: window creation failed\n");
+        return 1;
+    }
+    glfwMakeContextCurrent (win);
 
     /* initialize opengl */
-    glfwGetWindowSize (&self->width, &self->height);
+    glfwGetWindowSize (win, &self->width, &self->height);
 
-    rc = gl_init (self->width, self->height, 640, 240);
+    rc = gl_init (win, self->width, self->height, 640, 240);
     if (rc != 0) { return 1; }
 
     /* initialize glfw callbacks */
-    glfwSetKeyCallback (nsae_key_handler);
+    glfwSetKeyCallback (win, nsae_key_handler);
+    glfwSetWindowUserPointer (win, self);
 
     /* enter the main loop */
-    while (glfwGetWindowParam (GLFW_OPENED))
+    while (!glfwWindowShouldClose (win) && !self->exit)
     {
-        glfwGetWindowSize (&self->width, &self->height);
+        glfwGetWindowSize (win, &self->width, &self->height);
         glViewport (0, 0, self->width, self->height);
         glClear (GL_COLOR_BUFFER_BIT);
 
         /* process input */
-        nsae_update (self);
+        nsae_update (win);
 
         /* render output */
-        nsae_render (self);
+        nsae_render (win);
 
-        glfwSwapBuffers ();
+        glfwSwapBuffers (win);
+        glfwPollEvents ();
     }
 
     /* cleanup */
-    glfwCloseWindow ();
+    glfwMakeContextCurrent (NULL);
+    glfwDestroyWindow (win);
     glfwTerminate ();
 
     nsae_ipc_free (NSAE_IPC_SERVER);
@@ -147,41 +155,50 @@ nsae_start (nsae_t *self, int *p_argc, char **argv)
     return 0;
 }
 
-static void
-nsae_key_handler (int a, int b)
+static uint8_t
+nsae_key_decode (int key, int mods)
 {
-#if 0
-    assert (cb_data != NULL);
-    nsae_t *nsae = cb_data;
+    return key;
+}
+
+static void
+nsae_key_handler (GLFWwindow *win, int key, int scan, int action, int mods)
+{
+    nsae_t *nsae = glfwGetWindowUserPointer (win);
     adv_t  *adv  = &nsae->adv;
     kb_t   *kb   = &adv->kb;
 
     if (nsae->pause) return;
 
-    uint8_t adv_key = kb_decode_key (kb, key);
-    (void)kb_push (kb, adv_key);
+    adv->kb.autorepeat = (action == GLFW_REPEAT);
 
-    /* overflow */
-    adv->stat2_reg |= kb->overflow << 5;
-
-    /* maskable interupts */
-    if (adv->kb_mi)
+    uint8_t adv_key = nsae_key_decode (key, mods);
+    if (action == GLFW_PRESS)
     {
-        adv->stat2_reg |= kb->data_flag << 6;
+        (void)kb_push (kb, adv_key);
+
+        /* overflow */
+        adv->stat2_reg |= kb->overflow << 5;
+
+        /* maskable interupts */
+        if (adv->kb_mi)
+        {
+            adv->stat2_reg |= kb->data_flag << 6;
+        }
+
+        /* non maskable intreupts */
+        if (adv->kb_nmi)
+        {
+            adv->hw_interupt = kb->reset;
+        }
     }
 
-    /* non maskable intreupts */
-    if (adv->kb_nmi)
-    {
-        adv->hw_interupt = kb->reset;
-    }
-#endif
 }
 
 static void
-nsae_update (nsae_t *self)
+nsae_update (GLFWwindow *win)
 {
-    assert (self != NULL);
+    nsae_t *self = glfwGetWindowUserPointer (win);
     adv_t  *adv  = &self->adv;
 
     /* handle ipc */
@@ -208,9 +225,9 @@ nsae_update (nsae_t *self)
 }
 
 static void
-nsae_render (nsae_t *self)
+nsae_render (GLFWwindow *win)
 {
-    assert (self != NULL);
+    nsae_t *self = glfwGetWindowUserPointer (win);
     adv_t *adv = &self->adv;
     crt_t *crt = &adv->crt;
 
@@ -220,7 +237,7 @@ nsae_render (nsae_t *self)
         crt_draw (crt);
     glEnd ();
 
-    glfwSwapBuffers ();
+    glfwSwapBuffers (win);
 
     if (adv->crt_mi)
     {
