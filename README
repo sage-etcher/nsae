@@ -3,9 +3,9 @@
 
 ## Runtime Dependencies
 
-- FreeGLUT
-- GLU
+- GLFW3
 - GLEW
+- GLU
 - OpenGL 1.0
 
 ## Build Dependencies
@@ -24,4 +24,8 @@
 
 Copyright (c) 2025 Sage I. Hendricks
 MIT Licensing 
+
+
+
+
 
