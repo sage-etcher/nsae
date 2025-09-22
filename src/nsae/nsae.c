@@ -80,7 +80,7 @@ nsae_start (nsae_t *self, int *p_argc, char **argv)
 
     /* initialize emulator */
     self->scale_multiplier = 1.0f;
-    self->cycle_multiplier = 20.0f;
+    self->cycle_multiplier = 1.0f;
 
     self->width  = 640.0 * self->scale_multiplier;
     self->height = 480.0 * self->scale_multiplier;
@@ -136,6 +136,8 @@ nsae_start (nsae_t *self, int *p_argc, char **argv)
     glfwSetWindowUserPointer (win, self);
 
     /* enter the main loop */
+    gettimeofday (&self->frame_tv, NULL);
+    gettimeofday (&self->fps_tv, NULL);
     while (!glfwWindowShouldClose (win) && !self->exit)
     {
         glfwGetWindowSize (win, &self->width, &self->height);
@@ -167,27 +169,50 @@ nsae_start (nsae_t *self, int *p_argc, char **argv)
     return 0;
 }
 
+
 static void
 nsae_timeout (nsae_t *self)
 {
     struct timeval now = { 0 };
     gettimeofday (&now, NULL);
 
-    struct timeval delta = timeval_diff (now, self->update_tv);
-    struct timeval fps_limit = { 
+
+    /* frames per second */
+    struct timeval fps_tv = { .tv_sec = 1, .tv_usec = 0 };
+    struct timeval fps_delta = timeval_diff (now, self->fps_tv);
+
+    self->fps_cnt++;
+
+    /* fps_delta >= fps_tv) */
+    if (timeval_cmp (fps_delta, fps_tv) >= 0)
+    {
+        self->fps_tv = now;
+        self->fps = self->fps_cnt;
+        self->fps_cnt = 0;
+    }
+
+
+    /* frame time */
+    struct timeval frame_tv = { 
         .tv_sec = 0,
-        .tv_usec = 1000000 / self->max_fps,
+        .tv_usec = 1000000 / (self->cycle_multiplier * self->max_fps),
     };
 
-    /* if delta < fps_limit */
-    if (timeval_cmp (delta, fps_limit) < 0)
+    struct timeval frame_delta = timeval_diff (now, self->frame_tv);
+
+    /* if frame_delta < frame_limit */
+    if (timeval_cmp (frame_delta, frame_tv) < 0)
     {
-        struct timeval sleep_time = timeval_diff (fps_limit, delta);
+        struct timeval sleep_time = timeval_diff (frame_tv, frame_delta);
         usleep (sleep_time.tv_usec);
     }
 
-    self->update_tv = now;
+    self->frame_tv = now;
+
 }
+
+
+
 
 static void
 nsae_key_handler (GLFWwindow *win, int key, int scan, int action, int mods)
@@ -290,6 +315,9 @@ nsae_status (nsae_t *self)
 {
     log_info ("step: %d\n", self->step);
     log_info ("pause: %d\n", self->pause);
+    log_info ("fps: %d\n", self->fps);
+    log_info ("scale_mult: %.2f\n", self->scale_multiplier);
+    log_info ("cycle_mult: %.2f\n", self->cycle_multiplier);
 }
 
 /* end of file */

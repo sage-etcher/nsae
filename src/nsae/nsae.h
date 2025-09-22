@@ -34,7 +34,11 @@ typedef struct {
     bool pause;
     bool exit;
 
-    struct timeval update_tv;
+    struct timeval frame_tv;
+
+    struct timeval fps_tv;
+    uint32_t fps_cnt;
+    uint32_t fps;
 } nsae_t;
 
 int nsae_start (nsae_t *self, int *p_argc, char **argv);
