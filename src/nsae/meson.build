@@ -1,7 +1,7 @@
 
 glew_dep = dependency('glew', required : true)
-glut_dep = dependency('glut', required : true)
 glu_dep  = dependency('glu', required : true)
+glfw_dep = dependency('glfw3', required : true)
 
 nsae_inc = include_directories('.')
 z80emu_inc = include_directories('z80emu')
@@ -14,6 +14,7 @@ nsae_bin = executable('nsae', [
     'fdc.c',
     'io.c',
     'kb.c',
+    'kb_decode.c',
     'main.c',
     'mmu.c',
     'nsae.c',
@@ -22,6 +23,7 @@ nsae_bin = executable('nsae', [
     'server.c',
     'sio.c',
     'speaker.c',
+    'timer.c',
     'watchpoints.c',
     'z80emu/z80emu.c',
     advprom_h,
@@ -32,11 +34,12 @@ nsae_bin = executable('nsae', [
   ],
   dependencies : [
     glew_dep,
+    glfw_dep,
     glu_dep,
-    glut_dep,
     log_dep,
     nsaecmd_dep,
     nsaeipc_dep,
+    stb_ds_dep,
   ],
   install : true,
 )

@@ -21,13 +21,6 @@ kb_init (kb_t *self)
     return 0;
 }
 
-uint8_t
-kb_decode_key (kb_t *self, uint8_t host_key)
-{
-    /* TODO: handle modifier conversion */
-    return host_key;
-}
-
 void
 kb_reset (kb_t *self)
 {

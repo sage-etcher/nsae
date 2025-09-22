@@ -1,4 +1,5 @@
 
+subdir('stb_ds')
 subdir('log')
 subdir('libnsaeipc')
 subdir('libnsaecmd')

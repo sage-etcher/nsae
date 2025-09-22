@@ -11,6 +11,7 @@ extern "c" {
 
 #include "adv.h"
 #include "breakpoints.h"
+#include "kb_decode.h"
 #include "watchpoints.h"
 
 
@@ -20,6 +21,7 @@ typedef struct {
     adv_t adv;
     breakpoints_t br;
     watchpoints_t wp;
+    kbmap_hash_t *kbmap;
 
     int width;
     int height;
@@ -31,7 +33,6 @@ typedef struct {
     bool resuming;
     bool pause;
     bool exit;
-
 
     struct timeval update_tv;
 } nsae_t;

@@ -4,14 +4,14 @@
 
 #include "adv.h"
 #include "crt.h"
+#include "glinit.h"
 #include "kb.h"
+#include "kb_decode.h"
 #include "nsaeipc.h"
 #include "nslog.h"
 #include "server.h"
+#include "timer.h"
 
-#include <GL/glew.h>
-#include <GL/glu.h>
-#include <GL/freeglut.h>
 
 #include <assert.h>
 #include <stdint.h>
@@ -20,17 +20,18 @@
 #include <time.h>
 #include <unistd.h>
 
-static int gl_init (float win_width, float win_height,
-                    float emu_width, float emu_height);
+static int gl_init (GLFWwindow *win, float win_width, float win_height,
+                                     float emu_width, float emu_height);
 
-static void nsae_reshape (int width, int height, void *cb_data);
-static void nsae_key_handler (unsigned char key, int x, int y, void *cb_data);
-static void nsae_update (void *cb_data);
-static void nsae_render (void *cb_data);
-static void nsae_main_loop (int val, void *cb_data);
+static void nsae_key_handler (GLFWwindow *win, int key, int scan, int action, 
+        int mods);
+static void nsae_update (GLFWwindow *win);
+static void nsae_render (GLFWwindow *win);
+static void nsae_timeout (nsae_t *self);
 
 static int
-gl_init (float win_width, float win_height, float emu_width, float emu_height)
+gl_init (GLFWwindow *win, float win_width, float win_height, 
+        float emu_width, float emu_height)
 {
     GLenum glew_error = glewInit ();
     if (glew_error != GLEW_OK)
@@ -40,11 +41,13 @@ gl_init (float win_width, float win_height, float emu_width, float emu_height)
         return 1;
     }
 
+    /*
     if (!GLEW_VERSION_1_2)
     {
         log_fatal ("nsae: glew: insuffient OpenGL version, requires >=1.2\n");
         return 2;
     }
+    */
 
     glViewport (0.f, 0.f, win_width, win_height);
 
@@ -57,7 +60,7 @@ gl_init (float win_width, float win_height, float emu_width, float emu_height)
 
     glClearColor (0.f, 0.f, 0.f, 1.f);
     glClear (GL_COLOR_BUFFER_BIT);
-    glutSwapBuffers ();
+    glfwSwapBuffers (win);
 
     GLenum gl_error = glGetError ();
     if (gl_error != GL_NO_ERROR)
@@ -86,6 +89,8 @@ nsae_start (nsae_t *self, int *p_argc, char **argv)
     self->pause = true;
     self->exit = false;
 
+    self->kbmap = kbmap_init ();
+
     int rc = 0;
     log_init (LC_COUNT);
     rc |= nsae_ipc_init (NSAE_IPC_SERVER, NULL, NULL);
@@ -97,95 +102,143 @@ nsae_start (nsae_t *self, int *p_argc, char **argv)
         return 1;
     }
 
-    /* initialize freeglut */
-    glutInit (p_argc, argv);
-    glutInitContextVersion (1, 2);
-
-    /* create glut window */
-    glutInitDisplayMode (GLUT_DOUBLE);
-    glutInitWindowSize (self->width, self->height);
-    glutCreateWindow ("NorthStar Advantage Emulator");
-
-    /* TODO: initialize freeglut menu */
-
-    /* initialize opengl */
-    self->width  = glutGet (GLUT_WINDOW_WIDTH);
-    self->height = glutGet (GLUT_WINDOW_HEIGHT);
-
-    rc = gl_init (self->width, self->height, 640, 240);
-    if (rc != 0)
+    /* initialize glfw */
+    if (!glfwInit ())
     {
+        log_fatal ("nsae: glfw: initialization failed\n");
         return 1;
     }
 
-    /* initialize glut callbacks */
-    glutReshapeFuncUcall (nsae_reshape, self);
-    glutDisplayFuncUcall (nsae_render, self);
-    glutKeyboardFuncUcall (nsae_key_handler, self);
+    /* create glfw window */
+    GLFWwindow *win = NULL;
+    win = glfwCreateWindow (
+            self->width, self->height,
+            "NorthStar Advantage Emulator",
+             NULL, NULL);
+    if (win == NULL)
+    {
+        log_fatal ("nsae: glfw: window creation failed\n");
+        return 1;
+    }
+    glfwMakeContextCurrent (win);
+
+    /* initialize opengl */
+    glfwGetWindowSize (win, &self->width, &self->height);
+
+    rc = gl_init (win, self->width, self->height, 640, 240);
+    if (rc != 0) { return 1; }
+
+    /* input mode */
+    glfwSetInputMode (win, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
+
+    /* initialize glfw callbacks */
+    glfwSetKeyCallback (win, nsae_key_handler);
+    glfwSetWindowUserPointer (win, self);
 
     /* enter the main loop */
-    glutTimerFuncUcall (1000 / self->max_fps, nsae_main_loop, 0, self);
-    glutMainLoop ();
+    while (!glfwWindowShouldClose (win) && !self->exit)
+    {
+        glfwGetWindowSize (win, &self->width, &self->height);
+        glViewport (0, 0, self->width, self->height);
+        glClear (GL_COLOR_BUFFER_BIT);
+
+        /* process input */
+        nsae_update (win);
+
+        /* render output */
+        nsae_render (win);
+
+        glfwSwapBuffers (win);
+        glfwPollEvents ();
+
+        nsae_timeout (self);
+    }
 
     /* cleanup */
+    glfwMakeContextCurrent (NULL);
+    glfwDestroyWindow (win);
+    glfwTerminate ();
+
     nsae_ipc_free (NSAE_IPC_SERVER);
     log_quit ();
+
+    kbmap_free (self->kbmap);
 
     return 0;
 }
 
 static void
-nsae_reshape (int width, int height, void *cb_data)
+nsae_timeout (nsae_t *self)
 {
-    assert (cb_data != NULL);
-    nsae_t *self = cb_data;
+    struct timeval now = { 0 };
+    gettimeofday (&now, NULL);
 
-    glViewport (0.f, 0.f, width, height);
-    self->width  = width;
-    self->height = height;
+    struct timeval delta = timeval_diff (now, self->update_tv);
+    struct timeval fps_limit = { 
+        .tv_sec = 0,
+        .tv_usec = 1000000 / self->max_fps,
+    };
+
+    /* if delta < fps_limit */
+    if (timeval_cmp (delta, fps_limit) < 0)
+    {
+        struct timeval sleep_time = timeval_diff (fps_limit, delta);
+        usleep (sleep_time.tv_usec);
+    }
+
+    self->update_tv = now;
 }
 
 static void
-nsae_key_handler (unsigned char key, int x, int y, void *cb_data)
+nsae_key_handler (GLFWwindow *win, int key, int scan, int action, int mods)
 {
-    assert (cb_data != NULL);
-    nsae_t *nsae = cb_data;
+    nsae_t *nsae = glfwGetWindowUserPointer (win);
     adv_t  *adv  = &nsae->adv;
     kb_t   *kb   = &adv->kb;
-
-    //if (key == 'q')
-    //{
-    //    log_debug ("nsae: exit key pressed\n");
-    //    glutLeaveMainLoop ();
-    //    return;
-    //}
+    int rc = 0;
+    uint8_t keycode = 0x00;
 
     if (nsae->pause) return;
 
-    uint8_t adv_key = kb_decode_key (kb, key);
-    (void)kb_push (kb, adv_key);
+    adv->kb.autorepeat  = (action == GLFW_REPEAT);
+    adv->kb.cursor_lock = ((mods & GLFW_MOD_NUM_LOCK) != 0);
+    adv->kb.caps_lock   = ((mods & GLFW_MOD_CAPS_LOCK) != 0);
 
-    /* overflow */
-    adv->stat2_reg |= kb->overflow << 5;
-
-    /* maskable interupts */
-    if (adv->kb_mi)
+    if (action == GLFW_PRESS)
     {
-        adv->stat2_reg |= kb->data_flag << 6;
+        rc = kbmap_decode (nsae->kbmap, key, mods);
+        if ((rc < 0) || (rc > UINT8_MAX))
+        {
+            log_warning ("nsae: unknown key %x", key);
+            return;
+        }
+
+        keycode = rc;
+
+        (void)kb_push (kb, keycode);
+
+        /* overflow */
+        adv->stat2_reg |= kb->overflow << 5;
+
+        /* maskable interupts */
+        if (adv->kb_mi)
+        {
+            adv->stat2_reg |= kb->data_flag << 6;
+        }
+
+        /* non maskable intreupts */
+        if (adv->kb_nmi)
+        {
+            adv->hw_interupt = kb->reset;
+        }
     }
 
-    /* non maskable intreupts */
-    if (adv->kb_nmi)
-    {
-        adv->hw_interupt = kb->reset;
-    }
 }
 
 static void
-nsae_update (void *cb_data)
+nsae_update (GLFWwindow *win)
 {
-    assert (cb_data != NULL);
-    nsae_t *self = cb_data;
+    nsae_t *self = glfwGetWindowUserPointer (win);
     adv_t  *adv  = &self->adv;
 
     /* handle ipc */
@@ -212,11 +265,10 @@ nsae_update (void *cb_data)
 }
 
 static void
-nsae_render (void *cb_data)
+nsae_render (GLFWwindow *win)
 {
-    assert (cb_data != NULL);
-    nsae_t *nsae = cb_data;
-    adv_t *adv = &nsae->adv;
+    nsae_t *self = glfwGetWindowUserPointer (win);
+    adv_t *adv = &self->adv;
     crt_t *crt = &adv->crt;
 
     glClear (GL_COLOR_BUFFER_BIT);
@@ -225,33 +277,12 @@ nsae_render (void *cb_data)
         crt_draw (crt);
     glEnd ();
 
-    glutSwapBuffers ();
+    glfwSwapBuffers (win);
 
     if (adv->crt_mi)
     {
         adv->stat1_reg |= crt->vrefresh << 2;
     }
-}
-
-static void
-nsae_main_loop (int val, void *cb_data)
-{
-    assert (cb_data != NULL);
-    nsae_t *self = cb_data;
-
-    if (self->exit)
-    {
-        log_verbose ("nsae: exit conditional handled\n");
-        glutLeaveMainLoop ();
-        return;
-    }
-
-    /* queue the next iteration imediately */
-    glutTimerFuncUcall (1000 / self->max_fps, nsae_main_loop, val, self);
-
-    nsae_update (self);
-    nsae_render (self);
-
 }
 
 void
