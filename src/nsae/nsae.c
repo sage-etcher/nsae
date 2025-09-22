@@ -4,14 +4,12 @@
 
 #include "adv.h"
 #include "crt.h"
+#include "glinit.h"
 #include "kb.h"
 #include "nsaeipc.h"
 #include "nslog.h"
 #include "server.h"
 
-#include <GL/glew.h>
-#include <GL/glu.h>
-#include <GLFW/glfw3.h>
 
 #include <assert.h>
 #include <stdint.h>
