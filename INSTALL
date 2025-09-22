@@ -1,9 +1,11 @@
 
 build dependencies: meson>=1.1, xxd
-dependencies: freeglut, glew, glu, opengl>=1.0
+dependencies: glew, glfw3, glu, opengl>=1.0
 
 meson setup build
 cd build
 ninja
 meson install
+
+
 
