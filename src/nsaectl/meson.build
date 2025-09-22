@@ -25,8 +25,6 @@ nsaectl_help_h = custom_target(
 )
 
 nsaectl = executable('nsaectl', [
-    #    'client.c',
-    'stb_ds.c',
     'nsaectl.c',
     nsaectl_help_h,
     nsaectl_version_h,
@@ -35,7 +33,7 @@ nsaectl = executable('nsaectl', [
     log_dep,
     nsaecmd_dep,
     nsaeipc_dep,
-    stb_dep,
+    stb_ds_dep,
   ],
   install : true,
 )
@@ -46,7 +44,6 @@ debug_server = executable('debug_server', [
   dependencies: [
       nsaecmd_dep,
       nsaeipc_dep,
-      stb_dep,
   ],
 )
 
