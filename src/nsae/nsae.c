@@ -6,9 +6,11 @@
 #include "crt.h"
 #include "glinit.h"
 #include "kb.h"
+#include "kb_decode.h"
 #include "nsaeipc.h"
 #include "nslog.h"
 #include "server.h"
+#include "timer.h"
 
 
 #include <assert.h>
@@ -25,6 +27,7 @@ static void nsae_key_handler (GLFWwindow *win, int key, int scan, int action,
         int mods);
 static void nsae_update (GLFWwindow *win);
 static void nsae_render (GLFWwindow *win);
+static void nsae_timeout (nsae_t *self);
 
 static int
 gl_init (GLFWwindow *win, float win_width, float win_height, 
@@ -38,11 +41,13 @@ gl_init (GLFWwindow *win, float win_width, float win_height,
         return 1;
     }
 
+    /*
     if (!GLEW_VERSION_1_2)
     {
         log_fatal ("nsae: glew: insuffient OpenGL version, requires >=1.2\n");
         return 2;
     }
+    */
 
     glViewport (0.f, 0.f, win_width, win_height);
 
@@ -84,6 +89,8 @@ nsae_start (nsae_t *self, int *p_argc, char **argv)
     self->pause = true;
     self->exit = false;
 
+    self->kbmap = kbmap_init ();
+
     int rc = 0;
     log_init (LC_COUNT);
     rc |= nsae_ipc_init (NSAE_IPC_SERVER, NULL, NULL);
@@ -121,6 +128,9 @@ nsae_start (nsae_t *self, int *p_argc, char **argv)
     rc = gl_init (win, self->width, self->height, 640, 240);
     if (rc != 0) { return 1; }
 
+    /* input mode */
+    glfwSetInputMode (win, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
+
     /* initialize glfw callbacks */
     glfwSetKeyCallback (win, nsae_key_handler);
     glfwSetWindowUserPointer (win, self);
@@ -140,6 +150,8 @@ nsae_start (nsae_t *self, int *p_argc, char **argv)
 
         glfwSwapBuffers (win);
         glfwPollEvents ();
+
+        nsae_timeout (self);
     }
 
     /* cleanup */
@@ -150,13 +162,31 @@ nsae_start (nsae_t *self, int *p_argc, char **argv)
     nsae_ipc_free (NSAE_IPC_SERVER);
     log_quit ();
 
+    kbmap_free (self->kbmap);
+
     return 0;
 }
 
-static uint8_t
-nsae_key_decode (int key, int mods)
+static void
+nsae_timeout (nsae_t *self)
 {
-    return key;
+    struct timeval now = { 0 };
+    gettimeofday (&now, NULL);
+
+    struct timeval delta = timeval_diff (now, self->update_tv);
+    struct timeval fps_limit = { 
+        .tv_sec = 0,
+        .tv_usec = 1000000 / self->max_fps,
+    };
+
+    /* if delta < fps_limit */
+    if (timeval_cmp (delta, fps_limit) < 0)
+    {
+        struct timeval sleep_time = timeval_diff (fps_limit, delta);
+        usleep (sleep_time.tv_usec);
+    }
+
+    self->update_tv = now;
 }
 
 static void
@@ -165,15 +195,27 @@ nsae_key_handler (GLFWwindow *win, int key, int scan, int action, int mods)
     nsae_t *nsae = glfwGetWindowUserPointer (win);
     adv_t  *adv  = &nsae->adv;
     kb_t   *kb   = &adv->kb;
+    int rc = 0;
+    uint8_t keycode = 0x00;
 
     if (nsae->pause) return;
 
-    adv->kb.autorepeat = (action == GLFW_REPEAT);
+    adv->kb.autorepeat  = (action == GLFW_REPEAT);
+    adv->kb.cursor_lock = ((mods & GLFW_MOD_NUM_LOCK) != 0);
+    adv->kb.caps_lock   = ((mods & GLFW_MOD_CAPS_LOCK) != 0);
 
-    uint8_t adv_key = nsae_key_decode (key, mods);
     if (action == GLFW_PRESS)
     {
-        (void)kb_push (kb, adv_key);
+        rc = kbmap_decode (nsae->kbmap, key, mods);
+        if ((rc < 0) || (rc > UINT8_MAX))
+        {
+            log_warning ("nsae: unknown key %x", key);
+            return;
+        }
+
+        keycode = rc;
+
+        (void)kb_push (kb, keycode);
 
         /* overflow */
         adv->stat2_reg |= kb->overflow << 5;
