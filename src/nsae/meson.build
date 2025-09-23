@@ -23,7 +23,7 @@ nsae_bin = executable('nsae', [
     'server.c',
     'sio.c',
     'speaker.c',
-    'timer.c',
+    #'timer.c',
     'watchpoints.c',
     'z80emu/z80emu.c',
     advprom_h,
@@ -40,6 +40,7 @@ nsae_bin = executable('nsae', [
     nsaecmd_dep,
     nsaeipc_dep,
     sc_map_dep,
+    sc_time_dep,
   ],
   install : true,
 )

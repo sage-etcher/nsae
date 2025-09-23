@@ -17,7 +17,7 @@ cmake = import('cmake')
 
 #subprojects
 sc_proj = cmake.subproject('sc')
-sc_timer_dep = sc_proj.dependency('sc_timer')
+sc_time_dep = sc_proj.dependency('sc_time')
 sc_map_dep = sc_proj.dependency('sc_map')
 
 #arguments

@@ -10,14 +10,14 @@
 #include "nsaeipc.h"
 #include "nslog.h"
 #include "server.h"
-#include "timer.h"
 
+#include <sc_map.h>
+#include <sc_time.h>
 
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdbool.h>
-#include <time.h>
 #include <unistd.h>
 
 static int gl_init (GLFWwindow *win, float win_width, float win_height,
@@ -136,8 +136,8 @@ nsae_start (nsae_t *self, int *p_argc, char **argv)
     glfwSetWindowUserPointer (win, self);
 
     /* enter the main loop */
-    gettimeofday (&self->frame_tv, NULL);
-    gettimeofday (&self->fps_tv, NULL);
+    self->frame_time = sc_time_ms ();
+    self->fps_time   = sc_time_ms ();
     while (!glfwWindowShouldClose (win) && !self->exit)
     {
         glfwGetWindowSize (win, &self->width, &self->height);
@@ -173,42 +173,34 @@ nsae_start (nsae_t *self, int *p_argc, char **argv)
 static void
 nsae_timeout (nsae_t *self)
 {
-    struct timeval now = { 0 };
-    gettimeofday (&now, NULL);
 
+    uint64_t now = sc_time_ms ();
 
-    /* frames per second */
-    struct timeval fps_tv = { .tv_sec = 1, .tv_usec = 0 };
-    struct timeval fps_delta = timeval_diff (now, self->fps_tv);
+    /* fps count */ 
+    uint64_t fps_delta = now - self->fps_time;
+    uint64_t fps_wait = 1000;
+    
+    self->fps_count++;
 
-    self->fps_cnt++;
-
-    /* fps_delta >= fps_tv) */
-    if (timeval_cmp (fps_delta, fps_tv) >= 0)
+    if (fps_delta >= fps_wait)
     {
-        self->fps_tv = now;
-        self->fps = self->fps_cnt;
-        self->fps_cnt = 0;
-    }
+        self->fps = self->fps_count;
+        self->fps_count = 0;
 
+        self->fps_time = now;
+    }
 
     /* frame time */
-    struct timeval frame_tv = { 
-        .tv_sec = 0,
-        .tv_usec = 1000000 / (self->cycle_multiplier * self->max_fps),
-    };
+    uint64_t frame_wait = 1000 / (self->cycle_multiplier * self->max_fps);
+    uint64_t frame_delta = now - self->frame_time;
 
-    struct timeval frame_delta = timeval_diff (now, self->frame_tv);
-
-    /* if frame_delta < frame_limit */
-    if (timeval_cmp (frame_delta, frame_tv) < 0)
+    if (frame_delta < frame_wait)
     {
-        struct timeval sleep_time = timeval_diff (frame_tv, frame_delta);
-        usleep (sleep_time.tv_usec);
+         uint64_t sleep_time = frame_wait - frame_delta;
+	 sc_time_sleep (sleep_time);
     }
 
-    self->frame_tv = now;
-
+    self->frame_time = now;
 }
 
 

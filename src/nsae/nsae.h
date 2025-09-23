@@ -36,10 +36,10 @@ typedef struct {
     bool pause;
     bool exit;
 
-    struct timeval frame_tv;
+    uint64_t frame_time;
 
-    struct timeval fps_tv;
-    uint32_t fps_cnt;
+    uint64_t fps_time;
+    uint32_t fps_count;
     uint32_t fps;
 } nsae_t;
 
