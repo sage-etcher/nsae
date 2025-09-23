@@ -5,6 +5,7 @@ test.sh
 test.txt
 test-nsaectl
 **.log
+**.swp
 disks/2/
 .cache/
 subprojects/.wraplock
