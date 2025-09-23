@@ -4,6 +4,8 @@
 
 #include "glinit.h"
 
+#include <sc_map.h>
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -24,16 +26,9 @@ typedef struct {
     uint8_t keycodes[KC_STATE_COUNT];
 } key_t;
 
-typedef struct {
-    int key;
-    key_t value;
-} kbmap_hash_t;
+struct sc_map_64v kbmap_init (void);
+void kbmap_free (struct sc_map_64v *self);
 
-typedef kbmap_hash_t kb_map_t;
-
-kb_map_t *kbmap_init (void);
-void kbmap_free (kb_map_t *self);
-
-int kbmap_decode (kb_map_t *self, int key, int mod);
+int kbmap_decode (struct sc_map_64v *self, int key, int mod);
 
 #endif

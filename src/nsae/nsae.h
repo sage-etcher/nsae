@@ -5,14 +5,16 @@
 extern "c" {
 #endif
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <time.h>
-
 #include "adv.h"
 #include "breakpoints.h"
 #include "kb_decode.h"
 #include "watchpoints.h"
+
+#include <sc_map.h>
+
+#include <stdbool.h>
+#include <stdint.h>
+#include <time.h>
 
 
 #define NSAE_BREAKPOINT_MAX 256
@@ -21,7 +23,7 @@ typedef struct {
     adv_t adv;
     breakpoints_t br;
     watchpoints_t wp;
-    kbmap_hash_t *kbmap;
+    struct sc_map_64v kbmap;
 
     int width;
     int height;

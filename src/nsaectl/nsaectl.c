@@ -6,7 +6,7 @@
 #include "nsaeipc.h"
 #include "nslog.h"
 
-#include <stb_ds.h>
+#include <sc_map.h>
 
 #include <assert.h>
 #include <stdbool.h>
@@ -33,18 +33,11 @@ typedef struct {
     int max_args;
 } concmd_t;
 
-typedef struct {
-    char *key;
-    concmd_t value;
-} concmd_hash_t;
-
-concmd_hash_t *
+struct sc_map_sv
 get_keywords (void)
 {
-    concmd_hash_t *iter = NULL;
-    concmd_hash_t *hash = NULL;
-
-    concmd_hash_t cmd_arr[] = {
+    struct sc_map_sv map;
+    static struct { const char *key; concmd_t value; } s_cmd_arr[] = {
         { "exit",        { NSAE_CMD_EXIT,          0, 0 } },
         { "restart",     { NSAE_CMD_RESTART,       0, 0 } },
         { "pause",       { NSAE_CMD_PAUSE,         0, 0 } },
@@ -100,17 +93,15 @@ get_keywords (void)
         { "mmu_load",    { NSAE_CMD_MMU_LOAD,      2, 2 } },
         { "mmu_status",  { NSAE_CMD_MMU_STATUS,    0, 0 } },
     };
-    concmd_t default_cmd = (concmd_t){ NSAE_CMD_COUNT, 0, 0 };
 
-    shdefault (hash, default_cmd);
+    sc_map_init_sv (&map, 0, 0);
 
-    for (size_t i = 0; i < ARRLEN (cmd_arr); i++)
+    for (size_t i = 0; i < ARRLEN (s_cmd_arr); i++)
     {
-        iter = &cmd_arr[i];
-        shput (hash, iter->key, iter->value);
+	sc_map_put_sv (&map, s_cmd_arr[i].key, (void *)&s_cmd_arr[i].value);
     }
 
-    return hash;
+    return map;
 }
 
 
@@ -170,19 +161,21 @@ main (int argc, char **argv)
 
     const char *mode_str = argv[0];
 
-    concmd_hash_t *mode_hash = get_keywords ();
-    concmd_t mode = shget (mode_hash, mode_str);
+    struct sc_map_sv mode_hash = get_keywords ();
+    concmd_t *p_mode = NULL;
+    bool match = sc_map_get_sv (&mode_hash, mode_str, (void **)&p_mode);
     argc--; argv++;
 
-     assert (mode.cmd <= NSAE_CMD_COUNT);
-     if (mode.cmd == NSAE_CMD_COUNT)
-     {
+    if (!match)
+    {
          log_error ("nsaectl: invalid mode -- \"%s\"\n", mode_str);
          fprintf (stderr, "%.*s", USAGE_LEN, USAGE_STR);
          exit (EXIT_FAILURE);
     }
+    assert (p_mode != NULL);
+    assert (p_mode->cmd <= NSAE_CMD_COUNT);
 
-    if ((mode.min_args > argc) || (argc > mode.max_args))
+    if ((p_mode->min_args > argc) || (argc > p_mode->max_args))
     {
         log_error ("nsaectl: missing mode argument\n");
         fprintf (stderr, "%.*s", USAGE_LEN, USAGE_STR);
@@ -193,7 +186,7 @@ main (int argc, char **argv)
     size_t packet_size = sizeof (nsae_packet_t);
     nsae_packet_t *packet = malloc (packet_size);
 
-    packet->cmd = mode.cmd;
+    packet->cmd = p_mode->cmd;
 
     switch (packet->cmd)
     {

@@ -33,7 +33,7 @@ nsaectl = executable('nsaectl', [
     log_dep,
     nsaecmd_dep,
     nsaeipc_dep,
-    stb_ds_dep,
+    sc_map_dep,
   ],
   install : true,
 )

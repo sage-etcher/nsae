@@ -164,7 +164,7 @@ nsae_start (nsae_t *self, int *p_argc, char **argv)
     nsae_ipc_free (NSAE_IPC_SERVER);
     log_quit ();
 
-    kbmap_free (self->kbmap);
+    kbmap_free (&self->kbmap);
 
     return 0;
 }
@@ -231,7 +231,7 @@ nsae_key_handler (GLFWwindow *win, int key, int scan, int action, int mods)
 
     if (action == GLFW_PRESS)
     {
-        rc = kbmap_decode (nsae->kbmap, key, mods);
+        rc = kbmap_decode (&nsae->kbmap, key, mods);
         if ((rc < 0) || (rc > UINT8_MAX))
         {
             log_warning ("nsae: unknown key %x", key);
