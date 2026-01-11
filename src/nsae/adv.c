@@ -86,8 +86,9 @@ adv_init (adv_t *self)
 void
 adv_reset (adv_t *self)
 {
-    self->stat1_reg |= 0x01;
-    self->kb_mi = 1;
+    //self->stat1_reg &= ~0x01;
+    //self->stat2_reg &= ~0x01;
+    //self->kb_mi = 1;
 }
 
 int
@@ -284,11 +285,14 @@ adv_command (adv_t *self, uint8_t data, uint16_t pc)
         break;
 
     case 0x3: /* compliment kb mi */
-        self->kb_mi ^= 0x01;
         log_fn (LC_KB, LOG_DEBUG, "nsae: kb: %04x: compliment kb_mi %d\n", pc, self->kb_mi);
 
         self->stat1_reg &= ~0x01;
         self->stat1_reg |= self->kb_mi;
+        self->stat2_reg &= ~0x01;
+        self->stat2_reg |= self->kb_mi;
+
+        self->kb_mi ^= 0x01;
         break;
 
     case 0x4: /* compliment cursor lock */
