@@ -3,6 +3,7 @@
 #include "nsae.h"
 
 #include "adv.h"
+#include "config.h"
 #include "crt.h"
 #include "glinit.h"
 #include "kb.h"
@@ -58,7 +59,7 @@ gl_init (GLFWwindow *win, float win_width, float win_height,
     glMatrixMode (GL_MODELVIEW);
     glLoadIdentity ();
 
-    glClearColor (0.f, 0.f, 0.f, 1.f);
+    glClearColor (CRT_CLEAR_COLOR, 1.f); /* see config.h for color */
     glClear (GL_COLOR_BUFFER_BIT);
     glfwSwapBuffers (win);
 
@@ -226,7 +227,7 @@ nsae_key_handler (GLFWwindow *win, int key, int scan, int action, int mods)
         rc = kbmap_decode (&nsae->kbmap, key, mods);
         if ((rc < 0) || (rc > UINT8_MAX))
         {
-            log_warning ("nsae: unknown key %x", key);
+            log_warning ("nsae: unknown key %x\n", key);
             return;
         }
 

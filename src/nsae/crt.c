@@ -2,6 +2,7 @@
 #define LOG_CATEGORY LC_CRT
 #include "crt.h"
 
+#include "config.h"
 #include "nslog.h"
 #include "ram.h"
 
@@ -40,7 +41,7 @@ crt_draw (crt_t *self)
     /* if blank display, dont update */
     if (self->blank) return;
 
-    glColor3f (0.2f, 1.0f, 0.2f);   /* P1 (apple II green) #33FF33 */
+    glColor3f (CRT_DRAW_COLOR);  /* see config.h for colour */
 
     /* for each pixel */
     for (int y = 0; y < WIDTH; y++)
