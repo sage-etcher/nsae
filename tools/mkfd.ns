@@ -1,0 +1,65 @@
+#!/usr/bin/sh
+
+this_name=`basename -- "$0"`
+
+die() {
+    [ "x$1" == "x" ] || echo "$1" >>/dev/stderr
+    [ "x$2" == "x" ] || eval "$2"
+    exit 1
+}
+
+usage() {
+    die "usage: $this_name [-vh] [-t DSDD|SSDD] [-f CPM|NSDOS] disk_file"
+}
+
+# options
+vflag=false
+disk_file="emptydisk.nsi"
+disk_type="DSDD"
+disk_size=0
+disk_format="CPM"
+
+while [ $# -gt 0 ]; do
+    case $1 in
+        -v|--verbose) vflag=true;  shift ;;
+           --terse)   vflag=false; shift ;;
+        -t|--type)    disk_type="$2";   shift 2;;
+        -f|--format)  disk_format="$2"; shift 2;;
+
+        -h|--help) usage; die ;;
+        -*|--*) die "unknown option -- $1" usage ;;
+
+        *) disk_file="$1"; shift ;;
+    esac # is rediculous
+done
+
+# validation
+case $disk_type in
+    dsdd | DSDD) disk_size=358400 ;;
+    ssdd | SSDD) disk_size=179200 ;;
+    *) die "unknown disk type -- $disk_type" usage ;;
+esac # is ridiculous
+
+case $disk_format in
+    cpm|CPM|nsdos|NSDOS) ;;
+    *) die "unknown filesystem -- $disk_format" usage ;;
+esac # is ridiculous
+
+# actually initialize the system
+init_file() {
+    echo "Initializing $disk_file, as a $disk_type ($disk_size byte) $disk_format floppy image"
+
+    dd if=/dev/zero "of=$disk_file" "bs=$disk_size" count=1 status=none || die 'cannot zero fill'
+
+    case $disk_format in
+        cpm|CPM) mkfs.cpm -f nsfd -- "$disk_file" || die 'cannot mkfs.cpm' ;;
+        *) die "unimplemented format -- $disk_format" usage ;;
+    esac
+}
+
+if [ "x$vflag" == "xtrue" ]
+then init_file
+else init_file >>/dev/null
+fi
+
+# end of file

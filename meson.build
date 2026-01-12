@@ -38,6 +38,10 @@ endif
 subdir('resources')
 subdir('src')
 
+if get_option('enable-tools')
+  subdir('tools')
+endif
+
 if get_option('tests')
     subdir('tests')
 endif

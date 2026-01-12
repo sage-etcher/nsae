@@ -1,4 +1,5 @@
 
 option('tests', type : 'boolean', value : false)
+option('enable-tools', type : 'boolean', value : true)
 
 # end of file
