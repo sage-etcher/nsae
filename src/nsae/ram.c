@@ -112,7 +112,7 @@ ram_inspect (ram_t *self, uint32_t addr, uint32_t n)
     uint32_t base = addr & ~0x0000f;
     uint32_t end  = addr + n;
 
-    for (uint32_t row = base; row < end; row += 0x0000f)
+    for (uint32_t row = base; row < end; row += 0x00010)
     {
         /* line label */
         log_info ("(%05x): ", row);
