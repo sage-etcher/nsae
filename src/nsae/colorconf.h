@@ -19,7 +19,7 @@
 #define CRT_BG_BLACK
 // #define CRT_BG_DARK
 
-#if defined(CRT_BG_ABSBLACK)
+#if defined(CRT_BG_BLACK)
 #   define CRT_BG_COLOR 0.0f, 0.0f, 0.0f    /* Black 0x000000 */
 #elif defined(CRT_BG_DARK)
 #   define CRT_BG_COLOR 0.34f, 0.4f, 0.45f  /* Dark 0x5b6673 */

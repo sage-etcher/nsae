@@ -3,7 +3,7 @@
 #include "nsae.h"
 
 #include "adv.h"
-#include "config.h"
+#include "colorconf.h"
 #include "crt.h"
 #include "glinit.h"
 #include "kb.h"
