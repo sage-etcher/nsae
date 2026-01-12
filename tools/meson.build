@@ -8,13 +8,15 @@ find_program('echo',     required : false)
 find_program('sh',       required : false)
 
 # obscure requirements
-find_program('mkfs.cpm', required : true) # part of cpmtools
+find_program('mkfs.cpm',   required : false)  # cpmtools
+#find_program('mkfs.nsdos', required : false)
 
 
 nsae_tools = [
   'mkfd.ns',
   'mkfd.nscpm',
   'mkfd.nsdos',
+  'nsaecli',
 ]
 
 install_data(
