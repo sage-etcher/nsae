@@ -48,6 +48,17 @@ modes:
   kb_push <keycode>         push a keycode onto the keyboard buffer
   kb_pop                    pop a key off of the keyboard buffer
   kb_status <state>         display keyboard state
+  log_cpu <level>           set log level for cpu events
+  log_crt <level>           set log level for crt events
+  log_fdc <level>           set log level for fdc events
+  log_kb <level>            set log level for kb events
+  log_mmu <level>           set log level for mmu events
+  log_mobo <level>          set log level for mobo events
+  log_ram <level>           set log level for ram events
+  log_output <logfile>      set a file to duplicate logs to (this may get large)
+  log_terse                 set log level to terse for all events
+  log_verbose               set log level to verbose for all events
+  log_debug                 set log level to debug for all events
   mmu_load <slot> <page>    load an mmu slot with a page of memory
   mmu_read <addr> <n>       derefernce addr in the mmu, read n bytes
   mmu_status                display memory multiplexer state
@@ -74,3 +85,8 @@ fd_num is an integer index in the range of 0-1 for selecting which floppy disk
 drive to interact with.
 
 file is a path to a floppy/hard disk image to be loaded/saved into.
+
+level is a value from 0-6 where 0 is the most verbose and 6 is silent. minimum 
+log levels include all level > that selected, the levels are as follows:
+0 debug, 1 verbose, 2 info, 3 warnings, 4 errors, 5 fatal errors, >5 silent
+
