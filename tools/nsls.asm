@@ -5,14 +5,14 @@ BPUTC	equ	02h
 BPUTS	equ	09h
 *
 BIOS	equ	0f200h
-WBOOT	equ	BIOS +  0
-HOME	equ	BIOS + 21
-SELDSK	equ	BIOS + 24
-SETTRK	equ	BIOS + 27
-SETSEC	equ	BIOS + 30
-SETDMA	equ	BIOS + 33
-READ	equ	BIOS + 36
-WRITE	equ	BIOS + 39
+WBOOT	equ	BIOS + 3 *  0
+HOME	equ	BIOS + 3 *  7
+SELDSK	equ	BIOS + 3 *  8
+SETTRK	equ	BIOS + 3 *  9
+SETSEC	equ	BIOS + 3 * 10
+SETDMA	equ	BIOS + 3 * 11
+READ	equ	BIOS + 3 * 12
+WRITE	equ	BIOS + 3 * 13
 *
 *
 	org	0100h
