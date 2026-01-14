@@ -1,0 +1,19 @@
+
+quit
+run [pc]
+step [count]
+next
+continue
+reset
+break -> set breakpoint [index=-1] <pc>
+
+info <mode>
+set <mode> <variable> <value>
+delete <mode> <index>
+load <mode> [mode_args...] <file> [count]
+save <mode> [mode_args...] <file> [count]
+read  [mode=mmu] <address> [count] [format:WORD,BYTE=BYTE]
+write [mode=mmu] <address> <byte> [byte...]
+
+send <keycode|string> [type:keycode,string=keycode] ->
+
