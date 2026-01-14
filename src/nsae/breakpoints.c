@@ -23,6 +23,12 @@ br_add (breakpoints_t *self, uint16_t pc)
         return 1;
     }
 
+    /* break point already exists */
+    if (-1 != br_lookup (self, pc)) 
+    {
+        return 0;
+    }
+
     self->m[self->cnt++] = pc;
     return 0;
 }
@@ -35,7 +41,7 @@ br_remove (breakpoints_t *self, uint16_t pc)
     if (index == -1) return -1;
     uint16_t addr = self->m[index];
 
-    memcpy (&self->m[index], &self->m[index+1], self->cnt - index);
+    memcpy (&self->m[index], &self->m[index+1], self->cnt - index - 1);
     self->cnt--;
 
     return addr;
