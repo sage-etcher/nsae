@@ -31,144 +31,164 @@
 
 
 enum {
-    NSAE_IMPLICIT_RESET = NSAE_CMD_EXTRA,
-    NSAE_IMPLICIT_BREAK,
-    NSAE_IMPLICIT_SEND,
+    CMD_IMP_RESET = CMD_IMP_BASE,
+    CMD_IMP_BREAK,
+    CMD_IMP_PRESS,
 };
 
-static const struct { 
-    const char *cmd; 
-    const char *modes; 
-    uint8_t def_mode; 
-    uint8_t cmd_id; 
-} CMD_LIST[] = {
+/* in:  element used for detecting a match.
+ * out: an element used after a match is detected.
+ */
+struct cmd_entry { 
+    const char   *long_name;    /* in */
+    const char   *short_name;   /* in */
+    uint_fast8_t  command_id;   /* out */
+    uint_fast16_t mode_default; /* out */
+    uint_fast16_t mode_options; /* in */
+};
+
+struct mode_entry { 
+    const char *long_name;      /* in */
+    const char *short_name;     /* in */
+    uint_fast16_t mode_id;      /* out */
+};
+
+struct var_entry { 
+    uint_fast16_t mode_id;      /* in */
+    const char *long_name;      /* in */
+    const char *short_name;     /* in */
+    uint_fast16_t set_id;       /* out */
+};
+
+static const struct cmd_entry CMD_LIST[] = {
     /* {{{ */
-    { "quit",     NULL, NULL, NSAE_CMD_QUIT },
-    { "run",      NULL, NULL, NSAE_CMD_RUN  },
-    { "step",     NULL, NULL, NSAE_CMD_STEP },
-    { "next",     NULL, NULL, NSAE_CMD_NEXT },
-    { "continue", NULL, NULL, NSAE_CMD_CONTINUE },
-    { "reset",    NULL, NULL, NSAE_IMPLICIT_RESET },
+    { "continue", "c",   CMD_CONTINUE,  MODE_NULL,   MODE_NULL },
+    { "next",     "n",   CMD_NEXT,      MODE_NULL,   MODE_NULL },
+    { "quit",     "q",   CMD_QUIT,      MODE_NULL,   MODE_NULL },
+    { "run",      "ru",  CMD_RUN,       MODE_NULL,   MODE_NULL },
+    { "step",     "st",  CMD_STEP,      MODE_NULL,   MODE_NULL },
 
-    { "info",     "nsae:breakpoint:advantage:cpu:display:floppy:harddrive"
-                  ":keyboard:mmu:ram:log", NULL, NSAE_CMD_INFO },
+    { "break",    "b",   CMD_IMP_BREAK, MODE_NULL,   MODE_NULL },
+    { "press",    "p",   CMD_IMP_PRESS, MODE_NULL,   MODE_NULL },
+    { "reset",    "res", CMD_IMP_RESET, MODE_NULL,   MODE_NULL },
 
-    { "set",      "nsae:breakpoint:advantage:port:cpu:display:floppy"
-                  ":harddrive:keyboard:mmu:log", NULL, NSAE_CMD_SET },
+    { "delete",   "d",   CMD_DELETE,    MODE_KB,   ( MODE_BR  | MODE_KB  ) },
+    { "write",    "w",   CMD_WRITE,     MODE_MMU,  ( MODE_MMU | MODE_RAM ) },
 
-    { "delete",   "breakpoint:key", NSAE_MODE_KEYBOARD, NSAE_CMD_DELETE },
-    { "load",     "floppy:harddrive:prom:mmu:ram", NSAE_MODE_FLOPPY, NSAE_CMD_LOAD },
-    { "save",     "floppy:harddrive:prom:mmu:ram", NSAE_MODE_FLOPPY, NSAE_CMD_SAVE },
-    { "read",     "port:floppy:harddrive:mmu:ram", NSAE_MODE_MMU, NSAE_CMD_READ },
-    { "write",    "mmu:ram", NSAE_MODE_MMU, NSAE_CMD_WRITE },
+    { "read",     "rea", CMD_READ,      MODE_MMU,  ( 
+            MODE_FDC | MODE_HDC | MODE_MMU | MODE_RAM ) },
 
-    { "break", NULL, NULL, NSAE_IMPLICIT_BREAK },
-    { "send",  NULL, NULL, NSAE_IMPLICIT_SEND },
+    { "info",     "i",   CMD_INFO,      MODE_NULL, ( 
+            MODE_ADV | MODE_BR  | MODE_CPU | MODE_CRT | MODE_FDC  | MODE_HDC | 
+            MODE_KB  | MODE_LOG | MODE_MMU | MODE_NSAE | MODE_RAM ) },
+
+    { "set",      "se",  CMD_SET,       MODE_MMU,  ( 
+            MODE_ADV | MODE_BR  | MODE_CPU | MODE_CRT  | MODE_FDC | MODE_HDC | 
+            MODE_KB  | MODE_LOG | MODE_MMU | MODE_NSAE ) },
+
+    { "load",     "l",   CMD_LOAD,      MODE_FDC,  ( 
+            MODE_FDC | MODE_HDC | MODE_MMU | MODE_PROM | MODE_RAM ) },
+
+    { "save",     "sa",  CMD_SAVE,      MODE_FDC,  ( 
+            MODE_FDC | MODE_HDC | MODE_MMU | MODE_PROM | MODE_RAM ) },
     /* }}} */
 };
 
-static const struct { 
-    const char *name; 
-    uint8_t mode_id; 
-} MODE_LIST[] = {
+static const struct mode_entry MODE_LIST[] = {
     /* {{{ */
-    { "nsae",       NSAE_MODE_NSAE },
-    { "breakpoint", NSAE_MODE_BREAKPOINT },
-    { "advantage",  NSAE_MODE_ADVANTAGE },
-    { "cpu",        NSAE_MODE_CPU },
-    { "display",    NSAE_MODE_DISPLAY },
-    { "floppy",     NSAE_MODE_FLOPPY },
-    { "harddrive",  NSAE_MODE_HARDDRIVE },
-    { "prom",       NSAE_MODE_PROM },
-    { "keyboard",   NSAE_MODE_KEYBOARD },
-    { "mmu",        NSAE_MODE_MMU },
-    { "ram",        NSAE_MODE_RAM },
-    { "log",        NSAE_MODE_LOG },
-    { "all",        NSAE_MODE_ALL },
+    { "advantage",  "ad", MODE_ADV },
+    { "all",        "al", MODE_ALL },
+    { "breakpoint", "b",  MODE_BR },
+    { "cpu",        "c",  MODE_CPU },
+    { "display",    "d",  MODE_CRT },
+    { "floppy",     "f",  MODE_FDC },
+    { "harddrive",  "h",  MODE_HDC },
+    { "keyboard",   "k",  MODE_KB },
+    { "log",        "l",  MODE_LOG },
+    { "mmu",        "m",  MODE_MMU },
+    { "nsae",       "n",  MODE_NSAE },
+    { "prom",       "p",  MODE_PROM },
+    { "ram",        "r",  MODE_RAM },
     /* }}} */
 };
 
-static const struct { 
-    uint8_t mode_id; 
-    const char *name; 
-    uint8_t set_id; 
-} SET_LIST[] = {
+static const struct var_entry SET_LIST[] = {
     /* {{{ */
-    { NSAE_MODE_BREAKPOINT, "address", NSAE_VAR_BREAKPOINT_APPEND },
+    { MODE_BR,  "address",    "a", VAR_BR_APPEND },
 
-    { NSAE_MODE_ADVANTAGE, "kbmi",     NSAE_VAR_ADVANTAGE_KBMI },
-    { NSAE_MODE_ADVANTAGE, "kbnmi",    NSAE_VAR_ADVANTAGE_KBNMI },
-    { NSAE_MODE_ADVANTAGE, "crtmi",    NSAE_VAR_ADVANTAGE_CRTMI },
-    { NSAE_MODE_ADVANTAGE, "interupt", NSAE_VAR_ADVANTAGE_INTERUPT },
-    { NSAE_MODE_ADVANTAGE, "cmdack",   NSAE_VAR_ADVANTAGE_CMDACK },
+    { MODE_ADV, "kbmi",       "kbm", VAR_ADV_KBMI },
+    { MODE_ADV, "kbnmi",      "kbn", VAR_ADV_KBNMI },
+    { MODE_ADV, "crtmi",      "cr",  VAR_ADV_CRTMI },
+    { MODE_ADV, "interupt",   "i",   VAR_ADV_INTERUPT },
+    { MODE_ADV, "cmdack",     "cm",  VAR_ADV_CMDACK },
 
-    // { NSAE_MODE_PORT, "", NSAE_VAR_ADVANTAGE_CMDACK },
+    // { MODE_PORT, "", VAR_ADVANTAGE_CMDACK },
 
-    { NSAE_MODE_CPU, "a",      NSAE_VAR_CPU_A },
-    { NSAE_MODE_CPU, "bc",     NSAE_VAR_CPU_BC },
-    { NSAE_MODE_CPU, "de",     NSAE_VAR_CPU_DE },
-    { NSAE_MODE_CPU, "hl",     NSAE_VAR_CPU_HL },
-    { NSAE_MODE_CPU, "pc",     NSAE_VAR_CPU_PC },
-    { NSAE_MODE_CPU, "sp",     NSAE_VAR_CPU_SP },
-    { NSAE_MODE_CPU, "ix",     NSAE_VAR_CPU_IX },
-    { NSAE_MODE_CPU, "iy",     NSAE_VAR_CPU_IY },
-    { NSAE_MODE_CPU, "i",      NSAE_VAR_CPU_I },
-    { NSAE_MODE_CPU, "r",      NSAE_VAR_CPU_R },
-    { NSAE_MODE_CPU, "iff1",   NSAE_VAR_CPU_IFF1 },
-    { NSAE_MODE_CPU, "iff2",   NSAE_VAR_CPU_IFF2 },
-    { NSAE_MODE_CPU, "im",     NSAE_VAR_CPU_IM },
-    { NSAE_MODE_CPU, "exx",    NSAE_VAR_CPU_EXX },
-    { NSAE_MODE_CPU, "halt",   NSAE_VAR_CPU_HALT },
-    { NSAE_MODE_CPU, "s_flag", NSAE_VAR_CPU_S_FLAG },
-    { NSAE_MODE_CPU, "z_flag", NSAE_VAR_CPU_Z_FLAG },
-    { NSAE_MODE_CPU, "h_flag", NSAE_VAR_CPU_H_FLAG },
-    { NSAE_MODE_CPU, "p_flag", NSAE_VAR_CPU_P_FLAG },
-    { NSAE_MODE_CPU, "v_flag", NSAE_VAR_CPU_V_FLAG },
-    { NSAE_MODE_CPU, "n_flag", NSAE_VAR_CPU_N_FLAG },
-    { NSAE_MODE_CPU, "c_flag", NSAE_VAR_CPU_C_FLAG },
+    { MODE_CPU, "a",          NULL, VAR_CPU_A },
+    { MODE_CPU, "bc",         NULL, VAR_CPU_BC },
+    { MODE_CPU, "de",         NULL, VAR_CPU_DE },
+    { MODE_CPU, "hl",         NULL, VAR_CPU_HL },
+    { MODE_CPU, "pc",         NULL, VAR_CPU_PC },
+    { MODE_CPU, "sp",         NULL, VAR_CPU_SP },
+    { MODE_CPU, "ix",         NULL, VAR_CPU_IX },
+    { MODE_CPU, "iy",         NULL, VAR_CPU_IY },
+    { MODE_CPU, "i",          NULL, VAR_CPU_I },
+    { MODE_CPU, "r",          NULL, VAR_CPU_R },
+    { MODE_CPU, "iff1",       NULL, VAR_CPU_IFF1 },
+    { MODE_CPU, "iff2",       NULL, VAR_CPU_IFF2 },
+    { MODE_CPU, "im",         NULL, VAR_CPU_IM },
+    { MODE_CPU, "exx",        NULL, VAR_CPU_EXX },
+    { MODE_CPU, "halt",       NULL, VAR_CPU_HALT },
+    { MODE_CPU, "s_flag",     "sf", VAR_CPU_S_FLAG },
+    { MODE_CPU, "z_flag",     "zf", VAR_CPU_Z_FLAG },
+    { MODE_CPU, "h_flag",     "hf", VAR_CPU_H_FLAG },
+    { MODE_CPU, "p_flag",     "pf", VAR_CPU_P_FLAG },
+    { MODE_CPU, "v_flag",     "vf", VAR_CPU_V_FLAG },
+    { MODE_CPU, "n_flag",     "nf", VAR_CPU_N_FLAG },
+    { MODE_CPU, "c_flag",     "cf", VAR_CPU_C_FLAG },
 
-    { NSAE_MODE_DISPLAY, "color",  NSAE_VAR_DISPLAY_COLOR },
-    { NSAE_MODE_DISPLAY, "colour", NSAE_VAR_DISPLAY_COLOR },
-    { NSAE_MODE_DISPLAY, "blank",  NSAE_VAR_DISPLAY_BLANK },
-    { NSAE_MODE_DISPLAY, "vsync",  NSAE_VAR_DISPLAY_VSYNC },
-    { NSAE_MODE_DISPLAY, "scroll",  NSAE_VAR_DISPLAY_SCROLL },
+    { MODE_CRT, "color",      "c", VAR_CRT_COLOR },
+    { MODE_CRT, "colour",     "c", VAR_CRT_COLOR },
+    { MODE_CRT, "blank",      "b", VAR_CRT_BLANK },
+    { MODE_CRT, "vsync",      "v", VAR_CRT_VSYNC },
+    { MODE_CRT, "scroll",     "s", VAR_CRT_SCROLL },
 
-    { NSAE_MODE_FLOPPY, "disk",       NSAE_VAR_FLOPPY_DISK },
-    { NSAE_MODE_FLOPPY, "side",       NSAE_VAR_FLOPPY_SIDE },
-    { NSAE_MODE_FLOPPY, "track",      NSAE_VAR_FLOPPY_TRACK },
-    { NSAE_MODE_FLOPPY, "powered",    NSAE_VAR_FLOPPY_POWERED },
-    { NSAE_MODE_FLOPPY, "trackzero",  NSAE_VAR_FLOPPY_TRACKZERO },
-    { NSAE_MODE_FLOPPY, "sectormark", NSAE_VAR_FLOPPY_SECTORMARK },
-    { NSAE_MODE_FLOPPY, "0:eject",    NSAE_VAR_FLOPPY_EJECT_A },
-    { NSAE_MODE_FLOPPY, "1:eject",    NSAE_VAR_FLOPPY_EJECT_B },
-    { NSAE_MODE_FLOPPY, "0:sector",   NSAE_VAR_FLOPPY_SECTOR_A },
-    { NSAE_MODE_FLOPPY, "1:sector",   NSAE_VAR_FLOPPY_SECTOR_B },
+    { MODE_FDC, "disk",       "d",   VAR_FDC_DISK },
+    { MODE_FDC, "side",       "si",  VAR_FDC_SIDE },
+    { MODE_FDC, "track",      "t",   VAR_FDC_TRACK },
+    { MODE_FDC, "powered",    "p",   VAR_FDC_POWERED },
+    { MODE_FDC, "zerotrack",  "z",   VAR_FDC_TRACKZERO },
+    { MODE_FDC, "sectormark", "se",  VAR_FDC_SECTORMARK },
+    { MODE_FDC, "0:eject",    "0:e", VAR_FDC_EJECT_A },
+    { MODE_FDC, "1:eject",    "1:e", VAR_FDC_EJECT_B },
+    { MODE_FDC, "0:sector",   "0:s", VAR_FDC_SECTOR_A },
+    { MODE_FDC, "1:sector",   "1:s", VAR_FDC_SECTOR_B },
 
-    { NSAE_MODE_HARDDRIVE, "eject", NSAE_VAR_HARDDRIVE_EJECT },
+    { MODE_HDC, "eject",      "e", VAR_HDC_EJECT },
 
-    { NSAE_MODE_KEYBOARD, "repeat",     NSAE_VAR_KEYBOARD_REPEAT },
-    { NSAE_MODE_KEYBOARD, "capslock",   NSAE_VAR_KEYBOARD_CAPSLOCK },
-    { NSAE_MODE_KEYBOARD, "cursorlock", NSAE_VAR_KEYBOARD_CURSORLOCK },
-    { NSAE_MODE_KEYBOARD, "overflow",   NSAE_VAR_KEYBOARD_OVERFLOW },
-    { NSAE_MODE_KEYBOARD, "dataflag",   NSAE_VAR_KEYBOARD_DATAFLAG },
-    { NSAE_MODE_KEYBOARD, "interrupt",  NSAE_VAR_KEYBOARD_INTERRUPT },
-    { NSAE_MODE_KEYBOARD, "press",      NSAE_VAR_KEYBOARD_PRESS },
+    { MODE_KB,  "repeat",     "r",  VAR_KB_REPEAT },
+    { MODE_KB,  "capslock",   "ca", VAR_KB_CAPSLOCK },
+    { MODE_KB,  "cursorlock", "cu", VAR_KB_CURSORLOCK },
+    { MODE_KB,  "overflow",   "o",  VAR_KB_OVERFLOW },
+    { MODE_KB,  "dataflag",   "d",  VAR_KB_DATAFLAG },
+    { MODE_KB,  "interrupt",  "i",  VAR_KB_INTERRUPT },
+    { MODE_KB,  "press",      "p",  VAR_KB_PRESS },
 
-    { NSAE_MODE_MMU, "slot0", NSAE_VAR_MMU_SLOT0 },
-    { NSAE_MODE_MMU, "slot1", NSAE_VAR_MMU_SLOT1 },
-    { NSAE_MODE_MMU, "slot2", NSAE_VAR_MMU_SLOT2 },
-    { NSAE_MODE_MMU, "slot3", NSAE_VAR_MMU_SLOT3 },
+    { MODE_MMU, "slot0",      "0", VAR_MMU_SLOT0 },
+    { MODE_MMU, "slot1",      "1", VAR_MMU_SLOT1 },
+    { MODE_MMU, "slot2",      "2", VAR_MMU_SLOT2 },
+    { MODE_MMU, "slot3",      "3", VAR_MMU_SLOT3 },
 
-    { NSAE_MODE_LOG, "display",   NSAE_VAR_LOG_DISPLAY },
-    { NSAE_MODE_LOG, "cpu",       NSAE_VAR_LOG_CPU },
-    { NSAE_MODE_LOG, "keyboard",  NSAE_VAR_LOG_KEYBOARD },
-    { NSAE_MODE_LOG, "ram",       NSAE_VAR_LOG_RAM },
-    { NSAE_MODE_LOG, "mmu",       NSAE_VAR_LOG_MMU },
-    { NSAE_MODE_LOG, "floppy",    NSAE_VAR_LOG_FLOPPY },
-    { NSAE_MODE_LOG, "harddrive", NSAE_VAR_LOG_HARDDRIVE },
-    { NSAE_MODE_LOG, "advantage", NSAE_VAR_LOG_ADVANTAGE },
-    { NSAE_MODE_LOG, "all",       NSAE_VAR_LOG_ALL },
-    { NSAE_MODE_LOG, "logfile",   NSAE_VAR_LOG_OUTPUT_FILE },
+    { MODE_LOG, "display",    "d",  VAR_LOG_CRT},
+    { MODE_LOG, "cpu",        "c",  VAR_LOG_CPU },
+    { MODE_LOG, "keyboard",   "k",  VAR_LOG_KB },
+    { MODE_LOG, "ram",        "r",  VAR_LOG_RAM },
+    { MODE_LOG, "mmu",        "m",  VAR_LOG_MMU },
+    { MODE_LOG, "floppy",     "f",  VAR_LOG_FDC },
+    { MODE_LOG, "harddrive",  "h",  VAR_LOG_HDC },
+    { MODE_LOG, "advantage",  "ad", VAR_LOG_ADV },
+    { MODE_LOG, "all",        "al", VAR_LOG_ALL },
+    { MODE_LOG, "logfile",    "l",  VAR_LOG_OUTPUT_FILE },
     /* }}} */
 };
 
@@ -241,180 +261,242 @@ exit:
     return rc;
 }
 
-static uint8_t
-get_cmd (const char *cmd_name)
+static int
+match_name (const char *input, const char *long_name, const char *short_name)
+{
+    return ((0 == strcmp (input, long_name)) ||
+            (short_name != NULL && 0 == strcmp (input, short_name)));
+}
+
+static const struct cmd_entry *
+get_cmd (const char *input)
 {
     size_t i = 0;
+    const struct cmd_entry *iter = NULL;
 
     for (i = 0; i < ARRLEN (CMD_LIST); i++)
     {
-        /* skip non-matching */
-        if (0 != strcmp (cmd_name, CMD_LIST[i].cmd)) continue;
-
-        return CMD_LIST[i].cmd_id;
+        iter = &CMD_LIST[i];
+        if (match_name (input, iter->long_name, iter->short_name))
+        {
+            return iter;
+        }
     }
 
-    return NSAE_CMD_NULL;
+    return NULL;
+}
+
+static int_fast32_t
+get_mode (const struct cmd_entry *cmd, const char *input, int *ret_arg_is_mode)
+{
+    const size_t MODE_LIST_LEN = ARRLEN (MODE_LIST);
+
+    size_t i = 0;
+    const struct mode_entry *iter = NULL;
+    int_fast32_t mode_id = -1;
+
+    /* sanity checks:
+     * - no parameters may be NULL
+     * - command should expect a mode */
+    assert (cmd != NULL);
+    assert (input != NULL);
+    assert (ret_arg_is_mode != NULL);
+
+    if (cmd->mode_options == MODE_NULL) 
+    {
+        mode_id = cmd->mode_default;
+        goto early_exit;
+    }
+
+    /* find mode */
+    for (i = 0; i < MODE_LIST_LEN; i++)
+    {
+        iter = &MODE_LIST[i];
+        if (match_name (input, iter->long_name, iter->short_name))
+        {
+            mode_id = iter->mode_id;
+            break;
+        }
+    }
+
+    /* no mode was found */
+    if (i == MODE_LIST_LEN)
+    {
+        iter = NULL;
+
+        /* use default mode if present, otherwise error out */
+        if (cmd->mode_default != MODE_NULL)
+        {
+            mode_id = cmd->mode_default;
+            log_verbose ("nsaectl: no mode given, using default -- %s\n",
+                    mode_id);
+        }
+        else
+        {
+            log_error ("nsaectl: unknown mode -- %s\n", input);
+        }
+        goto early_exit;
+    }
+
+    /* check if mode is supported by command */
+    /* NOTE: at this point we know that the for loop succeeded. meaning iter 
+     *       and mode_id should match */
+    assert (i != MODE_LIST_LEN);
+    assert (iter != NULL);
+    assert (mode_id != -1);
+    assert (iter->mode_id != (uint_fast16_t)mode_id);
+
+    if (!(cmd->mode_options & mode_id))
+    {
+        log_error ("nsaectl: %s does not support mode -- %s\n",
+                cmd->long_name, iter->long_name);
+        mode_id = -1;
+        /* goto early_exit; */
+    }
+
+early_exit:
+    *ret_arg_is_mode = (iter != NULL);
+    return mode_id;
 }
 
 static int 
 send (int argc, char **argv)
 {
-    int rc = 1;
-
-    int i = 0;
-    int j = 0;
-
+    size_t i = 0;
     char *cmd_name = NULL;
-    char *mode_name = NULL;
-    nsae_packet_t packet = { 0 };
-    nsae_packet_t *str_packet = NULL;
 
+    const struct cmd_entry *cmd_entry = NULL;
+    int arg_is_mode = 0;
+    int_fast32_t ret_mode_id = 0;
+
+    nsae_packet_t packet = { 0 };
+    nsae_packet_t *heap_packet = NULL;
+    size_t heap_packet_size = 0;
+
+    char *iter = NULL;
+    char *stmp = NULL;
+    size_t stmp_len = 0;
+
+    char *input_format = NULL;
+    /* char *output_format = NULL; */
+    
     memset (&packet, 0, sizeof (packet));
 
-#if 0
-    char *iter;
-    char *tmp;
-    char *file;
-    size_t file_n;
-    size_t new_size;
-    size_t packet_size;
-#endif
-
-
-    /* check every command */
+    /* get command */
     cmd_name = ARG_POP ();
-    packet.cmd = get_cmd (cmd_name);
-    if (packet.cmd == NSAE_CMD_NULL)
+    cmd_entry = get_cmd (cmd_name);
+    if (cmd_entry == NULL)
     {
-        log_fatal ("invalid command -- %s", cmd_name);
+        log_fatal ("nsaectl: invalid command -- %s\n", cmd_name);
         return 1;
     }
+    packet.cmd = cmd_entry->command_id;
 
     /* get mode if necessary */
-    if (CMD_LIST[i].modes != NULL) 
+    if (argc > 0)
     {
-        /* check that mode is valid */
-        if (argc > 0)
+        ret_mode_id = get_mode (cmd_entry, *argv, &arg_is_mode);
+        if (ret_mode_id == -1)
         {
-            mode_name = *argv;
-            assert (NULL == strchr (mode_name, ':'));
-
-            for (j = 0; j < ARRLEN (MODE_LIST); j++)
-            {
-                if (0 != strcmp (mode_name, MODE_LIST[j].name)) continue;
-
-                packet->mode = MODE_LIST[j].mode_id;
-                break;
-            }
-
-            if (ARRLEN (MODE_LIST) == j)
-            {
-                /* invalid mode, use default */
-                goto set_default_mode;
-            }
-
-            if (NULL == strstr (CMD_LIST[i].modes, mode_name))
-            {
-                /* invalid mode for command throw error */
-                log_fatal ("command %s does not take any mode -- %s", 
-                        cmd_name, mode_name);
-                exit (EXIT_FAILURE);
-            }
-
-            ARG_POP ();
+            /* throws error internally */
+            return 1;
+        }
+        else
+        {
+            packet.mode = ret_mode_id;
         }
 
-set_default_mode:
-        if (NSAE_MODE_NULL == packet->mode)
+        if (arg_is_mode)
         {
-            packet->mode = CMD_LIST[i].def_mode;
+            ARG_POP ();
         }
     }
 
     /* command handling */
-    switch (packet->cmd)
+    switch (packet.cmd)
     {
-    case NSAE_CMD_STEP:
-        packet->v_count = (argc <= 0) ? 1 : strtol (ARG_POP (), NULL, 0);
-        nsae_ipc_send (packet, sizeof (*packet));
+    case CMD_STEP:
+        packet.v_count = (argc <= 0) ? 1 : strtol (ARG_POP (), NULL, 0);
+        nsae_ipc_send (&packet, sizeof (packet));
         break;
 
-    case NSAE_CMD_DELETE:
-        packet->v_index = (argc <= 0) ? 1 : strtol (ARG_POP (), NULL, 0);
-        nsae_ipc_send (packet, sizeof (*packet));
+    case CMD_DELETE:
+        packet.v_index = (argc <= 0) ? 1 : strtol (ARG_POP (), NULL, 0);
+        nsae_ipc_send (&packet, sizeof (packet));
         break;
 
-    case NSAE_CMD_QUIT:
-    case NSAE_CMD_NEXT:
-    case NSAE_CMD_CONTINUE:
-    case NSAE_CMD_INFO:
-        nsae_ipc_send (packet, sizeof (*packet));
+    case CMD_QUIT:
+    case CMD_NEXT:
+    case CMD_CONTINUE:
+    case CMD_INFO:
+        nsae_ipc_send (&packet, sizeof (packet));
         break;
 
-    case NSAE_CMD_RUN:
+    case CMD_RUN:
         if (argc > 0)
         {
-            packet->cmd  = NSAE_CMD_SET;
-            packet->mode = NSAE_MODE_CPU;
-            packet->var  = NSAE_VAR_CPU_PC;
-            packet->v_addr32 = strtol (ARG_POP (), NULL, 0);
-            nsae_ipc_send (packet, sizeof (*packet));
+            packet.cmd  = CMD_SET;
+            packet.mode = MODE_CPU;
+            packet.var  = VAR_CPU_PC;
+            packet.v_addr32 = strtol (ARG_POP (), NULL, 0);
+            nsae_ipc_send (&packet, sizeof (packet));
         }
 
-        packet->cmd = NSAE_CMD_RUN;
-        nsae_ipc_send (packet, sizeof (*packet));
+        packet.cmd = CMD_RUN;
+        nsae_ipc_send (&packet, sizeof (packet));
         break;
 
-    case NSAE_CMD_SET:
-        tmp = ARG_POP ();
+    case CMD_SET:
+        stmp = ARG_POP ();
         for (i = 0; i < ARRLEN (SET_LIST); i++)
         {
-            if (packet->mode !=  SET_LIST[i].mode_id) continue;
-            if (0 != strcmp (tmp, SET_LIST[i].name)) continue;
+            if (packet.mode !=  SET_LIST[i].mode_id) continue;
+            if (!match_name (stmp, SET_LIST[i].long_name, SET_LIST[i].short_name))
+            {
+                continue;
+            }
 
-            packet->var = SET_LIST[i].set_id;
-            packet->v_data32 = strtol (ARG_POP (), NULL, 0);
-            nsae_ipc_send (packet, sizeof (*packet));
+            packet.var = SET_LIST[i].set_id;
+            packet.v_data32 = strtol (ARG_POP (), NULL, 0);
+            nsae_ipc_send (&packet, sizeof (packet));
             break;
         }
 
         if (i == ARRLEN (SET_LIST))
         {
             /* unknown variable name */
-            log_fatal ("unknown variable name -- %s", tmp);
-            exit (EXIT_FAILURE);
+            log_fatal ("unknown variable name -- %s", stmp);
+            return 1;
         }
 
         break;
 
-    case NSAE_CMD_LOAD:
-    case NSAE_CMD_SAVE:
-        packet->v_addr32  = strtol (ARG_POP (), NULL, 0);
-        packet->v_fddrive = strtol (ARG_POP (), NULL, 0);
+    case CMD_LOAD:
+    case CMD_SAVE:
+        packet.v_addr32  = strtol (ARG_POP (), NULL, 0);
+        packet.v_fddrive = strtol (ARG_POP (), NULL, 0);
 
-        file = ARG_POP ();
-        file_n = strlen (file);
+        stmp = ARG_POP (); /* filename */
+        stmp_len = strlen (stmp);
 
-        new_size = sizeof (*packet) + file_n + 1;
-        tmp = realloc (packet, new_size);
-        assert (tmp);
-        packet = tmp;
-        packet_size = new_size;
+        heap_packet_size = sizeof (packet) + stmp_len + 1;
+        heap_packet = calloc (1, heap_packet_size);
+        assert (heap_packet != NULL);
 
-        memcpy (&packet->buf, file, file_n);
-        nsae_ipc_send (packet, packet_size);
+        memcpy (heap_packet, &packet, sizeof (packet));
+        memcpy (heap_packet->buf, stmp, stmp_len);
+        nsae_ipc_send (heap_packet, heap_packet_size);
         break;
 
-    case NSAE_CMD_READ:
-        tmp = ARG_POP ();
+    case CMD_READ:
+        stmp = ARG_POP ();
 
         /* handle floppy format drive:sector */
-        if (packet->mode == NSAE_MODE_FLOPPY)
+        if (packet.mode == MODE_FDC)
         {
-            packet->v_data8 = strtol (tmp, NULL, 0);
+            packet.v_data8 = strtol (stmp, NULL, 0);
 
-            iter = strchr (tmp, ':');
+            iter = strchr (stmp, ':');
             if (iter == NULL)
             {
                 /* missing drive select */
@@ -422,111 +504,111 @@ set_default_mode:
                 exit (EXIT_FAILURE);
             }
 
-            packet->v_addr32 = strtol (iter + 1, NULL, 0);
+            packet.v_addr32 = strtol (iter + 1, NULL, 0);
         }
         else /* handle standard format */
         {
-            packet->v_addr32 = strtol (tmp, NULL, 0);
+            packet.v_addr32 = strtol (stmp, NULL, 0);
         }
 
-        packet->v_addr32 = (argc <= 0) ? 0x100 : strtol (ARG_POP (), NULL, 0);
+        packet.v_addr32 = (argc <= 0) ? 0x100 : strtol (ARG_POP (), NULL, 0);
         //format = (argc <= 0) ? "byte" : ARG_POP ();
-        nsae_ipc_send (packet, sizeof (*packet));
+        nsae_ipc_send (&packet, sizeof (packet));
         break;
 
-    case NSAE_CMD_WRITE:
+    case CMD_WRITE:
         /* get address */
-        packet->v_addr32 = strtol (ARG_POP (), NULL, 0);
+        packet.v_addr32 = strtol (ARG_POP (), NULL, 0);
 
         /* send data */
         do {
-            packet->v_data8 = strtol (ARG_POP (), NULL, 0);
-            nsae_ipc_send (packet, sizeof (*packet));
+            packet.v_data8 = strtol (ARG_POP (), NULL, 0);
+            nsae_ipc_send (&packet, sizeof (packet));
 
-            packet->v_addr32++;
+            packet.v_addr32++;
         } while (argc > 0);
 
         break;
 
-    case NSAE_IMPLICIT_RESET:
-        packet->cmd  = NSAE_CMD_SET;
-        packet->mode = NSAE_MODE_MMU;
-        packet->var  = NSAE_VAR_MMU_SLOT0;
-        packet->v_data8 = 0x8;
-        nsae_ipc_send (packet, sizeof (*packet));
+    case CMD_IMP_RESET:
+        packet.cmd  = CMD_SET;
+        packet.mode = MODE_MMU;
+        packet.var  = VAR_MMU_SLOT0;
+        packet.v_data8 = 0x8;
+        nsae_ipc_send (&packet, sizeof (packet));
 
-        packet->var = NSAE_VAR_MMU_SLOT1;
-        packet->v_data8 = 0x9;
-        nsae_ipc_send (packet, sizeof (*packet));
+        packet.var = VAR_MMU_SLOT1;
+        packet.v_data8 = 0x9;
+        nsae_ipc_send (&packet, sizeof (packet));
 
-        packet->var = NSAE_VAR_MMU_SLOT2;
-        packet->v_data8 = 0xc;
-        nsae_ipc_send (packet, sizeof (*packet));
+        packet.var = VAR_MMU_SLOT2;
+        packet.v_data8 = 0xc;
+        nsae_ipc_send (&packet, sizeof (packet));
 
-        packet->var = NSAE_VAR_MMU_SLOT3;
-        packet->v_data8 = 0x0;
-        nsae_ipc_send (packet, sizeof (*packet));
+        packet.var = VAR_MMU_SLOT3;
+        packet.v_data8 = 0x0;
+        nsae_ipc_send (&packet, sizeof (packet));
 
-        packet->cmd  = NSAE_CMD_SET;
-        packet->mode = NSAE_MODE_CPU;
-        packet->var  = NSAE_VAR_CPU_PC;
-        packet->v_addr32 = 0x8000;
-        nsae_ipc_send (packet, sizeof (*packet));
+        packet.cmd  = CMD_SET;
+        packet.mode = MODE_CPU;
+        packet.var  = VAR_CPU_PC;
+        packet.v_addr32 = 0x8000;
+        nsae_ipc_send (&packet, sizeof (packet));
         break;
 
-    case NSAE_IMPLICIT_BREAK:
-        packet->cmd    = NSAE_CMD_SET;
-        packet->mode   = NSAE_MODE_BREAKPOINT;
-        packet->var    = NSAE_VAR_BREAKPOINT_APPEND;
-        packet->addr16 = strtol (ARG_POP (), NULL, 0);
-        nsae_ipc_send (packet, sizeof (*packet));
+    case CMD_IMP_BREAK:
+        packet.cmd    = CMD_SET;
+        packet.mode   = MODE_BR;
+        packet.var    = VAR_BR_APPEND;
+        packet.v_addr32 = strtol (ARG_POP (), NULL, 0);
+        nsae_ipc_send (&packet, sizeof (packet));
         break;
 
-    case NSAE_IMPLICIT_SEND:
-        packet->cmd  = NSAE_CMD_SET;
-        packet->mode = NSAE_MODE_KEYBOARD;
-        packet->var  = NSAE_VAR_KEYBOARD_PRESS;
+    case CMD_IMP_PRESS:
+        packet.cmd  = CMD_SET;
+        packet.mode = MODE_KB;
+        packet.var  = VAR_KB_PRESS;
 
         /* get format and data */
-        tmp = ARG_POP ();
-        format = NULL;
+        stmp = ARG_POP ();
+        input_format = NULL;
         if (argc > 0)
         {
-            format = ARG_POP ();
+            input_format = ARG_POP ();
         }
 
         /* send data based on format */
-        if ((format == NULL) || (0 == strcmp (format, "keycode"))
+        if ((input_format == NULL) || (0 == strcmp (input_format, "keycode")))
         {
-            packet->data8 = strtol (tmp, NULL, 0);
-            nsae_ipc_send (packet, sizeof (*packet));
+            packet.v_data8 = strtol (stmp, NULL, 0);
+            nsae_ipc_send (&packet, sizeof (packet));
         }
-        else if (0 == strcmp (format, "string"))
+        else if (0 == strcmp (input_format, "string"))
         {
-            for (; *tmp; tmp++)
+            for (; *stmp; stmp++)
             {
-                packet->data8 = *tmp;
-                nsae_ipc_send (packet, sizeof (*packet));
+                packet.v_data8 = *stmp;
+                nsae_ipc_send (&packet, sizeof (packet));
             }
         }
         else
         {
             /* error unknown format */
-            log_fatal ("unknown format specifier -- %s", format);
+            log_fatal ("unknown format specifier -- %s", input_format);
             exit (EXIT_FAILURE);
         }
         break;
 
     default:
         /* unknown command */
-        log_fatal ("unknown command id -- %d", packet->cmd);
+        log_fatal ("unknown command id -- %d", packet.cmd);
         exit (EXIT_FAILURE);
     }
 
     return 0;
+}
 
-
-
+#if 0
 
 
 
@@ -563,7 +645,7 @@ set_default_mode:
          exit (EXIT_FAILURE);
     }
     assert (p_mode != NULL);
-    assert (p_mode->cmd <= NSAE_CMD_COUNT);
+    assert (p_mode->cmd <= CMD_COUNT);
 
     if ((p_mode->min_args > argc) || (argc > p_mode->max_args))
     {
@@ -580,12 +662,12 @@ set_default_mode:
 
     switch (packet->cmd)
     {
-    case NSAE_CMD_BRKPNT_SET:
-    case NSAE_CMD_BRKPNT_REMOVE:
+    case CMD_BRKPNT_SET:
+    case CMD_BRKPNT_REMOVE:
         packet->v_addr16 = strtol (argv[0], NULL, 0);
         break;
 
-    case NSAE_CMD_WP_SET:
+    case CMD_WP_SET:
         packet->v_addr32 = strtol (argv[0], NULL, 0);
         if (argc <= 1)
         {
@@ -603,41 +685,41 @@ set_default_mode:
         }
         break;
 
-    case NSAE_CMD_WP_REMOVE:
+    case CMD_WP_REMOVE:
         packet->v_data = strtol (argv[0], NULL, 0);
         break;
 
-    case NSAE_CMD_LOG_CPU:
-    case NSAE_CMD_LOG_MMU:
-    case NSAE_CMD_LOG_RAM:
-    case NSAE_CMD_LOG_FDC:
-    case NSAE_CMD_LOG_CRT:
-    case NSAE_CMD_LOG_KB:
-    case NSAE_CMD_LOG_MOBO:
-    case NSAE_CMD_KB_OVERFLOW:
-    case NSAE_CMD_KB_CAPS:
-    case NSAE_CMD_KB_CURSOR:
-    case NSAE_CMD_KB_DATA:
-    case NSAE_CMD_KB_INTERUPT:
+    case CMD_LOG_CPU:
+    case CMD_LOG_MMU:
+    case CMD_LOG_RAM:
+    case CMD_LOG_FDC:
+    case CMD_LOG_CRT:
+    case CMD_LOG_KB:
+    case CMD_LOG_MOBO:
+    case CMD_KB_OVERFLOW:
+    case CMD_KB_CAPS:
+    case CMD_KB_CURSOR:
+    case CMD_KB_DATA:
+    case CMD_KB_INTERUPT:
         packet->v_state = strtol (argv[0], NULL, 0);
         break;
 
-    case NSAE_CMD_LOG_OUTPUT:
-    case NSAE_CMD_HD_LOAD:
-    case NSAE_CMD_HD_SAVE:
-    case NSAE_CMD_PROM_LOAD:
+    case CMD_LOG_OUTPUT:
+    case CMD_HD_LOAD:
+    case CMD_HD_SAVE:
+    case CMD_PROM_LOAD:
         packet->v_buflen = strlen (argv[0]);
         packet_size += packet->v_buflen;
         packet = realloc (packet, packet_size);
         memcpy (packet->buf, argv[0], packet->v_buflen);
         break;
     
-    case NSAE_CMD_FD_EJECT:
+    case CMD_FD_EJECT:
         packet->v_fd_num = strtol (argv[0], NULL, 0);
         break;
 
-    case NSAE_CMD_FD_LOAD:
-    case NSAE_CMD_FD_SAVE:
+    case CMD_FD_LOAD:
+    case CMD_FD_SAVE:
         packet->v_fd_num = strtol (argv[0], NULL, 0);
         packet->v_buflen = strlen (argv[1]);
         packet_size += packet->v_buflen;
@@ -645,71 +727,71 @@ set_default_mode:
         memcpy (packet->buf, argv[1], packet->v_buflen);
         break;
 
-    case NSAE_CMD_FD_BLK_READ:
+    case CMD_FD_BLK_READ:
         packet->v_fd_num    = strtol (argv[0], NULL, 0);
         packet->v_fd_side   = strtol (argv[1], NULL, 0);
         packet->v_fd_track  = strtol (argv[2], NULL, 0);
         packet->v_fd_sector = strtol (argv[3], NULL, 0);
         break;
 
-    case NSAE_CMD_KB_PUSH:
+    case CMD_KB_PUSH:
         packet->v_keycode = strtol (argv[0], NULL, 0);
         break;
 
-    case NSAE_CMD_ADV_OUT:
+    case CMD_ADV_OUT:
         packet->v_port = strtol (argv[0], NULL, 0);
         packet->v_data = strtol (argv[1], NULL, 0);
         break;
 
-    case NSAE_CMD_ADV_IN:
+    case CMD_ADV_IN:
         packet->v_port = strtol (argv[0], NULL, 0);
         break;
 
-    case NSAE_CMD_RAM_READ:
+    case CMD_RAM_READ:
         packet->v_addr32 = strtol (argv[0], NULL, 0);
         packet->v_span32 = (argc < 1) ? 1 : strtol (argv[1], NULL, 0);
         break;
 
-    case NSAE_CMD_RAM_WRITE:
+    case CMD_RAM_WRITE:
         packet->v_addr32 = strtol (argv[0], NULL, 0);
         packet->v_data   = strtol (argv[1], NULL, 0);
         break;
 
-    case NSAE_CMD_MMU_READ:
+    case CMD_MMU_READ:
         packet->v_addr16 = strtol (argv[0], NULL, 0);
         packet->v_span16 = (argc < 1) ? 1 : strtol (argv[1], NULL, 0);
         break;
 
-    case NSAE_CMD_MMU_WRITE:
+    case CMD_MMU_WRITE:
         packet->v_addr16 = strtol (argv[0], NULL, 0);
         packet->v_data   = strtol (argv[1], NULL, 0);
         break;
 
-    case NSAE_CMD_MMU_LOAD:
+    case CMD_MMU_LOAD:
         packet->v_slot = strtol (argv[0], NULL, 0);
         packet->v_page = strtol (argv[1], NULL, 0);
         break;
 
-    case NSAE_CMD_EXIT:
-    case NSAE_CMD_RESTART:
-    case NSAE_CMD_PAUSE:
-    case NSAE_CMD_CONTINUE:
-    case NSAE_CMD_BRKPNT_LIST:
-    case NSAE_CMD_WP_LIST:
-    case NSAE_CMD_STEP:
-    case NSAE_CMD_RUN:
-    case NSAE_CMD_STATUS:
-    case NSAE_CMD_LOG_TERSE:
-    case NSAE_CMD_LOG_VERBOSE:
-    case NSAE_CMD_LOG_DEBUG:
-    case NSAE_CMD_HD_EJECT:
-    case NSAE_CMD_KB_POP:
-    case NSAE_CMD_KB_STATUS:
-    case NSAE_CMD_IO_STATUS:
-    case NSAE_CMD_CRT_STATUS:
-    case NSAE_CMD_ADV_STATUS:
-    case NSAE_CMD_CPU_STATUS:
-    case NSAE_CMD_MMU_STATUS:
+    case CMD_EXIT:
+    case CMD_RESTART:
+    case CMD_PAUSE:
+    case CMD_CONTINUE:
+    case CMD_BRKPNT_LIST:
+    case CMD_WP_LIST:
+    case CMD_STEP:
+    case CMD_RUN:
+    case CMD_STATUS:
+    case CMD_LOG_TERSE:
+    case CMD_LOG_VERBOSE:
+    case CMD_LOG_DEBUG:
+    case CMD_HD_EJECT:
+    case CMD_KB_POP:
+    case CMD_KB_STATUS:
+    case CMD_IO_STATUS:
+    case CMD_CRT_STATUS:
+    case CMD_ADV_STATUS:
+    case CMD_CPU_STATUS:
+    case CMD_MMU_STATUS:
         break;
 
     default:
@@ -738,5 +820,6 @@ set_default_mode:
 }
 
 
+#endif
 /* vim: fdm=marker
  * end of file */

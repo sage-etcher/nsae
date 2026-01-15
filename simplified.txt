@@ -5,15 +5,16 @@ step [count]
 next
 continue
 reset
+
 break -> set breakpoint [index=-1] <pc>
+send <code|string> [*format=code] -> set keyboard press <code>
 
 info <mode>
 set <mode> <variable> <value>
 delete <mode> <index>
-load <mode> [mode_args...] <file> [count]
+load <mode> [mode_args...] <file> [offset=0] [count]
 save <mode> [mode_args...] <file> [count]
 read  [mode=mmu] <address> [count] [format:WORD,BYTE=BYTE]
 write [mode=mmu] <address> <byte> [byte...]
 
-send <keycode|string> [type:keycode,string=keycode] ->
-
+set 0:eject true

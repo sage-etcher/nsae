@@ -10,9 +10,9 @@
  *   2      "
  *   3      "
  *   4      cmd
- *   5      mode
- *   6      var
- *   7
+ *   5      var
+ *   6      mode
+ *   7      "
  *   8      span32  data    data    fd_num      slot    state   keycode loglevel    data16
  *   9      "               port    fd_side     page                                "
  *  10      "               span16  fd_track                                        wp_type
@@ -26,9 +26,8 @@
 
 typedef struct {
     uint8_t cmd;
-    uint8_t mode;
     uint8_t var;
-    uint8_t x;  /* unused padding */
+    uint16_t mode;
     union {
         uint32_t u32;
         uint16_t u16[2];
@@ -55,115 +54,115 @@ typedef struct {
 
 /* cmd types */
 typedef enum {
-    NSAE_CMD_NULL,
-    NSAE_CMD_QUIT = 0xf0,
-    NSAE_CMD_RUN,
-    NSAE_CMD_STEP,
-    NSAE_CMD_NEXT,
-    NSAE_CMD_CONTINUE,
-    NSAE_CMD_INFO,
-    NSAE_CMD_SET,
-    NSAE_CMD_DELETE,
-    NSAE_CMD_LOAD,
-    NSAE_CMD_SAVE,
-    NSAE_CMD_READ,
-    NSAE_CMD_WRITE,
-    NSAE_CMD_EXTRA,
+    CMD_NULL,
+    CMD_QUIT,
+    CMD_RUN,
+    CMD_STEP,
+    CMD_NEXT,
+    CMD_CONTINUE,
+    CMD_INFO,
+    CMD_SET,
+    CMD_DELETE,
+    CMD_LOAD,
+    CMD_SAVE,
+    CMD_READ,
+    CMD_WRITE,
+    CMD_IMP_BASE,
 } nsae_cmd_t;
 
 typedef enum {
-    NSAE_MODE_NULL = 0x00,
-    NSAE_MODE_NSAE,
-    NSAE_MODE_BREAKPOINT,
-    NSAE_MODE_ADVANTAGE,
-    NSAE_MODE_CPU,
-    NSAE_MODE_DISPLAY,
-    NSAE_MODE_FLOPPY,
-    NSAE_MODE_HARDDRIVE,
-    NSAE_MODE_PROM,
-    NSAE_MODE_KEYBOARD,
-    NSAE_MODE_MMU,
-    NSAE_MODE_RAM,
-    NSAE_MODE_LOG,
-    NSAE_MODE_ALL,
+    MODE_NULL = 0x0000,
+    MODE_ADV  = 0x0001,
+    MODE_BR   = 0x0002,
+    MODE_CPU  = 0x0004,
+    MODE_CRT  = 0x0008,
+    MODE_FDC  = 0x0010,
+    MODE_HDC  = 0x0020,
+    MODE_KB   = 0x0040,
+    MODE_LOG  = 0x0080,
+    MODE_MMU  = 0x0100,
+    MODE_NSAE = 0x0200,
+    MODE_PROM = 0x0400,
+    MODE_RAM  = 0x0800,
+    MODE_ALL  = 0x0fff,
 } nsae_mode_t;
 
 typedef enum {
-    NSAE_VAR_NULL = 0x00,
-    NSAE_VAR_BREAKPOINT_APPEND,
+    VAR_NULL = 0x00,
+    VAR_BR_APPEND,
 
-    NSAE_VAR_ADVANTAGE_KBMI,
-    NSAE_VAR_ADVANTAGE_KBNMI,
-    NSAE_VAR_ADVANTAGE_CRTMI,
-    NSAE_VAR_ADVANTAGE_INTERUPT,
-    NSAE_VAR_ADVANTAGE_CMDACK,
+    VAR_ADV_KBMI,
+    VAR_ADV_KBNMI,
+    VAR_ADV_CRTMI,
+    VAR_ADV_INTERUPT,
+    VAR_ADV_CMDACK,
 
-    // NSAE_VAR_PORT,
+    // VAR_PORT,
 
-    NSAE_VAR_CPU_A,
-    NSAE_VAR_CPU_BC,
-    NSAE_VAR_CPU_DE,
-    NSAE_VAR_CPU_HL,
-    NSAE_VAR_CPU_PC,
-    NSAE_VAR_CPU_SP,
-    NSAE_VAR_CPU_IX,
-    NSAE_VAR_CPU_IY,
-    NSAE_VAR_CPU_I,
-    NSAE_VAR_CPU_R,
-    NSAE_VAR_CPU_IFF1,
-    NSAE_VAR_CPU_IFF2,
-    NSAE_VAR_CPU_IM,
-    NSAE_VAR_CPU_EXX,
-    NSAE_VAR_CPU_HALT,
-    NSAE_VAR_CPU_S_FLAG,
-    NSAE_VAR_CPU_Z_FLAG,
-    NSAE_VAR_CPU_H_FLAG,
-    NSAE_VAR_CPU_P_FLAG,
-    NSAE_VAR_CPU_V_FLAG,
-    NSAE_VAR_CPU_N_FLAG,
-    NSAE_VAR_CPU_C_FLAG,
+    VAR_CPU_A,
+    VAR_CPU_BC,
+    VAR_CPU_DE,
+    VAR_CPU_HL,
+    VAR_CPU_PC,
+    VAR_CPU_SP,
+    VAR_CPU_IX,
+    VAR_CPU_IY,
+    VAR_CPU_I,
+    VAR_CPU_R,
+    VAR_CPU_IFF1,
+    VAR_CPU_IFF2,
+    VAR_CPU_IM,
+    VAR_CPU_EXX,
+    VAR_CPU_HALT,
+    VAR_CPU_S_FLAG,
+    VAR_CPU_Z_FLAG,
+    VAR_CPU_H_FLAG,
+    VAR_CPU_P_FLAG,
+    VAR_CPU_V_FLAG,
+    VAR_CPU_N_FLAG,
+    VAR_CPU_C_FLAG,
 
-    NSAE_VAR_DISPLAY_COLOR,
-    NSAE_VAR_DISPLAY_BLANK,
-    NSAE_VAR_DISPLAY_VSYNC,
-    NSAE_VAR_DISPLAY_SCROLL,
+    VAR_CRT_COLOR,
+    VAR_CRT_BLANK,
+    VAR_CRT_VSYNC,
+    VAR_CRT_SCROLL,
 
-    NSAE_VAR_FLOPPY_DISK,
-    NSAE_VAR_FLOPPY_SIDE,
-    NSAE_VAR_FLOPPY_TRACK,
-    NSAE_VAR_FLOPPY_POWERED,
-    NSAE_VAR_FLOPPY_TRACKZERO,
-    NSAE_VAR_FLOPPY_SECTORMARK,
-    NSAE_VAR_FLOPPY_EJECT_A,
-    NSAE_VAR_FLOPPY_EJECT_B,
-    NSAE_VAR_FLOPPY_SECTOR_A,
-    NSAE_VAR_FLOPPY_SECTOR_B,
+    VAR_FDC_DISK,
+    VAR_FDC_SIDE,
+    VAR_FDC_TRACK,
+    VAR_FDC_POWERED,
+    VAR_FDC_TRACKZERO,
+    VAR_FDC_SECTORMARK,
+    VAR_FDC_EJECT_A,
+    VAR_FDC_EJECT_B,
+    VAR_FDC_SECTOR_A,
+    VAR_FDC_SECTOR_B,
 
-    NSAE_VAR_HARDDRIVE_EJECT,
+    VAR_HDC_EJECT,
 
-    NSAE_VAR_KEYBOARD_REPEAT,
-    NSAE_VAR_KEYBOARD_CAPSLOCK,
-    NSAE_VAR_KEYBOARD_CURSORLOCK,
-    NSAE_VAR_KEYBOARD_OVERFLOW,
-    NSAE_VAR_KEYBOARD_DATAFLAG,
-    NSAE_VAR_KEYBOARD_INTERRUPT,
-    NSAE_VAR_KEYBOARD_PRESS,
+    VAR_KB_REPEAT,
+    VAR_KB_CAPSLOCK,
+    VAR_KB_CURSORLOCK,
+    VAR_KB_OVERFLOW,
+    VAR_KB_DATAFLAG,
+    VAR_KB_INTERRUPT,
+    VAR_KB_PRESS,
 
-    NSAE_VAR_MMU_SLOT0,
-    NSAE_VAR_MMU_SLOT1,
-    NSAE_VAR_MMU_SLOT2,
-    NSAE_VAR_MMU_SLOT3,
+    VAR_MMU_SLOT0,
+    VAR_MMU_SLOT1,
+    VAR_MMU_SLOT2,
+    VAR_MMU_SLOT3,
 
-    NSAE_VAR_LOG_DISPLAY,
-    NSAE_VAR_LOG_CPU,
-    NSAE_VAR_LOG_KEYBOARD,
-    NSAE_VAR_LOG_RAM,
-    NSAE_VAR_LOG_MMU,
-    NSAE_VAR_LOG_FLOPPY,
-    NSAE_VAR_LOG_HARDDRIVE,
-    NSAE_VAR_LOG_ADVANTAGE,
-    NSAE_VAR_LOG_ALL,
-    NSAE_VAR_LOG_OUTPUT_FILE,
+    VAR_LOG_CRT,
+    VAR_LOG_CPU,
+    VAR_LOG_KB,
+    VAR_LOG_RAM,
+    VAR_LOG_MMU,
+    VAR_LOG_FDC,
+    VAR_LOG_HDC,
+    VAR_LOG_ADV,
+    VAR_LOG_ALL,
+    VAR_LOG_OUTPUT_FILE,
 } nsae_var_t;
 
 
