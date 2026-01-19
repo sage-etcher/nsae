@@ -135,9 +135,11 @@ nsae_ipc_free (int mode)
 int
 nsae_ipc_send (void *buf, size_t n)
 {
+    int rc = 0;
     if (s_send == NULL) return -1;
     if (buf == NULL) return -1;
-    int rc = write (*s_send, buf, n);
+    rc |= write (*s_send, &n, sizeof (n));
+    rc |= write (*s_send, buf, n);
     return rc;
 }
 

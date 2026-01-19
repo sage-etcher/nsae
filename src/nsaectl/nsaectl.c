@@ -193,7 +193,11 @@ static const struct var_entry SET_LIST[] = {
 };
 
 
+static void version (void);
+static void usage (void);
 static int send (int argc, char **argv);
+
+static char *deref_filepath (const char *src, size_t *ret_size);
 
 static void
 version (void)
@@ -259,6 +263,36 @@ main (int argc, char **argv)
 exit:
     nsae_ipc_free (NSAE_IPC_CLIENT);
     return rc;
+}
+
+static char *
+deref_filepath (const char *src, size_t *ret_len)
+{
+    size_t src_len = 0;
+    const char *pwd = NULL;
+    char *dst = NULL;
+    size_t dst_len = 0;
+
+    src_len = strlen (src);
+
+    /* check if absolute path */
+    if (*src == '/') 
+    {
+        *ret_len = src_len;
+        return strdup (src);
+    }
+
+    /* treat as relative */
+    pwd = getcwd (NULL, 0);
+    dst_len = strlen (pwd) + 1 + src_len;
+    dst = calloc (dst_len + 1, sizeof (char));
+
+    strcat (dst, pwd);
+    strcat (dst, "/");
+    strcat (dst, src);
+
+    *ret_len = dst_len;
+    return dst;
 }
 
 static int
@@ -344,7 +378,7 @@ get_mode (const struct cmd_entry *cmd, const char *input, int *ret_arg_is_mode)
     assert (i != MODE_LIST_LEN);
     assert (iter != NULL);
     assert (mode_id != -1);
-    assert (iter->mode_id != (uint_fast16_t)mode_id);
+    assert (iter->mode_id == (uint_fast16_t)mode_id);
 
     if (!(cmd->mode_options & mode_id))
     {
@@ -479,6 +513,8 @@ send (int argc, char **argv)
         stmp = ARG_POP (); /* filename */
         stmp_len = strlen (stmp);
 
+        stmp = deref_filepath (stmp, &stmp_len);
+
         heap_packet_size = sizeof (packet) + stmp_len + 1;
         heap_packet = calloc (1, heap_packet_size);
         assert (heap_packet != NULL);
@@ -486,6 +522,12 @@ send (int argc, char **argv)
         memcpy (heap_packet, &packet, sizeof (packet));
         memcpy (heap_packet->buf, stmp, stmp_len);
         nsae_ipc_send (heap_packet, heap_packet_size);
+
+        free (stmp);
+        stmp = NULL;
+        stmp_len = 0;
+
+        free (heap_packet);
         break;
 
     case CMD_READ:
@@ -608,29 +650,17 @@ send (int argc, char **argv)
     return 0;
 }
 
+
+
+
+
+
+
+
+
+
+
 #if 0
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     const char *mode_str = argv[0];
 
     struct sc_map_sv mode_hash = get_keywords ();
