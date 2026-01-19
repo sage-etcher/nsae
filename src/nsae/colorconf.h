@@ -3,11 +3,14 @@
 #define NSAE_CONFIG_H
 
 /* select forground colour */
-#define CRT_FG_GREEN
+#define CRT_FG_GREEN_P31
+// #define CRT_FG_GREEN_P1
 // #define CRT_FG_WHITE
 // #define CRT_FG_LIGHT
 
-#if defined(CRT_FG_GREEN)
+#if defined(CRT_FG_GREEN_P31)
+#   define CRT_FG_COLOR 0.38f, 1.0f, 0.0f   /* P31 (NorthStar Adv) #61ff00 */
+#elif defined(CRT_FG_GREEN_P1)
 #   define CRT_FG_COLOR 0.2f, 1.0f, 0.2f    /* P1 (apple II green) #33FF33 */
 #elif defined(CRT_FG_WHITE)
 #   define CRT_FG_COLOR 1.0f, 1.0f, 1.0f    /* White 0xFFFFFF */
