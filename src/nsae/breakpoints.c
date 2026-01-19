@@ -61,5 +61,15 @@ br_lookup (breakpoints_t *self, uint16_t pc)
     return -1;
 }
 
+void
+br_list (breakpoints_t *self)
+{
+    log_info ("breakpoint list:\n");
+    for (size_t i = 0; i < self->cnt; i++)
+    {
+        log_info ("%3lu: %04x\n", i, self->m[i]);
+    }
+}
+
 
 /* end of file */

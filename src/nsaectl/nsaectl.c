@@ -25,7 +25,7 @@
 #define USAGE_STR ___SRC_NSAECTL_NSAECTL_HELP
 #define USAGE_LEN ___SRC_NSAECTL_NSAECTL_HELP_LEN
 
-#define ARG_POP() (assert (argc >= 0), argc--, *argv++)
+#define ARG_POP() (assert (argc > 0), argc--, *argv++)
 
 #define ARRLEN(a) (sizeof (a) / sizeof (*(a)))
 
@@ -62,7 +62,6 @@ struct var_entry {
 
 static const struct cmd_entry CMD_LIST[] = {
     /* {{{ */
-    { "continue", "c",   CMD_CONTINUE,  MODE_NULL,   MODE_NULL },
     { "next",     "n",   CMD_NEXT,      MODE_NULL,   MODE_NULL },
     { "quit",     "q",   CMD_QUIT,      MODE_NULL,   MODE_NULL },
     { "run",      "ru",  CMD_RUN,       MODE_NULL,   MODE_NULL },
@@ -248,7 +247,13 @@ main (int argc, char **argv)
     }
 
     /* setup ipc */
-    nsae_ipc_init (NSAE_IPC_CLIENT, custom_client, custom_server);
+    log_verbose ("nsaectl: openning connection to server\n");
+    rc = nsae_ipc_init (NSAE_IPC_CLIENT, custom_client, custom_server);
+    if (rc != 0)
+    {
+        log_fatal ("nsaectl: failed to initialize ipc\n");
+        exit (EXIT_FAILURE);
+    }
 
     /* send command */
     if (send (argc, argv))
@@ -261,7 +266,10 @@ main (int argc, char **argv)
 
     rc = 0; /* successful exit */
 exit:
+    log_verbose ("nsaectl: closing connection to server\n");
     nsae_ipc_free (NSAE_IPC_CLIENT);
+
+    log_quit ();
     return rc;
 }
 
@@ -273,6 +281,8 @@ deref_filepath (const char *src, size_t *ret_len)
     char *dst = NULL;
     size_t dst_len = 0;
 
+    assert (ret_len != NULL);
+    assert (src != NULL);
     src_len = strlen (src);
 
     /* check if absolute path */
@@ -284,6 +294,8 @@ deref_filepath (const char *src, size_t *ret_len)
 
     /* treat as relative */
     pwd = getcwd (NULL, 0);
+    assert (pwd != NULL);
+
     dst_len = strlen (pwd) + 1 + src_len;
     dst = calloc (dst_len + 1, sizeof (char));
 
@@ -461,7 +473,6 @@ send (int argc, char **argv)
 
     case CMD_QUIT:
     case CMD_NEXT:
-    case CMD_CONTINUE:
     case CMD_INFO:
         nsae_ipc_send (&packet, sizeof (packet));
         break;
@@ -511,6 +522,7 @@ send (int argc, char **argv)
         packet.v_fddrive = strtol (ARG_POP (), NULL, 0);
 
         stmp = ARG_POP (); /* filename */
+        assert (stmp != NULL);
         stmp_len = strlen (stmp);
 
         stmp = deref_filepath (stmp, &stmp_len);
@@ -553,7 +565,7 @@ send (int argc, char **argv)
             packet.v_addr32 = strtol (stmp, NULL, 0);
         }
 
-        packet.v_addr32 = (argc <= 0) ? 0x100 : strtol (ARG_POP (), NULL, 0);
+        packet.v_data32 = (argc <= 0) ? 0x100 : strtol (ARG_POP (), NULL, 0);
         //format = (argc <= 0) ? "byte" : ARG_POP ();
         nsae_ipc_send (&packet, sizeof (packet));
         break;
@@ -622,14 +634,14 @@ send (int argc, char **argv)
         /* send data based on format */
         if ((input_format == NULL) || (0 == strcmp (input_format, "keycode")))
         {
-            packet.v_data8 = strtol (stmp, NULL, 0);
+            packet.v_data32 = strtol (stmp, NULL, 0);
             nsae_ipc_send (&packet, sizeof (packet));
         }
         else if (0 == strcmp (input_format, "string"))
         {
             for (; *stmp; stmp++)
             {
-                packet.v_data8 = *stmp;
+                packet.v_data32 = *stmp;
                 nsae_ipc_send (&packet, sizeof (packet));
             }
         }
@@ -646,210 +658,8 @@ send (int argc, char **argv)
         log_fatal ("unknown command id -- %d", packet.cmd);
         exit (EXIT_FAILURE);
     }
-
     return 0;
 }
 
-
-
-
-
-
-
-
-
-
-
-#if 0
-    const char *mode_str = argv[0];
-
-    struct sc_map_sv mode_hash = get_keywords ();
-    concmd_t *p_mode = NULL;
-    bool match = sc_map_get_sv (&mode_hash, mode_str, (void **)&p_mode);
-    argc--; argv++;
-
-    if (!match)
-    {
-         log_error ("nsaectl: invalid mode -- \"%s\"\n", mode_str);
-         fprintf (stderr, "%.*s", USAGE_LEN, USAGE_STR);
-         exit (EXIT_FAILURE);
-    }
-    assert (p_mode != NULL);
-    assert (p_mode->cmd <= CMD_COUNT);
-
-    if ((p_mode->min_args > argc) || (argc > p_mode->max_args))
-    {
-        log_error ("nsaectl: missing mode argument\n");
-        fprintf (stderr, "%.*s", USAGE_LEN, USAGE_STR);
-        exit (EXIT_FAILURE);
-    }
-
-    log_verbose ("nsaectl: building packet\n");
-    size_t packet_size = sizeof (nsae_packet_t);
-    nsae_packet_t *packet = malloc (packet_size);
-
-    packet->cmd = p_mode->cmd;
-
-    switch (packet->cmd)
-    {
-    case CMD_BRKPNT_SET:
-    case CMD_BRKPNT_REMOVE:
-        packet->v_addr16 = strtol (argv[0], NULL, 0);
-        break;
-
-    case CMD_WP_SET:
-        packet->v_addr32 = strtol (argv[0], NULL, 0);
-        if (argc <= 1)
-        {
-            /* if no data is given, match any updates to that address */
-            packet->v_data16= 0;
-            packet->v_wp_type = 0;
-            packet->v_wp_match = 0;
-        }
-        else
-        {
-            /* otherwise default to matching when equal to data */
-            packet->v_data16   = strtol (argv[1], NULL, 0);
-            packet->v_wp_match = (argc <= 2) ? 1 : strtol (argv[2], NULL, 0);
-            packet->v_wp_type  = (argc <= 3) ? 0 : strtol (argv[3], NULL, 0);
-        }
-        break;
-
-    case CMD_WP_REMOVE:
-        packet->v_data = strtol (argv[0], NULL, 0);
-        break;
-
-    case CMD_LOG_CPU:
-    case CMD_LOG_MMU:
-    case CMD_LOG_RAM:
-    case CMD_LOG_FDC:
-    case CMD_LOG_CRT:
-    case CMD_LOG_KB:
-    case CMD_LOG_MOBO:
-    case CMD_KB_OVERFLOW:
-    case CMD_KB_CAPS:
-    case CMD_KB_CURSOR:
-    case CMD_KB_DATA:
-    case CMD_KB_INTERUPT:
-        packet->v_state = strtol (argv[0], NULL, 0);
-        break;
-
-    case CMD_LOG_OUTPUT:
-    case CMD_HD_LOAD:
-    case CMD_HD_SAVE:
-    case CMD_PROM_LOAD:
-        packet->v_buflen = strlen (argv[0]);
-        packet_size += packet->v_buflen;
-        packet = realloc (packet, packet_size);
-        memcpy (packet->buf, argv[0], packet->v_buflen);
-        break;
-    
-    case CMD_FD_EJECT:
-        packet->v_fd_num = strtol (argv[0], NULL, 0);
-        break;
-
-    case CMD_FD_LOAD:
-    case CMD_FD_SAVE:
-        packet->v_fd_num = strtol (argv[0], NULL, 0);
-        packet->v_buflen = strlen (argv[1]);
-        packet_size += packet->v_buflen;
-        packet = realloc (packet, packet_size);
-        memcpy (packet->buf, argv[1], packet->v_buflen);
-        break;
-
-    case CMD_FD_BLK_READ:
-        packet->v_fd_num    = strtol (argv[0], NULL, 0);
-        packet->v_fd_side   = strtol (argv[1], NULL, 0);
-        packet->v_fd_track  = strtol (argv[2], NULL, 0);
-        packet->v_fd_sector = strtol (argv[3], NULL, 0);
-        break;
-
-    case CMD_KB_PUSH:
-        packet->v_keycode = strtol (argv[0], NULL, 0);
-        break;
-
-    case CMD_ADV_OUT:
-        packet->v_port = strtol (argv[0], NULL, 0);
-        packet->v_data = strtol (argv[1], NULL, 0);
-        break;
-
-    case CMD_ADV_IN:
-        packet->v_port = strtol (argv[0], NULL, 0);
-        break;
-
-    case CMD_RAM_READ:
-        packet->v_addr32 = strtol (argv[0], NULL, 0);
-        packet->v_span32 = (argc < 1) ? 1 : strtol (argv[1], NULL, 0);
-        break;
-
-    case CMD_RAM_WRITE:
-        packet->v_addr32 = strtol (argv[0], NULL, 0);
-        packet->v_data   = strtol (argv[1], NULL, 0);
-        break;
-
-    case CMD_MMU_READ:
-        packet->v_addr16 = strtol (argv[0], NULL, 0);
-        packet->v_span16 = (argc < 1) ? 1 : strtol (argv[1], NULL, 0);
-        break;
-
-    case CMD_MMU_WRITE:
-        packet->v_addr16 = strtol (argv[0], NULL, 0);
-        packet->v_data   = strtol (argv[1], NULL, 0);
-        break;
-
-    case CMD_MMU_LOAD:
-        packet->v_slot = strtol (argv[0], NULL, 0);
-        packet->v_page = strtol (argv[1], NULL, 0);
-        break;
-
-    case CMD_EXIT:
-    case CMD_RESTART:
-    case CMD_PAUSE:
-    case CMD_CONTINUE:
-    case CMD_BRKPNT_LIST:
-    case CMD_WP_LIST:
-    case CMD_STEP:
-    case CMD_RUN:
-    case CMD_STATUS:
-    case CMD_LOG_TERSE:
-    case CMD_LOG_VERBOSE:
-    case CMD_LOG_DEBUG:
-    case CMD_HD_EJECT:
-    case CMD_KB_POP:
-    case CMD_KB_STATUS:
-    case CMD_IO_STATUS:
-    case CMD_CRT_STATUS:
-    case CMD_ADV_STATUS:
-    case CMD_CPU_STATUS:
-    case CMD_MMU_STATUS:
-        break;
-
-    default:
-        log_warning ("nsaectl: error: unknown cmd -- %x\n", packet->cmd);
-        break;
-    }
-
-    log_verbose ("nsaectl: openning connection to server\n");
-    int rc = nsae_ipc_init (NSAE_IPC_CLIENT, custom_client, custom_server);
-    if (rc != 0)
-    {
-        log_fatal ("nsaectl: failed to initialize ipc\n");
-        exit (EXIT_FAILURE);
-    }
-
-    log_verbose ("nsaectl: sending packet\n");
-    (void)nsae_ipc_send_block (packet_size, sizeof (uint32_t));
-    (void)nsae_ipc_send_block (packet, packet_size);
-
-    log_verbose ("nsaectl: closing connection to server\n");
-    nsae_ipc_free (NSAE_IPC_CLIENT);
-
-    log_quit ();
-
-    return 0;
-}
-
-
-#endif
 /* vim: fdm=marker
  * end of file */

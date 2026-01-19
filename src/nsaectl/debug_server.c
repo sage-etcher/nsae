@@ -61,7 +61,6 @@ main (void)
             case CMD_RUN:      cmd_str = "CMD_RUN";      break;
             case CMD_STEP:     cmd_str = "CMD_STEP";     break;
             case CMD_NEXT:     cmd_str = "CMD_NEXT";     break;
-            case CMD_CONTINUE: cmd_str = "CMD_CONTINUE"; break;
             case CMD_INFO:     cmd_str = "CMD_INFO";     break;
             case CMD_SET:      cmd_str = "CMD_SET";      break;
             case CMD_DELETE:   cmd_str = "CMD_DELETE";   break;

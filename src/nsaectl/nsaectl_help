@@ -20,60 +20,107 @@ options:
   -h       show this page
 
 modes:
-  adv_in <port>             read from port
-  adv_out <port> <data>     write data to port
-  adv_status                display avantage (motherboard) state
-  br_list                   list all breakpoints
-  br_remove <pc_address>    remove a breakpoint
-  br_set <pc_address>       add a new breakpoint
-  continue                  continue executation after a breakpoint/pause.
-  cpu_status                display cpu state
-  crt_status                display crt display's state
-  exit                      close out of the emulator.
-  fd_blkread <fd_num> <side> <track> <sector>
-                            read a block (512 bytes) from floppy disk
-  fd_eject <fd_num>         remove floppy from fd_num specified drive.
-  fd_load <fd_num> <file>   load floppy from file into drive fd_num.
-  fd_save <fd_num> <file>   save floppy into file from drive fd_num.
-  fd_status                 display floppy drive control state
-  hd_eject                  remove system hard disk.
-  hd_load <file>            load hard disk from file into system hard disk.
-  hd_save <file>            save hard disk into file from system hard disk.
-  hd_status                 display hard disk state
-  kb_caps <state>           set/unset capslock
-  kb_cursor <state>         set/unset cursorlock
-  kb_data <state>           set/unset kb data flag
-  kb_interupt <state>       set/unset kb interupt flag (reset)
-  kb_overflow <state>       set/unset kb overflow flag
-  kb_push <keycode>         push a keycode onto the keyboard buffer
-  kb_pop                    pop a key off of the keyboard buffer
-  kb_status <state>         display keyboard state
-  log_cpu <level>           set log level for cpu events
-  log_crt <level>           set log level for crt events
-  log_fdc <level>           set log level for fdc events
-  log_kb <level>            set log level for kb events
-  log_mmu <level>           set log level for mmu events
-  log_mobo <level>          set log level for mobo events
-  log_ram <level>           set log level for ram events
-  log_output <logfile>      set a file to duplicate logs to (this may get large)
-  log_terse                 set log level to terse for all events
-  log_verbose               set log level to verbose for all events
-  log_debug                 set log level to debug for all events
-  mmu_load <slot> <page>    load an mmu slot with a page of memory
-  mmu_read <addr> <n>       derefernce addr in the mmu, read n bytes
-  mmu_status                display memory multiplexer state
-  mmu_write <addr> <data>   dereference addr in the mmu, write into location
-                              data
-  io_status                 display io board state
-  pause                     halt execution.
-  prom_load <file>          load a file into the PROM, overwrite default
-  ram_read <abs_addr> <n>   read from raw memory n bytes at abs_addr
-  ram_write <abs_addr> <data>
-                            write data into abs_addr of raw memory.
-  restart                   restart the emulator, reinitialize the system.
-  run                       start executing code from the current PC.
-  status                    view information about the emulator's state.
-  step                      single step the emulator 1 instruction.
+  quit
+  run <start_address>
+  step <count>
+  next
+  reset
+  break -> set breakpoint $*
+
+  info   breakpoint
+  set    breakpoint <address>
+  delete breakpoint <index>
+
+  info advantage
+  set  advantage kbmi     <boolean>
+  set  advantage kbnmi    <boolean>
+  set  advantage crtmi    <boolean>
+  set  advantage interupt <boolean>
+  set  advantage cmdack   <boolean>
+
+  set port <port> <byte>
+  display port <port>
+
+  info cpu
+  set  cpu a <word>
+  set  cpu bc <word>
+  set  cpu de <word>
+  set  cpu hl <word>
+  set  cpu pc <word>
+  set  cpu sp <word>
+  set  cpu ix <word>
+  set  cpu iy <word>
+  set  cpu i <byte>
+  set  cpu r <byte>
+  set  cpu iff1 <boolean>
+  set  cpu iff2 <boolean>
+  set  cpu im <byte>
+  set  cpu exx
+  set  cpu halt <boolean>
+  set  cpu s_flag <boolean>
+  set  cpu z_flag <boolean>
+  set  cpu h_flag <boolean>
+  set  cpu p_flag <boolean>
+  set  cpu v_flag <boolean>
+  set  cpu n_flag <boolean>
+  set  cpu c_flag <boolean>
+
+  info display
+  set  display color  <hexcolor>
+  set  display blank  <boolean>
+  set  display vsync  <boolean>
+  set  display scroll <boolean>
+
+  info    floppy
+  set     floppy disk       <byte>
+  set     floppy side       <byte>
+  set     floppy track      <byte>
+  set     floppy powered    <boolean>
+  set     floppy trackzero  <boolean>
+  set     floppy sectormark <boolean>
+  set     floppy <drive_index:0,1>:eject  <boolean>
+  set     floppy <drive_index:0,1>:sector <boolean>
+  load    floppy <drive_index:0,1> <file> <*mode:ro|=rw>
+  save    floppy <drive_index:0,1> <*file>
+  display floppy <drive_index:0,1>:<sector> <*count=1>
+
+  info harddrive
+  set  harddrive eject <boolean>
+  load harddrive <file>
+  save harddrive <*file>
+
+  info prom
+  load prom <file> <*offset=0>
+  save prom <file>
+
+  info   keyboard
+  set    keyboard repeat     <boolean>
+  set    keyboard capslock   <boolean>
+  set    keyboard cursorlock <boolean>
+  set    keyboard overflow   <boolean>
+  set    keyboard dataflag   <boolean>
+  set    keyboard interupt   <boolean>
+  set    keyboard press <keycode>
+  delete keyboard <index>
+  press  <keycode|string> <*mode:keycode|=string>
+
+  press <keycode|ascii string> <*format:keycode,string>
+
+  info    <mmu|ram>
+  set     <mmu|ram> <flag> <value>
+  set      mmu      slot0 <page>
+  set      mmu      slot1 <page>
+  set      mmu      slot2 <page>
+  set      mmu      slot3 <page>
+  write   <mmu|ram> <address> <byte [byte...]>
+  print   <mmu|ram> <address> <*format:addr,byte>
+  display <mmu|ram> <address> <*count=0xa0> <*format:addr,byte>
+  save    <mmu|ram> <address> <file> <*count=-1> <*offset=0>
+  load    <mmu|ram> <address> <file> <*count=-1> <*offset=0>
+
+  info log
+  set  log <display|cpu|keyboard|ram|mmu|floppy|harddrive|advantage|all> <terse|verbose|debug|warning|error|fatal|none>
+  set  log logfile <file>
 
 fifo is the path to a named pipe to which nsaectrl can talk with nsae
 over.

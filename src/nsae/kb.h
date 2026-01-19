@@ -14,6 +14,7 @@ typedef struct {
     bool overflow;
     bool data_flag;
     bool reset;
+    bool hw_interrupt;
     bool cursor_lock;
     bool caps_lock;
     bool autorepeat;
