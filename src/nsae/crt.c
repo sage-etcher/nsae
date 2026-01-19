@@ -23,9 +23,12 @@ crt_init (crt_t *self, ram_t *p_ram, uint32_t vram_offset)
 
     (void)memset (self, 0, sizeof (*self));
 
+    self->inverted = 0;
     self->p_ram = p_ram;
     self->vram_offset = vram_offset;
 
+    self->foreground = (vec3_t) { 0.38f, 1.0f, 0.0f };
+    self->background = (vec3_t) { 0.0f,  0.0f, 0.0f };
     return 0;
 }
 
@@ -41,7 +44,16 @@ crt_draw (crt_t *self)
     /* if blank display, dont update */
     if (self->blank) return;
 
-    glColor3f (CRT_DRAW_COLOR);  /* see config.h for colour */
+    if (!self->inverted)
+    {
+        glColor3f (self->foreground.x, self->foreground.y, self->foreground.z);
+    }
+    else
+    {
+        glColor3f (self->background.x, self->background.y, self->background.z);
+    }
+
+    //glColor3f (CRT_DRAW_COLOR);  /* see config.h for colour */
 
     /* for each pixel */
     for (int y = 0; y < WIDTH; y++)

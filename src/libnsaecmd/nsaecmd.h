@@ -123,9 +123,11 @@ typedef enum {
     VAR_CPU_N_FLAG,
     VAR_CPU_C_FLAG,
 
-    VAR_CRT_COLOR,
+    VAR_CRT_FOREGROUND,
+    VAR_CRT_BACKGROUND,
     VAR_CRT_BLANK,
     VAR_CRT_VSYNC,
+    VAR_CRT_INVERTED,
     VAR_CRT_SCROLL,
 
     VAR_FDC_DISK,
@@ -162,6 +164,8 @@ typedef enum {
     VAR_LOG_FDC,
     VAR_LOG_HDC,
     VAR_LOG_ADV,
+    VAR_LOG_IO,
+    VAR_LOG_NSAE,
     VAR_LOG_ALL,
     VAR_LOG_OUTPUT_FILE,
 } nsae_var_t;

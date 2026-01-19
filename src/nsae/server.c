@@ -33,7 +33,7 @@ server_handle_ipc (nsae_t *self)
     rc = nsae_ipc_recieve (&packet_size, sizeof (size_t));
     if (rc <= 0) return 0; /* non blocking */
 
-    g_log_categories[LC_SERVER] = LOG_DEBUG;
+    //g_log_categories[LC_SERVER] = LOG_DEBUG;
     log_debug ("server_handle_ipc.nsae_ipc_recieve.rc = %d\n", rc);
 
     /* enforce minimum packet size */
@@ -326,8 +326,18 @@ server_handle_ipc (nsae_t *self)
             self->adv.cpu.state.registers.byte[Z80_F] |= Z80_C_FLAG * (packet->v_data32 > 0);
             break;
 
-        case VAR_CRT_COLOR:
-            log_verbose ("crt.color %06x\n", packet->v_data32);
+        case VAR_CRT_BACKGROUND:
+            log_verbose ("crt.background %06x\n", packet->v_data32);
+            self->adv.crt.background.x = (float)(packet->v_data32 & 0x00ff0000 >> 16) / 255;
+            self->adv.crt.background.y = (float)(packet->v_data32 & 0x0000ff00 >> 8) / 255;
+            self->adv.crt.background.z = (float)(packet->v_data32 & 0x000000ff) / 255;
+            break;
+
+        case VAR_CRT_FOREGROUND:
+            log_verbose ("crt.foreground %06x\n", packet->v_data32);
+            self->adv.crt.foreground.x = (float)(packet->v_data32 & 0x00ff0000 >> 16) / 255;
+            self->adv.crt.foreground.y = (float)(packet->v_data32 & 0x0000ff00 >> 8) / 255;
+            self->adv.crt.foreground.z = (float)(packet->v_data32 & 0x000000ff) / 255;
             break;
 
         case VAR_CRT_BLANK:
@@ -338,6 +348,11 @@ server_handle_ipc (nsae_t *self)
         case VAR_CRT_VSYNC:
             log_verbose ("crt.vsync %1d\n", packet->v_data32);
             self->adv.crt.vrefresh = (packet->v_data32 > 0);
+            break;
+
+        case VAR_CRT_INVERTED:
+            log_verbose ("crt.inverted %02x\n", packet->v_data32);
+            self->adv.crt.inverted = (packet->v_data32 > 1);
             break;
 
         case VAR_CRT_SCROLL:
@@ -489,10 +504,27 @@ server_handle_ipc (nsae_t *self)
             g_log_categories[LC_HDC] = packet->v_data32;
             break;
 
+        case VAR_LOG_IO:
+            log_verbose ("log.io %1d\n", packet->v_data32);
+            g_log_categories[LC_IO] = packet->v_data32;
+            g_log_categories[LC_SIO] = packet->v_data32;
+            g_log_categories[LC_PIO] = packet->v_data32;
+            break;
+
         case VAR_LOG_ADV:
             log_verbose ("log.adv %1d\n", packet->v_data32);
             g_log_categories[LC_ADV] = packet->v_data32;
+            g_log_categories[LC_SPEAKER] = packet->v_data32;
             break;
+
+        case VAR_LOG_NSAE:
+            log_verbose ("log.nsae %1d\n", packet->v_data32);
+            g_log_categories[LC_NSAE] = packet->v_data32;
+            g_log_categories[LC_SERVER] = packet->v_data32;
+            g_log_categories[LC_BREAKPOINTS] = packet->v_data32;
+            g_log_categories[LC_WATCHPOINTS] = packet->v_data32;
+            break;
+
 
         case VAR_LOG_ALL:
             log_verbose ("log.all %1d\n", packet->v_data32);

@@ -66,10 +66,12 @@ modes:
   set  cpu c_flag <boolean>
 
   info display
-  set  display color  <hexcolor>
-  set  display blank  <boolean>
-  set  display vsync  <boolean>
-  set  display scroll <boolean>
+  set  display background <hexcolor>
+  set  display foreground <hexcolor>
+  set  display blank      <boolean>
+  set  display vsync      <boolean>
+  set  display inverted   <boolean>
+  set  display scroll     <boolean>
 
   info    floppy
   set     floppy disk       <byte>

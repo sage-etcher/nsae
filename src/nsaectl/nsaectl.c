@@ -95,19 +95,19 @@ static const struct cmd_entry CMD_LIST[] = {
 
 static const struct mode_entry MODE_LIST[] = {
     /* {{{ */
-    { "advantage",  "ad", MODE_ADV },
-    { "all",        "al", MODE_ALL },
-    { "breakpoint", "b",  MODE_BR },
-    { "cpu",        "c",  MODE_CPU },
-    { "display",    "d",  MODE_CRT },
-    { "floppy",     "f",  MODE_FDC },
-    { "harddrive",  "h",  MODE_HDC },
-    { "keyboard",   "k",  MODE_KB },
-    { "log",        "l",  MODE_LOG },
-    { "mmu",        "m",  MODE_MMU },
+    { "advantage",  "ad", MODE_ADV  },
+    { "all",        "al", MODE_ALL  },
+    { "breakpoint", "b",  MODE_BR   },
+    { "cpu",        "c",  MODE_CPU  },
+    { "display",    "d",  MODE_CRT  },
+    { "floppy",     "f",  MODE_FDC  },
+    { "harddrive",  "h",  MODE_HDC  },
+    { "keyboard",   "k",  MODE_KB   },
+    { "log",        "l",  MODE_LOG  },
+    { "mmu",        "m",  MODE_MMU  },
     { "nsae",       "n",  MODE_NSAE },
     { "prom",       "p",  MODE_PROM },
-    { "ram",        "r",  MODE_RAM },
+    { "ram",        "r",  MODE_RAM  },
     /* }}} */
 };
 
@@ -146,11 +146,12 @@ static const struct var_entry SET_LIST[] = {
     { MODE_CPU, "n_flag",     "nf", VAR_CPU_N_FLAG },
     { MODE_CPU, "c_flag",     "cf", VAR_CPU_C_FLAG },
 
-    { MODE_CRT, "color",      "c", VAR_CRT_COLOR },
-    { MODE_CRT, "colour",     "c", VAR_CRT_COLOR },
-    { MODE_CRT, "blank",      "b", VAR_CRT_BLANK },
-    { MODE_CRT, "vsync",      "v", VAR_CRT_VSYNC },
-    { MODE_CRT, "scroll",     "s", VAR_CRT_SCROLL },
+    { MODE_CRT, "background", "bg", VAR_CRT_BACKGROUND },
+    { MODE_CRT, "foreground", "fg", VAR_CRT_FOREGROUND },
+    { MODE_CRT, "blank",      "bl", VAR_CRT_BLANK },
+    { MODE_CRT, "vsync",      "v",  VAR_CRT_VSYNC },
+    { MODE_CRT, "inverted",   "i",  VAR_CRT_INVERTED },
+    { MODE_CRT, "scroll",     "s",  VAR_CRT_SCROLL },
 
     { MODE_FDC, "disk",       "d",   VAR_FDC_DISK },
     { MODE_FDC, "side",       "si",  VAR_FDC_SIDE },
@@ -186,6 +187,8 @@ static const struct var_entry SET_LIST[] = {
     { MODE_LOG, "floppy",     "f",  VAR_LOG_FDC },
     { MODE_LOG, "harddrive",  "h",  VAR_LOG_HDC },
     { MODE_LOG, "advantage",  "ad", VAR_LOG_ADV },
+    { MODE_LOG, "io",         "i",  VAR_LOG_IO },
+    { MODE_LOG, "nsae",       "n",  VAR_LOG_NSAE },
     { MODE_LOG, "all",        "al", VAR_LOG_ALL },
     { MODE_LOG, "logfile",    "l",  VAR_LOG_OUTPUT_FILE },
     /* }}} */

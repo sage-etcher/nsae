@@ -10,12 +10,18 @@ extern "c" {
 #include <stdbool.h>
 #include <stdint.h>
 
+typedef struct { float x, y, z; } vec3_t;
+
 typedef struct {
     bool blank;
     bool vrefresh;
+    bool inverted;
     uint8_t scroll_reg;
     uint32_t vram_offset;
     ram_t *p_ram;
+
+    vec3_t background;
+    vec3_t foreground;
 } crt_t;
 
 int crt_init (crt_t *self, ram_t *p_ram, uint32_t vram_offset);

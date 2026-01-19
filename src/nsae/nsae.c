@@ -59,7 +59,7 @@ gl_init (GLFWwindow *win, float win_width, float win_height,
     glMatrixMode (GL_MODELVIEW);
     glLoadIdentity ();
 
-    glClearColor (CRT_CLEAR_COLOR, 1.f); /* see config.h for color */
+    glClearColor (0.f, 0.f, 0.f, 1.f);
     glClear (GL_COLOR_BUFFER_BIT);
     glfwSwapBuffers (win);
 
@@ -288,6 +288,23 @@ nsae_render (GLFWwindow *win)
     nsae_t *self = glfwGetWindowUserPointer (win);
     adv_t *adv = &self->adv;
     crt_t *crt = &adv->crt;
+ 
+    if (!crt->inverted)
+    {
+        glClearColor (
+                crt->background.x, 
+                crt->background.y, 
+                crt->background.z, 
+                1.f);
+    }
+    else
+    {
+        glClearColor (
+                crt->foreground.x, 
+                crt->foreground.y, 
+                crt->foreground.z, 
+                1.f);
+    }
 
     glClear (GL_COLOR_BUFFER_BIT);
 
