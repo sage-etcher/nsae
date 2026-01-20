@@ -65,6 +65,7 @@ static const struct cmd_entry CMD_LIST[] = {
     { "next",     "n",   CMD_NEXT,      MODE_NULL,   MODE_NULL },
     { "quit",     "q",   CMD_QUIT,      MODE_NULL,   MODE_NULL },
     { "run",      "ru",  CMD_RUN,       MODE_NULL,   MODE_NULL },
+    { "pause",    "p",   CMD_PAUSE,     MODE_NULL,   MODE_NULL },
     { "step",     "st",  CMD_STEP,      MODE_NULL,   MODE_NULL },
 
     { "break",    "b",   CMD_IMP_BREAK, MODE_NULL,   MODE_NULL },
@@ -464,19 +465,16 @@ send (int argc, char **argv)
     /* command handling */
     switch (packet.cmd)
     {
+    case CMD_QUIT:
+    case CMD_PAUSE:
     case CMD_STEP:
-        packet.v_count = (argc <= 0) ? 1 : strtol (ARG_POP (), NULL, 0);
+    case CMD_NEXT:
+    case CMD_INFO:
         nsae_ipc_send (&packet, sizeof (packet));
         break;
 
     case CMD_DELETE:
         packet.v_index = (argc <= 0) ? 1 : strtol (ARG_POP (), NULL, 0);
-        nsae_ipc_send (&packet, sizeof (packet));
-        break;
-
-    case CMD_QUIT:
-    case CMD_NEXT:
-    case CMD_INFO:
         nsae_ipc_send (&packet, sizeof (packet));
         break;
 
@@ -486,7 +484,7 @@ send (int argc, char **argv)
             packet.cmd  = CMD_SET;
             packet.mode = MODE_CPU;
             packet.var  = VAR_CPU_PC;
-            packet.v_addr32 = strtol (ARG_POP (), NULL, 0);
+            packet.v_data32 = strtol (ARG_POP (), NULL, 0);
             nsae_ipc_send (&packet, sizeof (packet));
         }
 
@@ -521,8 +519,19 @@ send (int argc, char **argv)
 
     case CMD_LOAD:
     case CMD_SAVE:
-        packet.v_addr32  = strtol (ARG_POP (), NULL, 0);
-        packet.v_fddrive = strtol (ARG_POP (), NULL, 0);
+        if (packet.mode == MODE_FDC)
+        {
+            packet.v_fddrive = strtol (ARG_POP (), NULL, 0);
+        }
+        else
+        {
+            packet.v_addr32  = strtol (ARG_POP (), NULL, 0);
+
+            if (packet.cmd == CMD_SAVE)
+            {
+                packet.v_count = (argc <= 0) ? -1 : strtol (ARG_POP (), NULL, 0);
+            }
+        }
 
         stmp = ARG_POP (); /* filename */
         assert (stmp != NULL);
@@ -551,7 +560,7 @@ send (int argc, char **argv)
         /* handle floppy format drive:sector */
         if (packet.mode == MODE_FDC)
         {
-            packet.v_data8 = strtol (stmp, NULL, 0);
+            packet.v_fddrive = strtol (stmp, NULL, 0);
 
             iter = strchr (stmp, ':');
             if (iter == NULL)
@@ -568,8 +577,7 @@ send (int argc, char **argv)
             packet.v_addr32 = strtol (stmp, NULL, 0);
         }
 
-        packet.v_data32 = (argc <= 0) ? 0x100 : strtol (ARG_POP (), NULL, 0);
-        //format = (argc <= 0) ? "byte" : ARG_POP ();
+        packet.v_count = (argc <= 0) ? 0x100 : strtol (ARG_POP (), NULL, 0);
         nsae_ipc_send (&packet, sizeof (packet));
         break;
 
@@ -579,7 +587,7 @@ send (int argc, char **argv)
 
         /* send data */
         do {
-            packet.v_data8 = strtol (ARG_POP (), NULL, 0);
+            packet.v_data32 = strtol (ARG_POP (), NULL, 0);
             nsae_ipc_send (&packet, sizeof (packet));
 
             packet.v_addr32++;
@@ -588,28 +596,34 @@ send (int argc, char **argv)
         break;
 
     case CMD_IMP_RESET:
+        packet.cmd = CMD_PAUSE;
+        nsae_ipc_send (&packet, sizeof (packet));
+
         packet.cmd  = CMD_SET;
         packet.mode = MODE_MMU;
         packet.var  = VAR_MMU_SLOT0;
-        packet.v_data8 = 0x8;
+        packet.v_data32 = 0x8;
         nsae_ipc_send (&packet, sizeof (packet));
 
         packet.var = VAR_MMU_SLOT1;
-        packet.v_data8 = 0x9;
+        packet.v_data32 = 0x9;
         nsae_ipc_send (&packet, sizeof (packet));
 
         packet.var = VAR_MMU_SLOT2;
-        packet.v_data8 = 0xc;
+        packet.v_data32 = 0xc;
         nsae_ipc_send (&packet, sizeof (packet));
 
         packet.var = VAR_MMU_SLOT3;
-        packet.v_data8 = 0x0;
+        packet.v_data32 = 0x0;
         nsae_ipc_send (&packet, sizeof (packet));
 
         packet.cmd  = CMD_SET;
         packet.mode = MODE_CPU;
         packet.var  = VAR_CPU_PC;
-        packet.v_addr32 = 0x8000;
+        packet.v_data32 = 0x8000;
+        nsae_ipc_send (&packet, sizeof (packet));
+
+        packet.cmd = CMD_RUN;
         nsae_ipc_send (&packet, sizeof (packet));
         break;
 
@@ -617,7 +631,7 @@ send (int argc, char **argv)
         packet.cmd    = CMD_SET;
         packet.mode   = MODE_BR;
         packet.var    = VAR_BR_APPEND;
-        packet.v_addr32 = strtol (ARG_POP (), NULL, 0);
+        packet.v_data32 = strtol (ARG_POP (), NULL, 0);
         nsae_ipc_send (&packet, sizeof (packet));
         break;
 

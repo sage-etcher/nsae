@@ -22,10 +22,13 @@ options:
 modes:
   quit
   run <start_address>
-  step <count>
-  next
+  pause
+  step
+  next				unimplimented
   reset
   break -> set breakpoint $*
+  press <keycode> keycode -> set keyboard press $keycode
+  press <string>  string  -> foreach c in $string; do set keyboard press $c
 
   info   breakpoint
   set    breakpoint <address>
@@ -38,8 +41,8 @@ modes:
   set  advantage interupt <boolean>
   set  advantage cmdack   <boolean>
 
-  set port <port> <byte>
-  display port <port>
+  set port <port> <byte>	unimplimented
+  read port <port>		unimplimented
 
   info cpu
   set  cpu a <word>
@@ -55,8 +58,8 @@ modes:
   set  cpu iff1 <boolean>
   set  cpu iff2 <boolean>
   set  cpu im <byte>
-  set  cpu exx
-  set  cpu halt <boolean>
+  set  cpu exx			unimplimented
+  set  cpu halt <boolean>	unimplimented
   set  cpu s_flag <boolean>
   set  cpu z_flag <boolean>
   set  cpu h_flag <boolean>
@@ -73,27 +76,26 @@ modes:
   set  display inverted   <boolean>
   set  display scroll     <boolean>
 
-  info    floppy
-  set     floppy disk       <byte>
-  set     floppy side       <byte>
-  set     floppy track      <byte>
-  set     floppy powered    <boolean>
-  set     floppy trackzero  <boolean>
-  set     floppy sectormark <boolean>
-  set     floppy <drive_index:0,1>:eject  <boolean>
-  set     floppy <drive_index:0,1>:sector <boolean>
-  load    floppy <drive_index:0,1> <file> <*mode:ro|=rw>
-  save    floppy <drive_index:0,1> <*file>
-  display floppy <drive_index:0,1>:<sector> <*count=1>
+  info floppy
+  set  floppy disk       <byte>
+  set  floppy side       <byte>
+  set  floppy track      <byte>
+  set  floppy powered    <boolean>
+  set  floppy zerotrack  <boolean>
+  set  floppy sectormark <boolean>
+  set  floppy <drive_index:0,1>:eject  <boolean>
+  set  floppy <drive_index:0,1>:sector <boolean>
+  load floppy <drive_index:0,1> <file>
+  save floppy <drive_index:0,1> <file>
+  read floppy <drive_index:0,1>:<sector> <*count=1>
 
-  info harddrive
-  set  harddrive eject <boolean>
-  load harddrive <file>
-  save harddrive <*file>
+  info harddrive			unimplimented
+  set  harddrive eject <boolean>	unimplimented
+  load harddrive <file>			unimplimented
+  save harddrive <*file>		unimplimented
 
   info prom
-  load prom <file> <*offset=0>
-  save prom <file>
+  load prom <file>
 
   info   keyboard
   set    keyboard repeat     <boolean>
@@ -104,24 +106,30 @@ modes:
   set    keyboard interupt   <boolean>
   set    keyboard press <keycode>
   delete keyboard <index>
-  press  <keycode|string> <*mode:keycode|=string>
 
-  press <keycode|ascii string> <*format:keycode,string>
+  info  <mmu|ram>
+  set   <mmu|ram> <flag> <value>
+  set   mmu      slot0 <page>
+  set   mmu      slot1 <page>
+  set   mmu      slot2 <page>
+  set   mmu      slot3 <page>
+  write <mmu|ram> <address> <byte [byte...]>
+  read  <mmu|ram> <address> <*count=0xa0> <*format:addr,byte>
+  save  <mmu|ram> <address> <file> <*count=-1> <*offset=0>
+  load  <mmu|ram> <address> <file> <*count=-1> <*offset=0>
 
-  info    <mmu|ram>
-  set     <mmu|ram> <flag> <value>
-  set      mmu      slot0 <page>
-  set      mmu      slot1 <page>
-  set      mmu      slot2 <page>
-  set      mmu      slot3 <page>
-  write   <mmu|ram> <address> <byte [byte...]>
-  print   <mmu|ram> <address> <*format:addr,byte>
-  display <mmu|ram> <address> <*count=0xa0> <*format:addr,byte>
-  save    <mmu|ram> <address> <file> <*count=-1> <*offset=0>
-  load    <mmu|ram> <address> <file> <*count=-1> <*offset=0>
-
-  info log
-  set  log <display|cpu|keyboard|ram|mmu|floppy|harddrive|advantage|all> <terse|verbose|debug|warning|error|fatal|none>
+  info log				unimplimented
+  set  log display   <loglevel>
+  set  log cpu       <loglevel>
+  set  log keyboard  <loglevel>
+  set  log ram       <loglevel>
+  set  log mmu       <loglevel>
+  set  log floppy    <loglevel>
+  set  log harddrive <loglevel>
+  set  log advantage <loglevel>
+  set  log io        <loglevel>
+  set  log nsae      <loglevel>
+  set  log all       <loglevel>
   set  log logfile <file>
 
 fifo is the path to a named pipe to which nsaectrl can talk with nsae

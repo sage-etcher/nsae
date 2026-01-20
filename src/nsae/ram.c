@@ -76,6 +76,67 @@ ram_load_prom_from_file (ram_t *self, char *file)
     return 0;
 }
 
+int
+ram_save_disk (ram_t *self, uint32_t addr, uint32_t n, const char *file)
+{
+    FILE *fp = NULL;
+
+    assert (self != NULL);
+    assert (file != NULL);
+
+    log_verbose ("nsae: ram: saving 0x%5x bytes of ram 0x%05x to file %s\n", 
+            n, addr, file);
+
+    fp = fopen (file, "wb+");
+    if (fp == NULL)
+    {
+        log_error ("nsae: ram: failed to open binary file -- %s\n", file);
+        return 1;
+    }
+
+    while (n > 0)
+    {
+        assert (addr < RAM_SIZE);
+        fputc (self->m[addr++], fp);
+        n--;
+    }
+
+    fclose (fp);
+    return 0;
+}
+
+int
+ram_load_disk (ram_t *self, uint32_t addr, const char *file, uint32_t n)
+{
+    FILE *fp = NULL;
+    int c = 0;
+
+    assert (self != NULL);
+    assert (file != NULL);
+
+    log_verbose ("nsae: ram: loading ram 0x%05x from file %s\n", addr, file);
+
+    fp = fopen (file, "rb");
+    if (fp == NULL)
+    {
+        log_error ("nsae: ram: failed to open binary file -- %s\n", file);
+        return 1;
+    }
+
+    while ((c = fgetc (fp)) != EOF)
+    {
+        assert (addr < RAM_SIZE);
+        assert ((0 <= c) && (c < 256));
+
+        if (n-- == 0) break;
+
+        self->m[addr++] = (uint8_t)c;
+    }
+
+    fclose (fp);
+    return 0;
+}
+
 uint8_t
 ram_read (ram_t *self, uint32_t addr)
 {

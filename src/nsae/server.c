@@ -28,6 +28,7 @@ server_handle_ipc (nsae_t *self)
     nsae_packet_t *packet = NULL;
     char *file = NULL;
     size_t file_len = 0;
+    uint32_t abs_address = 0;
 
     /* poll packet_size */
     rc = nsae_ipc_recieve (&packet_size, sizeof (size_t));
@@ -73,6 +74,11 @@ server_handle_ipc (nsae_t *self)
         self->step = false;
         self->pause = false;
         self->resuming = true;
+        break;
+
+    case CMD_PAUSE:
+        log_verbose ("nsae: server: pause\n");
+        self->pause = false;
         break;
 
     case CMD_STEP:
@@ -352,7 +358,7 @@ server_handle_ipc (nsae_t *self)
 
         case VAR_CRT_INVERTED:
             log_verbose ("crt.inverted %02x\n", packet->v_data32);
-            self->adv.crt.inverted = (packet->v_data32 > 1);
+            self->adv.crt.inverted = (packet->v_data32 > 0);
             break;
 
         case VAR_CRT_SCROLL:
@@ -525,7 +531,6 @@ server_handle_ipc (nsae_t *self)
             g_log_categories[LC_WATCHPOINTS] = packet->v_data32;
             break;
 
-
         case VAR_LOG_ALL:
             log_verbose ("log.all %1d\n", packet->v_data32);
             memset (g_log_categories, packet->v_data32, g_log_categories_count);
@@ -540,7 +545,6 @@ server_handle_ipc (nsae_t *self)
                 log_error ("nsae: server: cannot open -- %s\n", file);
             }
             break;
-
         }
         break;
 
@@ -559,15 +563,18 @@ server_handle_ipc (nsae_t *self)
 
         case MODE_RAM:
             log_verbose ("ram\n");
+            ram_load_disk (&self->adv.ram, packet->v_addr32, file, -1);
             break;
 
         case MODE_MMU:
             log_verbose ("mmu\n");
+            abs_address = mmu_decode (&self->adv.mmu, packet->v_addr32);
+            ram_load_disk (&self->adv.ram, abs_address, file, -1);
             break;
 
         case MODE_PROM:
             log_verbose ("prom %s\n", file);
-            ram_load_prom_from_file (&self->adv.ram, file);
+            ram_load_disk (&self->adv.ram, RAM_BASE_PROM, file, RAM_PROM_SIZE);
             break;
         }
         break;
@@ -587,10 +594,13 @@ server_handle_ipc (nsae_t *self)
 
         case MODE_RAM:
             log_verbose ("ram\n");
+            ram_save_disk (&self->adv.ram, packet->v_addr32, packet->v_count, file);
             break;
 
         case MODE_MMU:
             log_verbose ("mmu\n");
+            abs_address = mmu_decode (&self->adv.mmu, packet->v_addr32);
+            ram_save_disk (&self->adv.ram, abs_address, packet->v_count, file);
             break;
         }
         break;
@@ -600,16 +610,14 @@ server_handle_ipc (nsae_t *self)
         switch (packet->mode)
         {
         case MODE_RAM:
-            log_verbose ("ram %05zu %05zu\n", packet->v_addr32, packet->v_data32);
-            ram_inspect (&self->adv.ram, packet->v_addr32, packet->v_data32);
+            log_verbose ("ram %05zu %05zu\n", packet->v_addr32, packet->v_count);
+            ram_inspect (&self->adv.ram, packet->v_addr32, packet->v_count);
             break;
 
         case MODE_MMU:
-            log_verbose ("mmu %04zu %05zu\n", packet->v_addr32, packet->v_data32);
-            ram_inspect (
-                    &self->adv.ram,
-                    mmu_decode (&self->adv.mmu, packet->v_addr32), 
-                    packet->v_data32);
+            log_verbose ("mmu %04zu %05zu\n", packet->v_addr32, packet->v_count);
+            abs_address = mmu_decode (&self->adv.mmu, packet->v_addr32);
+            ram_inspect (&self->adv.ram, abs_address, packet->v_count);
             break;
         }
         break;
@@ -619,13 +627,13 @@ server_handle_ipc (nsae_t *self)
         switch (packet->mode)
         {
         case MODE_RAM:
-            log_verbose ("ram %05zu %02u\n", packet->v_addr32, packet->v_data8);
-            ram_write (&self->adv.ram, packet->v_addr32, packet->v_data8);
+            log_verbose ("ram %05zu %02u\n", packet->v_addr32, packet->v_data32);
+            ram_write (&self->adv.ram, packet->v_addr32, packet->v_data32);
             break;
 
         case MODE_MMU:
-            log_verbose ("mmu %05zu %02u\n", packet->v_addr32, packet->v_data8);
-            mmu_write (&self->adv.mmu, packet->v_addr32, packet->v_data8);
+            log_verbose ("mmu %05zu %02u\n", packet->v_addr32, packet->v_data32);
+            mmu_write (&self->adv.mmu, packet->v_addr32, packet->v_data32);
             break;
         }
         break;

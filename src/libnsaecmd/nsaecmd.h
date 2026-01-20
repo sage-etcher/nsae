@@ -32,24 +32,26 @@ typedef struct {
         uint32_t u32;
         uint16_t u16[2];
         uint8_t u8[4];
-    } a;
-    union {
-        uint32_t u32;
+    } a; 
+    union { uint32_t u32;
         uint16_t u16[2];
         uint8_t u8[4];
     } b;
+    union { uint32_t u32;
+        uint16_t u16[2];
+        uint8_t u8[4];
+    } c;
     uint8_t buf[];
 } nsae_packet_t;
 
 /* virtual union */
-#define v_data32    a.u32       /* 0 - 3    */
-#define v_addr32    a.u32       /* 0 - 3    */
+#define v_addr32    a.u32       /* 0 1 2 3 */
+#define v_index     a.u32       /* 0 1 2 3 */
 
-#define v_data8     b.u8[0]     /* 4 */
-#define v_format    b.u8[1]     /* 5 */
-#define v_fddrive   b.u8[1]     /* 5 */
-#define v_index     b.u16[1]    /* 6 - 7 */
-#define v_count     b.u16[1]    /* 6 - 7 */
+#define v_data32    b.u32       /* 4 5 6 7 */
+#define v_count     b.u32       /* 4 5 6 7 */
+
+#define v_fddrive   c.u8[0]     /* 8       */
 
 
 /* cmd types */
@@ -57,15 +59,19 @@ typedef enum {
     CMD_NULL,
     CMD_QUIT,
     CMD_RUN,
+    CMD_PAUSE,
     CMD_STEP,
     CMD_NEXT,
     CMD_INFO,
-    CMD_SET,
-    CMD_DELETE,
-    CMD_LOAD,
-    CMD_SAVE,
-    CMD_READ,
-    CMD_WRITE,
+    CMD_SET,    /* mode, var,            v_data32 */
+                /* mode, var,                                  buf */
+    CMD_DELETE, /* mode,      v_index */
+    CMD_LOAD,   /* mode,                            v_fddrive, buf */
+                /* mode,      v_addr32,  v_count32,            buf */
+    CMD_SAVE,   /* " */
+    CMD_READ,   /* mode,      v_addr32,  v_count32, v_fddrive */
+                /* mode,      v_addr32,  v_count32 */
+    CMD_WRITE,  /* mode,      v_addr32,  v_data32  */
     CMD_IMP_BASE,
 } nsae_cmd_t;
 
