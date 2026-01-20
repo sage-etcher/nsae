@@ -1,15 +1,4 @@
-Usage: nsaectl [-f fifo] [-htvV] (adv_in <port> | adv_out <port> <data> |
-           adv_status | br_list | br_remove <pc_address> |
-           br_set <pc_address> | continue | cpu_state | crt_state | exit |
-           fd_blkread <fd_num> <side> <track> <sector> | fd_eject <fd_num> |
-           fd_load <fd_num> <file> | fd_save <fd_num> <file> | fd_status |
-           hd_eject | hd_load <file> | hd_save <file> | hd_status |
-           kb_caps <state> | kb_cursor <state> | kb_data <state> |
-           kb_interupt <state> | kb_overflow <state> | kb_push <keycode> |
-           kb_pop | mmu_load <slot> <page> | mmu_read <addr> <n> | mmu_status |
-           mmu_write <addr> <data> | io_status | pause | prom_load <file> |
-           ram_read <abs_addr> <n> | ram_write <abs_addr> <data> | restart |
-           run | status | step)
+Usage: nsaectl [-f fifo] [-htvV] <mode> [modearg [modearg...]]
 
 options:
   -f fifo  specify an alternate fifo for sending data to the server.
@@ -41,8 +30,8 @@ modes:
   set  advantage interupt <boolean>
   set  advantage cmdack   <boolean>
 
-  set port <port> <byte>	unimplimented
-  read port <port>		unimplimented
+  set port out <port> <byte>	unimplimented
+  set port in  <port>		unimplimented
 
   info cpu
   set  cpu a <word>

@@ -47,6 +47,7 @@ typedef struct {
 /* virtual union */
 #define v_addr32    a.u32       /* 0 1 2 3 */
 #define v_index     a.u32       /* 0 1 2 3 */
+#define v_port      a.u8[0]     /* 0       */
 
 #define v_data32    b.u32       /* 4 5 6 7 */
 #define v_count     b.u32       /* 4 5 6 7 */
@@ -88,10 +89,10 @@ typedef enum {
     MODE_LOG  = 0x0100,
     MODE_MMU  = 0x0200,
     MODE_NSAE = 0x0400,
+    MODE_PORT = 0x0800,
     MODE_PROM = 0x0800,
     MODE_RAM  = 0x1000,
     MODE_WP   = 0x2000,
-    MODE_ALL  = 0x4000,
 } nsae_mode_t;
 
 typedef enum {
@@ -104,7 +105,8 @@ typedef enum {
     VAR_ADV_INTERUPT,
     VAR_ADV_CMDACK,
 
-    // VAR_PORT,
+    VAR_PORT_OUT,
+    VAR_PORT_IN,
 
     VAR_CPU_A,
     VAR_CPU_BC,

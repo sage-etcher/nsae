@@ -78,7 +78,7 @@ server_handle_ipc (nsae_t *self)
 
     case CMD_PAUSE:
         log_verbose ("nsae: server: pause\n");
-        self->pause = false;
+        self->pause = true;
         break;
 
     case CMD_STEP:
@@ -222,6 +222,16 @@ server_handle_ipc (nsae_t *self)
             self->adv.cmd_ack = (packet->v_data32 > 0);
             break;
 
+        case VAR_PORT_OUT:
+            log_verbose ("port.out %02x %02x\n", packet->v_port, packet->v_data32);
+            adv_out (&self->adv, packet->v_port, packet->v_data32, 0x0000);
+            break;
+
+        case VAR_PORT_IN:
+            log_verbose ("port.in %02x\n", packet->v_port);
+            adv_in (&self->adv, packet->v_port, 0x0000);
+            break;
+
         case VAR_CPU_A:
             log_verbose ("cpu.a %02x\n", packet->v_data32);
             self->adv.cpu.state.registers.byte[Z80_A] = (packet->v_data32 & 0xff);
@@ -243,7 +253,7 @@ server_handle_ipc (nsae_t *self)
             break;
 
         case VAR_CPU_PC:
-            log_verbose ("cpu.pc %04x\n", packet->v_data32);
+            log_verbose ("cpu.pc %04x %x\n", packet->v_data32);
             self->adv.cpu.state.pc = (packet->v_data32 & 0xffff);
             break;
 
@@ -641,41 +651,5 @@ server_handle_ipc (nsae_t *self)
 
     return 0;
 }
-#if 0
-
-    case NSAE_CMD_LOG_MOBO:
-        log_verbose ("nsae: server: log_mobo %d\n", packet->v_state);
-        log_set_cat (LC_ADV, packet->v_state);
-        break;
-
-
-    /* floppy */
-    case NSAE_CMD_FD_BLK_READ:
-        log_verbose ("nsae: server: fd_blkdread %d %d %d %d\n", 
-                packet->v_fd_num, 
-                packet->v_fd_side, 
-                packet->v_fd_track, 
-                packet->v_fd_sector);
-        break;
-
-    /* harddisk */
-    /* system advantage */
-    case NSAE_CMD_ADV_OUT:
-        log_verbose ("nsae: server: adv_out %02x %02x\n", 
-                packet->v_port, packet->v_data);
-        adv_out (&self->adv, packet->v_port, packet->v_data, 0x0000);
-        break;
-
-    case NSAE_CMD_ADV_IN:
-        log_verbose ("nsae: server: adv_in %02x\n", packet->v_port);
-        log_info ("port (%02x): %02x\n", packet->v_port, 
-                adv_in (&self->adv, packet->v_port, 0x00000));
-        break;
-
-    return 0;
-}
-
-#endif
-
 
 /* end of file */

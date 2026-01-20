@@ -97,7 +97,6 @@ static const struct cmd_entry CMD_LIST[] = {
 static const struct mode_entry MODE_LIST[] = {
     /* {{{ */
     { "advantage",  "ad", MODE_ADV  },
-    { "all",        "al", MODE_ALL  },
     { "breakpoint", "b",  MODE_BR   },
     { "cpu",        "c",  MODE_CPU  },
     { "display",    "d",  MODE_CRT  },
@@ -107,7 +106,8 @@ static const struct mode_entry MODE_LIST[] = {
     { "log",        "l",  MODE_LOG  },
     { "mmu",        "m",  MODE_MMU  },
     { "nsae",       "n",  MODE_NSAE },
-    { "prom",       "p",  MODE_PROM },
+    { "port",       "po", MODE_PORT },
+    { "prom",       "pr", MODE_PROM },
     { "ram",        "r",  MODE_RAM  },
     /* }}} */
 };
@@ -122,7 +122,8 @@ static const struct var_entry SET_LIST[] = {
     { MODE_ADV, "interupt",   "i",   VAR_ADV_INTERUPT },
     { MODE_ADV, "cmdack",     "cm",  VAR_ADV_CMDACK },
 
-    // { MODE_PORT, "", VAR_ADVANTAGE_CMDACK },
+    { MODE_PORT, "out",       "o",   VAR_PORT_OUT },
+    { MODE_PORT, "in",        "i",   VAR_PORT_IN },
 
     { MODE_CPU, "a",          NULL, VAR_CPU_A },
     { MODE_CPU, "bc",         NULL, VAR_CPU_BC },
@@ -503,7 +504,12 @@ send (int argc, char **argv)
             }
 
             packet.var = SET_LIST[i].set_id;
+            if (packet.var == VAR_PORT_OUT)
+            {
+                packet.v_port = strtol (ARG_POP (), NULL, 0);
+            }
             packet.v_data32 = strtol (ARG_POP (), NULL, 0);
+
             nsae_ipc_send (&packet, sizeof (packet));
             break;
         }

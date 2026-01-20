@@ -29,7 +29,7 @@ do
     for cmd in "${cmd_arr[@]}"; do
         # custom commands
         case "$cmd" in
-            quit)
+            exit)
                 run_flag=false
                 break
                 ;;
