@@ -24,7 +24,7 @@ typedef struct {
     bool accepts_allcaps;
     bool accepts_cursorlock;
     uint8_t keycodes[KC_STATE_COUNT];
-} key_t;
+} nskey_t;
 
 struct sc_map_64v kbmap_init (void);
 void kbmap_free (struct sc_map_64v *self);
