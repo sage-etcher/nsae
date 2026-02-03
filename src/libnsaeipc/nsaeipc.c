@@ -71,7 +71,7 @@ nsae_ipc_init (int mode, char *custom_client, char *custom_server)
     {
     case NSAE_IPC_SERVER:
         s_client_fd = open_fifo (s_client_fifo, O_WRONLY, O_RDONLY);
-        s_server_fd = open (s_server_fifo, O_RDONLY | O_NONBLOCK);
+        s_server_fd = open_fifo (s_server_fifo, O_RDONLY | O_NONBLOCK, O_WRONLY);
         s_send    = &s_client_fd;
         s_recieve = &s_server_fd;
         break;
