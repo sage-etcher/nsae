@@ -35,6 +35,7 @@ adv_init (adv_t *self)
     //rc |= io_init (&self->io);
     rc |= kb_init (&self->kb);
     rc |= speaker_init (&self->speaker);
+    speaker_start (&self->speaker);
 
     /* initialize ram */
     rc |= ram_init (&self->ram, EMBED_PROM, EMBED_PROM_LEN);
@@ -381,6 +382,11 @@ adv_out (adv_t *self, uint8_t port, uint8_t data, uint16_t pc)
         self->crt_mi = (data >> 7) & 0x01;
 
         /* bit 6 speaker data */
+        if (((data ^ self->ctrl_reg) >> 6) & 0x01)
+        {
+            speaker_toggle (&self->speaker, event_time_new (0, 0));
+        }
+
         /* bit 5 blank display */
         self->crt.blank = (data >> 5) & 0x01;
 

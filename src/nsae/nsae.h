@@ -41,6 +41,8 @@ typedef struct {
     uint64_t fps_time;
     uint32_t fps_count;
     uint32_t fps;
+
+    int frame_number;
 } nsae_t;
 
 int nsae_start (nsae_t *self, int *p_argc, char **argv);

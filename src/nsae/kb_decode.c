@@ -14,7 +14,7 @@ struct sc_map_64v
 kbmap_init (void)
 {
     struct sc_map_64v map;
-    static struct { int key; key_t value; } s_keymap_data[] = {
+    static struct { int key; nskey_t value; } s_keymap_data[] = {
         { .key = GLFW_KEY_TAB,           .value = { false, false, false, { 0x09, 0x09, 0x09, 0x09, 0x00 } } }, /* tab       */
         { .key = GLFW_KEY_ENTER,         .value = { false, false, false, { 0x0d, 0x0d, 0x0d, 0x0d, 0x00 } } }, /* return    */
         { .key = GLFW_KEY_ESCAPE,        .value = { false, false, false, { 0x1b, 0x1b, 0x1b, 0x1b, 0x00 } } }, /* esc       */
@@ -122,7 +122,7 @@ int
 kbmap_decode (struct sc_map_64v *self, int key, int mods)
 {
     /* get match */
-    key_t *p_keycode = NULL;
+    nskey_t *p_keycode = NULL;
     bool match = sc_map_get_64v (self, key, (void **)&p_keycode);
     if (!match) return -1;
 

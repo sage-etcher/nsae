@@ -14,12 +14,16 @@ extern "c" {
 
 typedef struct {
     Z80_STATE state;
+    int speed_hz;
+    int cycles_per_frame;
+
+    int elapsed_cycles;
 } cpu_t;
 
-int cpu_init (cpu_t *self);
+int  cpu_init  (cpu_t *self);
 void cpu_reset (cpu_t *self);
-int cpu_run (cpu_t *self, int cycles, void *cb_data);
-int cpu_step (cpu_t *self, void *cb_data);
+int  cpu_run   (cpu_t *self, int cycles, void *cb_data);
+int  cpu_step  (cpu_t *self, void *cb_data);
 
 void cpu_status (cpu_t *self, mmu_t *mmu);
 

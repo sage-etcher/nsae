@@ -266,8 +266,8 @@ nsae_update (GLFWwindow *win)
     if (self->pause) return;
 
     unsigned long CPU_HZ = 4000000; /* 4MHz */
-    unsigned long cycles = self->cycle_multiplier * (CPU_HZ / self->max_fps) ;
-    unsigned long i = 0;
+    unsigned long cycles = self->cycle_multiplier * (CPU_HZ / self->max_fps);
+    unsigned long i = 0; /* NOLINT */
 
     if (self->step)
     {
@@ -275,11 +275,17 @@ nsae_update (GLFWwindow *win)
         self->pause = true;
     }
 
+    adv->speaker.pause = false;
+    speaker_set_cpu_speed (&adv->speaker, CPU_HZ, cycles);
+
     i += adv_run (adv, cycles, self);
     if (self->pause)
     {
         cpu_status (&adv->cpu, &adv->mmu);
+        adv->speaker.pause = true;
     }
+
+    self->frame_number++;
 }
 
 static void

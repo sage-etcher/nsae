@@ -103,9 +103,10 @@ extern "C" {
 
 #define NSAE_CTX ((nsae_t *)context)
 #define BR_CTX ((breakpoints_t *)&NSAE_CTX->br)
+#define WP_CTX ((watchpoints_t *)&NSAE_CTX->wp)
 #define ADV_CTX ((adv_t *)&NSAE_CTX->adv)
 #define MMU_CTX ((mmu_t *)&ADV_CTX->mmu)
-#define WP_CTX ((watchpoints_t *)&NSAE_CTX->wp)
+#define CPU_CTX ((cpu_t *)&ADV_CTX->cpu)
 
 #define Z80_READ_BYTE(address, x)                                       \
 {                                                                       \
@@ -177,6 +178,8 @@ extern "C" {
 #define Z80_OUTPUT_BYTE(port, x)                                        \
 {                                                                       \
         assert (context != NULL);                                       \
+        CPU_CTX->elapsed_cycles = elapsed_cycles;                       \
+                                                                        \
         adv_out (ADV_CTX, port, x, pc);                                 \
 }
 

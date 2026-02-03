@@ -74,11 +74,13 @@ server_handle_ipc (nsae_t *self)
         self->step = false;
         self->pause = false;
         self->resuming = true;
+        self->adv.speaker.pause = false;
         break;
 
     case CMD_PAUSE:
         log_verbose ("nsae: server: pause\n");
         self->pause = true;
+        self->adv.speaker.pause = true;
         break;
 
     case CMD_STEP:
@@ -86,6 +88,7 @@ server_handle_ipc (nsae_t *self)
         self->step = true;
         self->pause = false;
         self->resuming = true;
+        self->adv.speaker.pause = false;
         break;
 
     case CMD_NEXT:
