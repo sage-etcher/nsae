@@ -273,16 +273,16 @@ nsae_update (GLFWwindow *win)
     {
         cycles = 1;
         self->pause = true;
-        speaker_start (&adv->speaker);
     }
 
+    adv->speaker.paused = false;
     speaker_set_cpu_speed (&adv->speaker, CPU_HZ, cycles);
 
     i += adv_run (adv, cycles, self);
     if (self->pause)
     {
         cpu_status (&adv->cpu, &adv->mmu);
-        speaker_stop (&adv->speaker);
+        adv->speaker.paused = true;
     }
 
     self->frame_number++;

@@ -23,6 +23,7 @@ typedef struct {
     event_timeline_t transitions;
     size_t transition_index;
 
+    int paused;
     int last_state;
     event_time_t time; 
 } speaker_t;

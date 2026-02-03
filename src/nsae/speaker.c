@@ -22,6 +22,7 @@ typedef struct { float quot, rem; } fdiv_t;
 fdiv_t fdiv (float x, float y);
 
 static event_time_t event_time_cmp (event_time_t x, event_time_t y);
+static int event_time_less_than (event_time_t x, event_time_t y);
 static int event_time_in_range (event_time_t x, event_time_t y, 
         event_time_t range);
 
@@ -73,10 +74,10 @@ event_time_cmp (event_time_t x, event_time_t y)
     event_time_t result = event_time_new (0, 0);
 
     /* handle carry */
-    if (x.cycle < y.cycle)
+    if (x.frame < y.frame)
     {
-        carry.frame = -1;
-        carry.cycle = s_cycles_run;
+        carry.frame = 1;
+        carry.cycle = -s_cycles_run;
     }
 
     /* calculate result */
@@ -88,17 +89,30 @@ event_time_cmp (event_time_t x, event_time_t y)
 }
 
 static int
+event_time_less_than (event_time_t x, event_time_t y)
+{
+    /* {{{ */
+    if (x.frame > y.frame) { return 0; }
+
+    if (x.frame < y.frame) { return 1; }
+    if (x.cycle < y.cycle) { return 1; }
+
+    return 0;
+    /* }}} */
+}
+
+static int
 event_time_in_range (event_time_t x, event_time_t y, event_time_t range)
 {
     /* {{{ */
     event_time_t diff = event_time_cmp (x, y);
     
-    if ((diff.frame < 0) || (diff.frame > range.frame))
+    if ((diff.frame > 0) || (diff.frame < -range.frame))
     {
         return 0;
     }
 
-    if ((diff.cycle < 0) || (diff.cycle > range.cycle))
+    if ((diff.cycle > 0) || (diff.cycle < -range.cycle))
     {
         return 0;
     }
@@ -119,6 +133,7 @@ speaker_init (speaker_t *self)
     self->last_state = 0;
     self->time = event_time_new (0, 0);
     self->stream = NULL;
+    self->paused = 1;
 
     self->transition_index = 0;
     DA_INIT (self->transitions, event_time_t);
@@ -207,6 +222,9 @@ speaker_toggle (speaker_t *self, event_time_t event_time)
     event_time_t diff = event_time_new (0, 0);
 
     assert (self != NULL);
+    
+    da_pop_front ((da_void_t *)&self->transitions, (int)self->transition_index);
+    self->transition_index = 0;
 
     da_resize ((da_void_t *)&self->transitions, 1);
     
@@ -276,18 +294,13 @@ speaker_callback (const void *input_buffer, void *output_buffer, /* NOLINT */
     (void)input_buffer;
 
     speaker_generate_buffer (self, frames_per_buffer);
-
     for (i = 0; i < frames_per_buffer; i++)
     {
-        /* limit amplitude to -1.0 to 1.0 */
+        /* bind amplitude to -1.0 to 1.0 */
         amplitude = fminf (1.F, fmaxf (-1.F, self->buffer[i]));
-        output = (amplitude * 0.5 + 0.5) * UINT8_MAX;
-        //printf ("% 6.4f % 6.4f % 4d\n", self->buffer[i], amplitude, output);
-        if (output != 0)
-        {
-            printf ("% 6.4f % 6.4f % 4d\n", self->buffer[i], amplitude, output);
-        }
 
+        /* calculate final value */
+        output = (amplitude * 0.5 + 0.5) * UINT8_MAX;
 
         *out++ = output;
     }
@@ -304,14 +317,26 @@ speaker_generate_amplitude (speaker_t *self)
     event_time_t *transition = NULL;
     const event_time_t RANGE = { .frame = 0, .cycle = s_cycles_per_frame };
 
-    for (i = self->transition_index; i < self->transitions.count; i++)
+    /* if paused dont output audio */
+    if (self->paused)
     {
-        transition = &self->transitions.m[i];
+        return -1.F;
+    }
 
-        /* break on the first non-match */
-        //printf ("try:   %8f %8d @ %8f %8d\n", 
-        //        transition->cycle, transition->frame,
-        //        self->time.cycle, self->time.frame);
+    /* allow speaker to fall back if emulator is running slow */
+    if (self->transition_index < self->transitions.count)
+    {
+        transition = &self->transitions.m[self->transition_index];
+
+        if (event_time_less_than (*transition, self->time))
+        {
+            self->time = *transition;
+        }
+    }
+
+    while (self->transition_index < self->transitions.count)
+    {
+        transition = &self->transitions.m[self->transition_index];
 
         if (!event_time_in_range (self->time, *transition, RANGE)) 
         {
@@ -320,10 +345,9 @@ speaker_generate_amplitude (speaker_t *self)
 
         //printf ("match: %8f %8d\n", transition->cycle, transition->frame);
         self->last_state ^= 1;
+        self->transition_index++;
     }
 
-    self->transition_index = i;
-    
     return ((self->last_state) ? 1.F : -1.F);
     /* }}} */
 }
@@ -335,23 +359,25 @@ speaker_generate_buffer (speaker_t *self, unsigned long n)
     unsigned long i = 0;
     fdiv_t result = { 0 };
 
-    self->transition_index = 0;
     for (i = 0; i < n; i++)
     {
+        /* generate one */
         self->buffer[i] = speaker_generate_amplitude (self);
 
         /* increment time */
-        self->time.cycle += s_cycles_per_frame;
-
-        result = fdiv (self->time.cycle, s_cycles_run);
-        if (result.quot > 0)
+        if (!self->paused)
         {
-            self->time.cycle  = result.rem;
-            self->time.frame += (int)result.quot;
+            self->time.cycle += s_cycles_per_frame;
+
+            result = fdiv (self->time.cycle, s_cycles_run);
+            if (result.quot > 0)
+            {
+                self->time.cycle  = result.rem;
+                self->time.frame += (int)result.quot;
+            }
         }
     }
     
-    da_pop_front ((da_void_t *)&self->transitions, (int)self->transition_index);
     return;
     /* }}} */
 }

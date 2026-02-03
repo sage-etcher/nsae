@@ -36,7 +36,6 @@ adv_init (adv_t *self)
     rc |= kb_init (&self->kb);
     rc |= speaker_init (&self->speaker);
     speaker_start (&self->speaker);
-    speaker_beep (&self->speaker);
 
     /* initialize ram */
     rc |= ram_init (&self->ram, EMBED_PROM, EMBED_PROM_LEN);
