@@ -202,10 +202,13 @@ static const struct var_entry SET_LIST[] = {
 
 
 static void expect (int condition, const char *msg);
+static void send_packet (nsae_packet_t *packet, size_t n, char *custom_client, 
+        char *custom_server);
 
 static void version (void);
 static void usage (void);
-static int send (int argc, char **argv);
+static int send (int argc, char **argv, char *custom_client, 
+        char *custom_server);
 
 static char *deref_filepath (const char *src, size_t *ret_size);
 
@@ -230,6 +233,27 @@ expect (int condition, const char *msg)
         usage ();
         exit (EXIT_FAILURE);
     }
+}
+
+static void
+send_packet (nsae_packet_t *packet, size_t n, char *custom_client, 
+        char *custom_server)
+{
+    int rc = 0;
+
+    log_verbose ("nsaectl: openning connection to server\n");
+    rc = nsae_ipc_init (NSAE_IPC_CLIENT, custom_client, custom_server);
+    if (rc != 0)
+    {
+        log_fatal ("nsaectl: failed to initialize ipc\n");
+        exit (EXIT_FAILURE);
+    }
+
+    nsae_ipc_send ((void *)packet, n);
+
+    log_verbose ("nsaectl: closing connection to server\n");
+    nsae_ipc_free (NSAE_IPC_CLIENT);
+    return;
 }
 
 int
@@ -268,17 +292,8 @@ main (int argc, char **argv)
         exit (EXIT_FAILURE);
     }
 
-    /* setup ipc */
-    log_verbose ("nsaectl: openning connection to server\n");
-    rc = nsae_ipc_init (NSAE_IPC_CLIENT, custom_client, custom_server);
-    if (rc != 0)
-    {
-        log_fatal ("nsaectl: failed to initialize ipc\n");
-        exit (EXIT_FAILURE);
-    }
-
     /* send command */
-    if (send (argc, argv))
+    if (send (argc, argv, custom_client, custom_server))
     {
         log_error ("nsaectl: failed to send\n");
         goto exit;
@@ -288,9 +303,6 @@ main (int argc, char **argv)
 
     rc = 0; /* successful exit */
 exit:
-    log_verbose ("nsaectl: closing connection to server\n");
-    nsae_ipc_free (NSAE_IPC_CLIENT);
-
     log_quit ();
     return rc;
 }
@@ -428,7 +440,7 @@ early_exit:
 }
 
 static int 
-send (int argc, char **argv)
+send (int argc, char **argv, char *custom_client, char *custom_server)
 {
     size_t i = 0;
     char *cmd_name = NULL;
@@ -490,12 +502,12 @@ send (int argc, char **argv)
     case CMD_STEP:
     case CMD_NEXT:
     case CMD_INFO:
-        nsae_ipc_send (&packet, sizeof (packet));
+        send_packet (&packet, sizeof (packet), custom_client, custom_server);
         break;
 
     case CMD_DELETE:
         packet.v_index = (argc <= 0) ? 1 : strtol (ARG_POP (), NULL, 0);
-        nsae_ipc_send (&packet, sizeof (packet));
+        send_packet (&packet, sizeof (packet), custom_client, custom_server);
         break;
 
     case CMD_RUN:
@@ -505,11 +517,11 @@ send (int argc, char **argv)
             packet.mode = MODE_CPU;
             packet.var  = VAR_CPU_PC;
             packet.v_data32 = strtol (ARG_POP (), NULL, 0);
-            nsae_ipc_send (&packet, sizeof (packet));
+            send_packet (&packet, sizeof (packet), custom_client, custom_server);
         }
 
         packet.cmd = CMD_RUN;
-        nsae_ipc_send (&packet, sizeof (packet));
+        send_packet (&packet, sizeof (packet), custom_client, custom_server);
         break;
 
     case CMD_SET:
@@ -529,7 +541,7 @@ send (int argc, char **argv)
             }
             packet.v_data32 = strtol (ARG_POP (), NULL, 0);
 
-            nsae_ipc_send (&packet, sizeof (packet));
+            send_packet (&packet, sizeof (packet), custom_client, custom_server);
             break;
         }
 
@@ -570,7 +582,7 @@ send (int argc, char **argv)
 
         memcpy (heap_packet, &packet, sizeof (packet));
         memcpy (heap_packet->buf, stmp, stmp_len);
-        nsae_ipc_send (heap_packet, heap_packet_size);
+        send_packet (heap_packet, heap_packet_size, custom_client, custom_server);
 
         free (stmp);
         stmp = NULL;
@@ -603,7 +615,7 @@ send (int argc, char **argv)
         }
 
         packet.v_count = (argc <= 0) ? 0x100 : strtol (ARG_POP (), NULL, 0);
-        nsae_ipc_send (&packet, sizeof (packet));
+        send_packet (&packet, sizeof (packet), custom_client, custom_server);
         break;
 
     case CMD_WRITE:
@@ -613,7 +625,7 @@ send (int argc, char **argv)
         /* send data */
         do {
             packet.v_data32 = strtol (ARG_POP (), NULL, 0);
-            nsae_ipc_send (&packet, sizeof (packet));
+            send_packet (&packet, sizeof (packet), custom_client, custom_server);
 
             packet.v_addr32++;
         } while (argc > 0);
@@ -622,34 +634,34 @@ send (int argc, char **argv)
 
     case CMD_IMP_RESET:
         packet.cmd = CMD_PAUSE;
-        nsae_ipc_send (&packet, sizeof (packet));
+        send_packet (&packet, sizeof (packet), custom_client, custom_server);
 
         packet.cmd  = CMD_SET;
         packet.mode = MODE_MMU;
         packet.var  = VAR_MMU_SLOT0;
         packet.v_data32 = 0x8;
-        nsae_ipc_send (&packet, sizeof (packet));
+        send_packet (&packet, sizeof (packet), custom_client, custom_server);
 
         packet.var = VAR_MMU_SLOT1;
         packet.v_data32 = 0x9;
-        nsae_ipc_send (&packet, sizeof (packet));
+        send_packet (&packet, sizeof (packet), custom_client, custom_server);
 
         packet.var = VAR_MMU_SLOT2;
         packet.v_data32 = 0xc;
-        nsae_ipc_send (&packet, sizeof (packet));
+        send_packet (&packet, sizeof (packet), custom_client, custom_server);
 
         packet.var = VAR_MMU_SLOT3;
         packet.v_data32 = 0x0;
-        nsae_ipc_send (&packet, sizeof (packet));
+        send_packet (&packet, sizeof (packet), custom_client, custom_server);
 
         packet.cmd  = CMD_SET;
         packet.mode = MODE_CPU;
         packet.var  = VAR_CPU_PC;
         packet.v_data32 = 0x8000;
-        nsae_ipc_send (&packet, sizeof (packet));
+        send_packet (&packet, sizeof (packet), custom_client, custom_server);
 
         packet.cmd = CMD_RUN;
-        nsae_ipc_send (&packet, sizeof (packet));
+        send_packet (&packet, sizeof (packet), custom_client, custom_server);
         break;
 
     case CMD_IMP_BREAK:
@@ -657,7 +669,7 @@ send (int argc, char **argv)
         packet.mode   = MODE_BR;
         packet.var    = VAR_BR_APPEND;
         packet.v_data32 = strtol (ARG_POP (), NULL, 0);
-        nsae_ipc_send (&packet, sizeof (packet));
+        send_packet (&packet, sizeof (packet), custom_client, custom_server);
         break;
 
     case CMD_IMP_PRESS:
@@ -677,14 +689,14 @@ send (int argc, char **argv)
         if ((input_format == NULL) || (0 == strcmp (input_format, "keycode")))
         {
             packet.v_data32 = strtol (stmp, NULL, 0);
-            nsae_ipc_send (&packet, sizeof (packet));
+            send_packet (&packet, sizeof (packet), custom_client, custom_server);
         }
         else if (0 == strcmp (input_format, "string"))
         {
             for (; *stmp; stmp++)
             {
                 packet.v_data32 = *stmp;
-                nsae_ipc_send (&packet, sizeof (packet));
+                send_packet (&packet, sizeof (packet), custom_client, custom_server);
             }
         }
         else
