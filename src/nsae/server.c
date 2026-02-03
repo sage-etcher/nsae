@@ -155,6 +155,11 @@ server_handle_ipc (nsae_t *self)
             mmu_status (&self->adv.mmu);
             break;
 
+        case MODE_SPEAKER:
+            log_verbose ("speaker\n");
+            speaker_status (&self->adv.speaker);
+            break;
+
         case MODE_NSAE:
             log_verbose ("nsae\n");
             nsae_status (self);
@@ -486,6 +491,11 @@ server_handle_ipc (nsae_t *self)
         case VAR_MMU_SLOT3:
             log_verbose ("mmu.slot3 %02x\n", packet->v_data32);
             mmu_load_page (&self->adv.mmu, 3, packet->v_data32); 
+            break;
+
+        case VAR_SPEAKER_VOLUME:
+            log_verbose ("speaker.volume %03d\n", packet->v_data32);
+            self->adv.speaker.volume_level = (float)packet->v_data32;
             break;
 
         case VAR_LOG_CRT:

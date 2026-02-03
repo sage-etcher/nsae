@@ -3,7 +3,6 @@
 #include "audio.h"
 
 #include <math.h>
-#include <stdio.h>
 
 
 float

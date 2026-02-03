@@ -1,9 +1,10 @@
 
-
+#define LOG_CATEGORY LC_SPEAKER
 #include "speaker.h"
 
 #include "audio.h"
 #include "cpu.h"
+#include "nslog.h"
 #include "darray.h"
 
 #include <portaudio.h>
@@ -147,7 +148,7 @@ speaker_init (speaker_t *self)
     err = Pa_Initialize ();
     if (err != paNoError) 
     { 
-        (void)fprintf (stderr, "cannot initialize portaudio\n");
+        log_error ("nsae: speaker: cannot initialize portaudio\n");
         return 1; 
     }
 
@@ -163,7 +164,7 @@ speaker_init (speaker_t *self)
 
     if (err != paNoError) 
     {
-        (void)fprintf (stderr, "cannot open stream\n");
+        log_error ("nsae: speaker: cannot open stream\n");
         speaker_destroy (self);
         return 1;
     }
@@ -181,7 +182,7 @@ speaker_start (speaker_t *self)
     err = Pa_StartStream (self->stream);
     if (err != paNoError)
     {
-        (void)fprintf (stderr, "cannot start stream\n");
+        log_error ("nsae: speaker: cannot start stream\n");
         return 1;
     }
 
@@ -198,7 +199,7 @@ speaker_stop (speaker_t *self)
     err = Pa_StopStream (self->stream);
     if (err != paNoError)
     {
-        (void)fprintf (stderr, "cannot stop stream\n");
+        log_error ("nsae: speaker: cannot stop stream\n");
         return 1;
     }
 
@@ -313,8 +314,6 @@ speaker_callback (const void *input_buffer, void *output_buffer, /* NOLINT */
 
         /* calculate final value */
         output = amplitude * UINT8_MAX;
-        //printf ("output: %3u % 7.4f %3.0f\n", 
-        //        output, amplitude, self->volume_level);
         *out++ = output;
     }
 
@@ -326,7 +325,6 @@ static float
 speaker_generate_amplitude (speaker_t *self)
 {
     /* {{{ */
-    size_t i = 0;
     event_time_t *transition = NULL;
     const event_time_t RANGE = { .frame = 0, .cycle = s_cycles_per_frame };
 
@@ -356,7 +354,6 @@ speaker_generate_amplitude (speaker_t *self)
             break;
         }
 
-        //printf ("match: %8f %8d\n", transition->cycle, transition->frame);
         self->last_state ^= 1;
         self->transition_index++;
     }
@@ -402,6 +399,15 @@ speaker_beep (speaker_t *self)
     const float FREQUENCY = 1920.F;
     const int DURATION_MS = 500;
     speaker_generate_frequency (self, FREQUENCY, DURATION_MS);
+    /* }}} */
+}
+
+void
+speaker_status (speaker_t *self)
+{
+    /* {{{ */
+    log_info ("volume: %3.0f%%  pause: %1d\n", 
+            self->volume_level, self->pause);
     /* }}} */
 }
 

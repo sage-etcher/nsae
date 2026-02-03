@@ -25,7 +25,7 @@
 #define USAGE_STR ___SRC_NSAECTL_NSAECTL_HELP
 #define USAGE_LEN ___SRC_NSAECTL_NSAECTL_HELP_LEN
 
-#define ARG_POP() (assert (argc > 0), argc--, *argv++)
+#define ARG_POP() (expect (argc > 0, "expected parameter"), argc--, *argv++)
 
 #define ARRLEN(a) (sizeof (a) / sizeof (*(a)))
 
@@ -80,11 +80,12 @@ static const struct cmd_entry CMD_LIST[] = {
 
     { "info",     "i",   CMD_INFO,      MODE_NULL, ( 
             MODE_ADV | MODE_BR  | MODE_CPU | MODE_CRT | MODE_FDC  | MODE_HDC | 
-            MODE_KB  | MODE_LOG | MODE_MMU | MODE_NSAE | MODE_RAM ) },
+            MODE_KB  | MODE_LOG | MODE_MMU | MODE_NSAE | MODE_RAM | 
+            MODE_SPEAKER ) },
 
     { "set",      "se",  CMD_SET,       MODE_MMU,  ( 
             MODE_ADV | MODE_BR  | MODE_CPU | MODE_CRT  | MODE_FDC | MODE_HDC | 
-            MODE_KB  | MODE_LOG | MODE_MMU | MODE_NSAE ) },
+            MODE_KB  | MODE_LOG | MODE_MMU | MODE_SPEAKER | MODE_NSAE ) },
 
     { "load",     "l",   CMD_LOAD,      MODE_FDC,  ( 
             MODE_FDC | MODE_HDC | MODE_MMU | MODE_PROM | MODE_RAM ) },
@@ -96,19 +97,20 @@ static const struct cmd_entry CMD_LIST[] = {
 
 static const struct mode_entry MODE_LIST[] = {
     /* {{{ */
-    { "advantage",  "ad", MODE_ADV  },
-    { "breakpoint", "b",  MODE_BR   },
-    { "cpu",        "c",  MODE_CPU  },
-    { "display",    "d",  MODE_CRT  },
-    { "floppy",     "f",  MODE_FDC  },
-    { "harddrive",  "h",  MODE_HDC  },
-    { "keyboard",   "k",  MODE_KB   },
-    { "log",        "l",  MODE_LOG  },
-    { "mmu",        "m",  MODE_MMU  },
-    { "nsae",       "n",  MODE_NSAE },
-    { "port",       "po", MODE_PORT },
-    { "prom",       "pr", MODE_PROM },
-    { "ram",        "r",  MODE_RAM  },
+    { "advantage",  "ad", MODE_ADV     },
+    { "breakpoint", "b",  MODE_BR      },
+    { "cpu",        "c",  MODE_CPU     },
+    { "display",    "d",  MODE_CRT     },
+    { "floppy",     "f",  MODE_FDC     },
+    { "harddrive",  "h",  MODE_HDC     },
+    { "keyboard",   "k",  MODE_KB      },
+    { "log",        "l",  MODE_LOG     },
+    { "mmu",        "m",  MODE_MMU     },
+    { "nsae",       "n",  MODE_NSAE    },
+    { "port",       "po", MODE_PORT    },
+    { "prom",       "pr", MODE_PROM    },
+    { "speaker",    "s",  MODE_SPEAKER },
+    { "ram",        "r",  MODE_RAM     },
     /* }}} */
 };
 
@@ -181,6 +183,8 @@ static const struct var_entry SET_LIST[] = {
     { MODE_MMU, "slot2",      "2", VAR_MMU_SLOT2 },
     { MODE_MMU, "slot3",      "3", VAR_MMU_SLOT3 },
 
+    { MODE_SPEAKER, "volume", "v", VAR_SPEAKER_VOLUME },
+
     { MODE_LOG, "display",    "d",  VAR_LOG_CRT},
     { MODE_LOG, "cpu",        "c",  VAR_LOG_CPU },
     { MODE_LOG, "keyboard",   "k",  VAR_LOG_KB },
@@ -196,6 +200,8 @@ static const struct var_entry SET_LIST[] = {
     /* }}} */
 };
 
+
+static void expect (int condition, const char *msg);
 
 static void version (void);
 static void usage (void);
@@ -213,6 +219,17 @@ static void
 usage (void)
 {
     fprintf (stderr, "%.*s", USAGE_LEN, USAGE_STR);
+}
+
+static void
+expect (int condition, const char *msg)
+{
+    if (!condition)
+    {
+        log_error ("nsaectl: error: %s\n", msg);
+        usage ();
+        exit (EXIT_FAILURE);
+    }
 }
 
 int
@@ -439,6 +456,7 @@ send (int argc, char **argv)
     if (cmd_entry == NULL)
     {
         log_fatal ("nsaectl: invalid command -- %s\n", cmd_name);
+        usage ();
         return 1;
     }
     packet.cmd = cmd_entry->command_id;
@@ -450,6 +468,7 @@ send (int argc, char **argv)
         if (ret_mode_id == -1)
         {
             /* throws error internally */
+            usage ();
             return 1;
         }
         else

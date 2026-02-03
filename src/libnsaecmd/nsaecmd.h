@@ -77,22 +77,23 @@ typedef enum {
 } nsae_cmd_t;
 
 typedef enum {
-    MODE_NULL = 0x0000,
-    MODE_ADV  = 0x0001,
-    MODE_BR   = 0x0002,
-    MODE_CPU  = 0x0004,
-    MODE_CRT  = 0x0008,
-    MODE_FDC  = 0x0010,
-    MODE_HDC  = 0x0020,
-    MODE_IO   = 0x0040,
-    MODE_KB   = 0x0080,
-    MODE_LOG  = 0x0100,
-    MODE_MMU  = 0x0200,
-    MODE_NSAE = 0x0400,
-    MODE_PORT = 0x0800,
-    MODE_PROM = 0x0800,
-    MODE_RAM  = 0x1000,
-    MODE_WP   = 0x2000,
+    MODE_NULL    = 0x0000,
+    MODE_ADV     = 0x0001,
+    MODE_BR      = 0x0002,
+    MODE_CPU     = 0x0004,
+    MODE_CRT     = 0x0008,
+    MODE_FDC     = 0x0010,
+    MODE_HDC     = 0x0020,
+    MODE_IO      = 0x0040,
+    MODE_KB      = 0x0080,
+    MODE_LOG     = 0x0100,
+    MODE_MMU     = 0x0200,
+    MODE_NSAE    = 0x0400,
+    MODE_PORT    = 0x0800,
+    MODE_PROM    = 0x0800,
+    MODE_RAM     = 0x1000,
+    MODE_SPEAKER = 0x2000,
+    MODE_WP      = 0x4000,
 } nsae_mode_t;
 
 typedef enum {
@@ -163,6 +164,8 @@ typedef enum {
     VAR_MMU_SLOT1,
     VAR_MMU_SLOT2,
     VAR_MMU_SLOT3,
+
+    VAR_SPEAKER_VOLUME,
 
     VAR_LOG_CRT,
     VAR_LOG_CPU,

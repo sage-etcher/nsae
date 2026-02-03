@@ -55,6 +55,8 @@ void speaker_generate_frequency (speaker_t *self, float frequency, int ms_durati
 
 void speaker_beep (speaker_t *self);
 
+void speaker_status (speaker_t *self);
+
 
 #endif
 /* end of file */

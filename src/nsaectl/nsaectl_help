@@ -107,6 +107,9 @@ modes:
   save  <mmu|ram> <address> <file> <*count=-1> <*offset=0>
   load  <mmu|ram> <address> <file> <*count=-1> <*offset=0>
 
+  info speaker
+  set  speaker volume <percentage>
+
   info log				unimplimented
   set  log display   <loglevel>
   set  log cpu       <loglevel>
