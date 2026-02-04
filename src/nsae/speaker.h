@@ -48,6 +48,7 @@ void speaker_set_cpu_speed (speaker_t *self, float cpu_hz, float cycles_run);
 int  speaker_init    (speaker_t *self);
 int  speaker_start   (speaker_t *self);
 int  speaker_stop    (speaker_t *self);
+void speaker_send_stop_start (speaker_t *self, int stop_flag);
 void speaker_destroy (speaker_t *self);
 
 int speaker_toggle (speaker_t *self, event_time_t event_time);

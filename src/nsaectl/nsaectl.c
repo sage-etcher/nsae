@@ -184,6 +184,7 @@ static const struct var_entry SET_LIST[] = {
     { MODE_MMU, "slot3",      "3", VAR_MMU_SLOT3 },
 
     { MODE_SPEAKER, "volume", "v", VAR_SPEAKER_VOLUME },
+    { MODE_SPEAKER, "stop",   "s", VAR_SPEAKER_STOP },
 
     { MODE_LOG, "display",    "d",  VAR_LOG_CRT},
     { MODE_LOG, "cpu",        "c",  VAR_LOG_CPU },

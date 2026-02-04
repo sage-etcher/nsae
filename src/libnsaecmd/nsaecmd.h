@@ -166,6 +166,7 @@ typedef enum {
     VAR_MMU_SLOT3,
 
     VAR_SPEAKER_VOLUME,
+    VAR_SPEAKER_STOP,
 
     VAR_LOG_CRT,
     VAR_LOG_CPU,

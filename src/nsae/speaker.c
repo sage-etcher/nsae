@@ -179,6 +179,7 @@ speaker_start (speaker_t *self)
     /* {{{ */
     PaError err = 0;
 
+    log_verbose ("nsae: speaker: start\n");
     err = Pa_StartStream (self->stream);
     if (err != paNoError)
     {
@@ -196,6 +197,7 @@ speaker_stop (speaker_t *self)
     /* {{{ */
     PaError err = 0;
 
+    log_verbose ("nsae: speaker: stop\n");
     err = Pa_StopStream (self->stream);
     if (err != paNoError)
     {
@@ -204,6 +206,21 @@ speaker_stop (speaker_t *self)
     }
 
     return 0;
+    /* }}} */
+}
+
+void
+speaker_send_stop_start (speaker_t *self, int stop_flag)
+{
+    /* {{{ */
+    if (stop_flag)
+    {
+        speaker_stop (self);
+    }
+    else
+    {
+        speaker_start (self);
+    }
     /* }}} */
 }
 

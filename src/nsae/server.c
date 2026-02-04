@@ -498,6 +498,11 @@ server_handle_ipc (nsae_t *self)
             self->adv.speaker.volume_level = (float)packet->v_data32;
             break;
 
+        case VAR_SPEAKER_STOP:
+            log_verbose ("speaker.stop %1d\n", packet->v_data32);
+            speaker_send_stop_start (&self->adv.speaker, (int)packet->v_data32);
+            break;
+
         case VAR_LOG_CRT:
             log_verbose ("log.crt %1d\n", packet->v_data32);
             g_log_categories[LC_CRT] = packet->v_data32;
