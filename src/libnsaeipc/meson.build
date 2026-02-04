@@ -3,9 +3,22 @@ nsaeipc_inc = include_directories([
   '.',
 ])
 
-nsaeipc_lib = library('nsaeipc', [
-    'nsaeipc.c',
-  ],
+os = host_machine.system() 
+if os == 'linux' or os.endswith('bsd') or os == 'dragonfly' or os == 'cygwin'
+  nsaeipc_src = files('nsaeipc_unix.c')
+
+elif os == 'windows'
+  nsaeipc_src = files('nsaeipc_win.c')
+
+else
+  error('unsupported operating system')
+endif
+
+
+
+nsaeipc_lib = library(
+  'nsaeipc', 
+  nsaeipc_src,
   install : true,
 )
 
