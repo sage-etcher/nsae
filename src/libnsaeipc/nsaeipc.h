@@ -2,23 +2,16 @@
 #ifndef NSAEIPC_H
 #define NSAEIPC_H
 
+#include <zmq.h>
+
 #include <stddef.h>
 #include <stdint.h>
 
+int nsae_ipc_init_server (const char *custom_addr);
+int nsae_ipc_init_client (const char *custom_addr);
+void nsae_ipc_quit (void);
 
-enum {
-    NSAE_IPC_CLIENT,
-    NSAE_IPC_SERVER,
-};
-
-
-int  nsae_ipc_init (int mode, char *custom_client, char *custom_server);
-void nsae_ipc_free (int mode);
-
-int nsae_ipc_send (void *buf, size_t n);
-int nsae_ipc_send_block (void *buf, size_t n);
-
-int nsae_ipc_recieve (void *buf, size_t n);
-int nsae_ipc_recieve_block (void *buf, size_t n);
+int nsae_ipc_send (int flags, void *buf, size_t n);
+int nsae_ipc_recieve (int flags, void **p_buf, size_t *p_n);
 
 #endif /* NSAEIPC_H */

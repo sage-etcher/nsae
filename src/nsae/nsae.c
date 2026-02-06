@@ -94,7 +94,7 @@ nsae_start (nsae_t *self, int *p_argc, char **argv)
 
     int rc = 0;
     log_init (LC_COUNT);
-    rc |= nsae_ipc_init (NSAE_IPC_SERVER, NULL, NULL);
+    rc |= nsae_ipc_init_server ("tcp://localhost:5555");
     rc |= adv_init (&self->adv);
 
     if (rc != 0)
@@ -162,7 +162,7 @@ nsae_start (nsae_t *self, int *p_argc, char **argv)
     glfwDestroyWindow (win);
     glfwTerminate ();
 
-    nsae_ipc_free (NSAE_IPC_SERVER);
+    nsae_ipc_quit ();
     log_quit ();
 
     kbmap_free (&self->kbmap);
