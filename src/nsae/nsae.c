@@ -318,8 +318,6 @@ nsae_render (GLFWwindow *win)
         crt_draw (crt);
     glEnd ();
 
-    glfwSwapBuffers (win);
-
     if (adv->crt_mi)
     {
         adv->stat1_reg |= crt->vrefresh << 2;
