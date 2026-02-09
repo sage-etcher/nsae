@@ -2,7 +2,6 @@
 #define LOG_CATEGORY LC_CRT
 #include "crt.h"
 
-#include "colorconf.h"
 #include "nslog.h"
 #include "ram.h"
 
