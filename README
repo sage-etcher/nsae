@@ -8,6 +8,7 @@
 - GLU
 - OpenGL 1.0
 - PortAudio 2.0
+- ZeroMQ
 
 ## Build Dependencies
 
