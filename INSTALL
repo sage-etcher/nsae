@@ -1,6 +1,6 @@
 
-build dependencies: meson>=1.1, xxd
-dependencies: glew, glfw3, glu, opengl>=1.0
+build dependencies: meson>=0.51.0, xxd
+dependencies: glew, glfw3, glu, opengl>=1.0, portaudio>=2.0, zeromq
 
 meson setup build
 cd build

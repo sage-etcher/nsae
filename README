@@ -1,6 +1,8 @@
 
 # NorthStar Advantage Emulator
 
+Tested support for AlmaLinux 9, FreeBSD 13, and Windows 11.
+
 ## Runtime Dependencies
 
 - GLEW

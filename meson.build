@@ -9,7 +9,7 @@ project('NorthStar Advantage Emulator', 'c',
     #'b_lundef=false',
     #'b_sanitize=address,undefined',
   ],
-  #meson_version : '>= 1.1',
+  meson_version : '>= 0.51.0',
 )
 
 #imports
@@ -18,7 +18,7 @@ cmake = import('cmake')
 #subprojects
 sc_proj = cmake.subproject('sc')
 sc_time_dep = sc_proj.dependency('sc_time')
-sc_map_dep = sc_proj.dependency('sc_map')
+sc_map_dep  = sc_proj.dependency('sc_map')
 
 #arguments
 add_project_arguments([
