@@ -24,17 +24,18 @@ int
 server_handle_ipc (nsae_t *self)
 {
     int rc = 0;
-    uint32_t packet_size = 0;
+    size_t packet_size = 0;
     nsae_packet_t *packet = NULL;
     char *file = NULL;
     size_t file_len = 0;
     uint32_t abs_address = 0;
 
     /* poll packet_size */
-    rc = nsae_ipc_recieve (&packet_size, sizeof (size_t));
-    if (rc <= 0) return 0; /* non blocking */
+    rc = nsae_ipc_recieve (ZMQ_DONTWAIT, (void **)&packet, &packet_size);
 
-    //g_log_categories[LC_SERVER] = LOG_DEBUG;
+    if (rc) return 0; /* non blocking */
+    if (packet_size == 0) return 0; /* non blocking */
+
     log_debug ("server_handle_ipc.nsae_ipc_recieve.rc = %d\n", rc);
 
     /* enforce minimum packet size */
@@ -42,15 +43,10 @@ server_handle_ipc (nsae_t *self)
     {
         log_error ("nsae: server: packet_size cannot be less than %zu, but got %zu\n", 
                 sizeof (nsae_packet_t), packet_size);
-        return 1;
+        rc = 1;
+        nsae_ipc_send (0, &rc, sizeof (rc));
+        return rc;
     }
-
-    /* allocate packet */
-    packet = malloc (packet_size);
-    if (packet == NULL) return 1;
-
-    /* get packet */
-    rc = nsae_ipc_recieve_block (packet, packet_size);
 
     if (packet_size > sizeof (nsae_packet_t))
     {
@@ -667,6 +663,10 @@ server_handle_ipc (nsae_t *self)
         break;
     }
 
+    rc = 0;
+    nsae_ipc_send (0, &rc, sizeof (rc));
+
+    free (packet);
     return 0;
 }
 

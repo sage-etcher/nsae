@@ -1,6 +1,8 @@
 
 # NorthStar Advantage Emulator
 
+Tested support for AlmaLinux 9, FreeBSD 13, and Windows 11.
+
 ## Runtime Dependencies
 
 - GLEW
@@ -8,6 +10,7 @@
 - GLU
 - OpenGL 1.0
 - PortAudio 2.0
+- ZeroMQ
 
 ## Build Dependencies
 
@@ -24,13 +27,4 @@
 # Licensing
 
 Copyright (c) 2025 Sage I. Hendricks
-MIT Licensing 
-
-
-
-
-
-
-
-
-
+MIT License
