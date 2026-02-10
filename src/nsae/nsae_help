@@ -1,0 +1,13 @@
+Usage: nsae [-pstvVh] [-f socket] [-A disk_file] [-B disk_file]
+
+options:
+  -f socket     custom zmq_socket for communicating with the client.
+  -A disk_file  load diskette in floppy drive A.
+  -B disk_file  load diskette in floppy drive B.
+  -p            start the emulator paused.
+  -s            disable speaker/portaudio.
+  -t            log ony essential information (the default).
+  -v            log more information.
+  -V            show version page.
+  -h            show this page.
+

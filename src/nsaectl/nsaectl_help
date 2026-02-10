@@ -1,11 +1,11 @@
 Usage: nsaectl [-f socket] [-htvV] <mode> [modearg [modearg...]]
 
 options:
-  -f socket custom zmq_socket for communicating with the server.
-  -t        log only essential information (the default)
-  -v        log more information
-  -V        show version page
-  -h        show this page
+  -f socket  custom zmq_socket for communicating with the server.
+  -t         log only essential information (the default).
+  -v         log more information.
+  -V         show version page.
+  -h         show this page.
 
 modes:
   quit

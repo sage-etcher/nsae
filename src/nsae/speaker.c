@@ -243,6 +243,8 @@ speaker_toggle (speaker_t *self, event_time_t event_time)
     event_time_t diff = event_time_new (0, 0);
 
     assert (self != NULL);
+
+    if (self->stream == NULL) return 0;
     
     da_pop_front ((da_void_t *)&self->transitions, (int)self->transition_index);
     self->transition_index = 0;

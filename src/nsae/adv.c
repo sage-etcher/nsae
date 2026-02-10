@@ -30,12 +30,8 @@ adv_init (adv_t *self)
     int rc = 0;
     rc |= cpu_init (&self->cpu);
     rc |= fdc_init (&self->fdc);
-    fdc_load_disk (&self->fdc, 0, "CPMBASIC_120.NSI");
-
     //rc |= io_init (&self->io);
     rc |= kb_init (&self->kb);
-    rc |= speaker_init (&self->speaker);
-    speaker_start (&self->speaker);
 
     /* initialize ram */
     rc |= ram_init (&self->ram, EMBED_PROM, EMBED_PROM_LEN);

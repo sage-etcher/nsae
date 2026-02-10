@@ -74,7 +74,7 @@ gl_init (GLFWwindow *win, float win_width, float win_height,
 }
 
 int
-nsae_start (nsae_t *self, int *p_argc, char **argv)
+nsae_start (nsae_t *self, nsae_config_t *config)
 {
     assert (self != NULL);
 
@@ -86,15 +86,38 @@ nsae_start (nsae_t *self, int *p_argc, char **argv)
     self->height = 480.0 * self->scale_multiplier;
     self->max_fps = 60;
 
-    self->pause = true;
+    self->pause = config->init_paused;
     self->exit = false;
 
     self->kbmap = kbmap_init ();
 
     int rc = 0;
+
     log_init (LC_COUNT);
-    rc |= nsae_ipc_init_server ("tcp://localhost:5555");
+    if (config->verbosity)
+    {
+        memset (g_log_categories, LOG_VERBOSE, LC_COUNT);
+    }
+
+    rc |= nsae_ipc_init_server (config->socket_addr);
     rc |= adv_init (&self->adv);
+
+    if (config->init_speaker)
+    {
+        rc |= speaker_init (&self->adv.speaker);
+        speaker_start (&self->adv.speaker);
+    }
+
+    if (config->disk_a != NULL)
+    {
+        fdc_load_disk (&self->adv.fdc, 0, config->disk_a);
+    }
+
+    if (config->disk_b != NULL)
+    {
+        fdc_load_disk (&self->adv.fdc, 1, config->disk_b);
+    }
+
 
     if (rc != 0)
     {

@@ -45,7 +45,17 @@ typedef struct {
     int frame_number;
 } nsae_t;
 
-int nsae_start (nsae_t *self, int *p_argc, char **argv);
+typedef struct {
+    char *socket_addr;
+    char *disk_a;
+    char *disk_b;
+    int verbosity;
+    int init_paused;
+    int init_speaker;
+    /* (64bit-only) 4bytes padding */
+} nsae_config_t;
+
+int nsae_start (nsae_t *self, nsae_config_t *config);
 
 void nsae_status (nsae_t *self);
 

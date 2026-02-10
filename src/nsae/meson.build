@@ -1,4 +1,31 @@
 
+# version and help files
+nsae_conf = configuration_data({
+  'PROJ_NAME'    : 'nsae',
+  'PROJ_VERSION' : meson.project_version(),
+})
+
+nsae_version = configure_file(
+  output : 'nsae_version',
+  input  : 'nsae_version.in',
+  configuration : nsae_conf,
+)
+
+nsae_version_h = custom_target(
+  'nsae_version.h',
+  output  : 'nsae_version.h',
+  input   : nsae_version,
+  command : xxd_command,
+)
+
+nsae_help_h = custom_target(
+  'nsae_help.h',
+  output  : 'nsae_help.h',
+  input   : 'nsae_help',
+  command : xxd_command,
+)
+
+# build the binaries
 cc = meson.get_compiler('c')
 
 glew_dep = dependency('glew', required : true)
@@ -33,6 +60,8 @@ nsae_bin = executable('nsae', [
     'watchpoints.c',
     'z80emu/z80emu.c',
     advprom_h,
+    nsae_help_h,
+    nsae_version_h,
   ],
   include_directories : [
     nsae_inc,
