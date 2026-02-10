@@ -211,6 +211,13 @@ static void usage (void);
 static int send (int argc, char **argv, char *socket_addr);
 
 static char *deref_filepath (const char *src, size_t *ret_size);
+static char *deref_string (const char *src);
+
+static inline int 
+isodigit (int c)
+{
+    return (c >= '0') && (c <= '7');
+}
 
 static void
 version (void)
@@ -346,6 +353,105 @@ deref_filepath (const char *src, size_t *ret_len)
     strcat (dst, src);
 
     *ret_len = dst_len;
+    return dst;
+}
+
+static char *
+deref_string (const char *src)
+{
+    size_t src_len = 0;
+    const char *src_iter = NULL;
+
+    char *dst = NULL;
+    char *dst_iter = NULL;
+
+    if (src == NULL) return NULL;
+
+    src_len = strlen (src);
+    src_iter = src;
+
+    dst = malloc (src_len + 1);
+    assert (dst != NULL);
+    dst_iter = dst;
+
+    for (; *src_iter != '\0'; src_iter++)
+    {
+        if (*src_iter != '\\')
+        {
+            *dst_iter++ = *src_iter;
+            continue;
+        }
+
+        switch (*++src_iter)
+        {
+        case 'a':  *dst_iter++ = '\a'; break;
+        case 'b':  *dst_iter++ = '\b'; break;
+        case 'f':  *dst_iter++ = '\f'; break;
+        case 'n':  *dst_iter++ = '\n'; break;
+        case 'r':  *dst_iter++ = '\r'; break;
+        case 't':  *dst_iter++ = '\t'; break;
+        case 'v':  *dst_iter++ = '\v'; break;
+        case '\\': *dst_iter++ = '\\'; break;
+        case '\'': *dst_iter++ = '\''; break;
+        case '"':  *dst_iter++ = '\"'; break;
+        case '?':  *dst_iter++ = '\?'; break;
+
+        case 'x': 
+            assert ('a' > 'A');
+            assert ('A' > '0');
+
+            if (!isxdigit (*src_iter))
+            {
+                log_error ("nsaectl: deref_string: unknown escape code \\%c\n",
+                        *src_iter);
+                free (dst);
+                return NULL;
+            }
+
+            *dst_iter = 0;
+            for (++src_iter; isxdigit (*src_iter); src_iter++)
+            {
+                *dst_iter *= 0x10;
+                if (*src_iter >= 'a')
+                {
+                    *dst_iter += *src_iter - 'a';
+                }
+                else if (*src_iter >= 'A')
+                {
+                    *dst_iter += *src_iter - 'A';
+                }
+                else
+                {
+                    *dst_iter += *src_iter - '0';
+                }
+            }
+
+            dst_iter++;
+            break;
+
+        default:
+            if (!isodigit (*src_iter))
+            {
+                log_error ("nsaectl: deref_string: unknown escape code \\%c\n",
+                        *src_iter);
+                free (dst);
+                return NULL;
+            }
+
+            *dst_iter = 0;
+            for (; isodigit (*src_iter); src_iter++)
+            {
+                *dst_iter *= 010;
+                *dst_iter += *src_iter - '0';
+            }
+
+            dst_iter++;
+            break;
+        }
+    }
+
+    *dst_iter = '\0';
+
     return dst;
 }
 
@@ -547,7 +653,51 @@ send (int argc, char **argv, char *socket_addr)
             {
                 packet.v_port = strtol (ARG_POP (), NULL, 0);
             }
-            packet.v_data32 = strtol (ARG_POP (), NULL, 0);
+
+            stmp = ARG_POP ();
+            if (0 == strcmp (stmp, "false") ||
+                0 == strcmp (stmp, "disable") ||
+                0 == strcmp (stmp, "off") ||
+                0 == strcmp (stmp, "debug"))
+            {
+                packet.v_data32 = 0;
+            }
+            else if (0 == strcmp (stmp, "true") ||
+                     0 == strcmp (stmp, "enable") ||
+                     0 == strcmp (stmp, "on") ||
+                     0 == strcmp (stmp, "verbose"))
+            {
+                packet.v_data32 = 1;
+            }
+            else if (0 == strcmp (stmp, "info") ||
+                     0 == strcmp (stmp, "terse"))
+            {
+                packet.v_data32 = 2;
+            }
+            else if (0 == strcmp (stmp, "warning"))
+            {
+                packet.v_data32 = 3;
+            }
+            else if (0 == strcmp (stmp, "error"))
+            {
+                packet.v_data32 = 4;
+            }
+            else if (0 == strcmp (stmp, "fatal"))
+            {
+                packet.v_data32 = 5;
+            }
+            else if (0 == strcmp (stmp, "silent"))
+            {
+                packet.v_data32 = 6;
+            }
+            else if (*stmp == '#')
+            {
+                packet.v_data32 = strtol (stmp+1, NULL, 16);
+            }
+            else 
+            {
+                packet.v_data32 = strtol (stmp, NULL, 0);
+            }
 
             send_packet (&packet, sizeof (packet), socket_addr);
             break;
@@ -701,11 +851,13 @@ send (int argc, char **argv, char *socket_addr)
         }
         else if (0 == strcmp (input_format, "string"))
         {
+            stmp = deref_string (stmp);
             for (; *stmp; stmp++)
             {
                 packet.v_data32 = *stmp;
                 send_packet (&packet, sizeof (packet), socket_addr);
             }
+            free (stmp);
         }
         else
         {
