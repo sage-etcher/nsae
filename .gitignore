@@ -11,3 +11,8 @@ disks/2/
 subprojects/.wraplock
 subprojects/stb/
 **.nsi
+/build
+/build-**
+/install-**
+/install
+/win32
