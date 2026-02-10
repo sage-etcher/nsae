@@ -209,7 +209,7 @@ static void usage (void);
 static int send (int argc, char **argv, char *socket_addr);
 
 static char *deref_filepath (const char *src, size_t *ret_size);
-static char *deref_string (const char *src);
+static unsigned char *deref_string (const unsigned char *src);
 
 static inline int 
 isodigit (int c)
@@ -354,18 +354,18 @@ deref_filepath (const char *src, size_t *ret_len)
     return dst;
 }
 
-static char *
-deref_string (const char *src)
+static unsigned char *
+deref_string (const unsigned char *src)
 {
     size_t src_len = 0;
-    const char *src_iter = NULL;
+    const unsigned char *src_iter = NULL;
 
-    char *dst = NULL;
-    char *dst_iter = NULL;
+    unsigned char *dst = NULL;
+    unsigned char *dst_iter = NULL;
 
     if (src == NULL) return NULL;
 
-    src_len = strlen (src);
+    src_len = strlen ((char *)src);
     src_iter = src;
 
     dst = malloc (src_len + 1);
@@ -398,6 +398,8 @@ deref_string (const char *src)
             assert ('a' > 'A');
             assert ('A' > '0');
 
+            src_iter++;
+
             if (!isxdigit (*src_iter))
             {
                 log_error ("nsaectl: deref_string: unknown escape code \\%c\n",
@@ -407,16 +409,16 @@ deref_string (const char *src)
             }
 
             *dst_iter = 0;
-            for (++src_iter; isxdigit (*src_iter); src_iter++)
+            for (; isxdigit (*src_iter); src_iter++)
             {
                 *dst_iter *= 0x10;
                 if (*src_iter >= 'a')
                 {
-                    *dst_iter += *src_iter - 'a';
+                    *dst_iter += *src_iter - 'a' + 10;
                 }
                 else if (*src_iter >= 'A')
                 {
-                    *dst_iter += *src_iter - 'A';
+                    *dst_iter += *src_iter - 'A' + 10;
                 }
                 else
                 {
@@ -424,6 +426,7 @@ deref_string (const char *src)
                 }
             }
 
+            src_iter--;
             dst_iter++;
             break;
 
@@ -443,6 +446,7 @@ deref_string (const char *src)
                 *dst_iter += *src_iter - '0';
             }
 
+            src_iter--;
             dst_iter++;
             break;
         }
@@ -849,8 +853,9 @@ send (int argc, char **argv, char *socket_addr)
         }
         else if (0 == strcmp (input_format, "string"))
         {
-            stmp = deref_string (stmp);
-            for (; *stmp; stmp++)
+            stmp = (char *)deref_string ((unsigned char *)stmp);
+            iter = stmp;
+            for (; *iter; iter++)
             {
                 packet.v_data32 = *stmp;
                 send_packet (&packet, sizeof (packet), socket_addr);
