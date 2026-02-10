@@ -18,6 +18,7 @@
 #include <unistd.h>
 
 
+
 #define VERSION_STR SRC_NSAECTL_NSAECTL_VERSION
 #define VERSION_LEN SRC_NSAECTL_NSAECTL_VERSION_LEN
 
@@ -208,6 +209,7 @@ static void version (void);
 static void usage (void);
 static int send (int argc, char **argv, char *socket_addr);
 
+static uint32_t nsaectl_lookup_set_keyword (const char *kw);
 static char *deref_filepath (const char *src, size_t *ret_size);
 static unsigned char *deref_string (const unsigned char *src);
 
@@ -314,6 +316,52 @@ main (int argc, char **argv)
 exit:
     log_quit ();
     return rc;
+}
+
+static uint32_t
+nsaectl_lookup_set_keyword (const char *kw)
+{
+    if (0 == strcmp (kw, "false") ||
+        0 == strcmp (kw, "disable") ||
+        0 == strcmp (kw, "off") ||
+        0 == strcmp (kw, "debug"))
+    {
+        return 0;
+    }
+    else if (0 == strcmp (kw, "true") ||
+             0 == strcmp (kw, "enable") ||
+             0 == strcmp (kw, "on") ||
+             0 == strcmp (kw, "verbose"))
+    {
+        return 1;
+    }
+    else if (0 == strcmp (kw, "info") ||
+             0 == strcmp (kw, "terse"))
+    {
+        return 2;
+    }
+    else if (0 == strcmp (kw, "warning"))
+    {
+        return 3;
+    }
+    else if (0 == strcmp (kw, "error"))
+    {
+        return 4;
+    }
+    else if (0 == strcmp (kw, "fatal"))
+    {
+        return 5;
+    }
+    else if (0 == strcmp (kw, "silent"))
+    {
+        return 6;
+    }
+    else if (*kw == '#')
+    {
+        return strtol (kw+1, NULL, 16);
+    }
+
+    return strtol (kw, NULL, 0);
 }
 
 static char *
@@ -650,58 +698,48 @@ send (int argc, char **argv, char *socket_addr)
                 continue;
             }
 
+            heap_packet = NULL;
             packet.var = SET_LIST[i].set_id;
             if (packet.var == VAR_PORT_OUT)
             {
-                packet.v_port = strtol (ARG_POP (), NULL, 0);
+                packet.v_port   = strtol (ARG_POP (), NULL, 0);
+                packet.v_data32 = strtol (ARG_POP (), NULL, 0);
+            }
+            else if (packet.var == VAR_LOG_OUTPUT_FILE)
+            {
+                stmp = ARG_POP (); /* filename */
+                assert (stmp != NULL);
+                stmp_len = strlen (stmp);
+
+                stmp = deref_filepath (stmp, &stmp_len);
+
+                heap_packet_size = sizeof (packet) + stmp_len + 1;
+                heap_packet = calloc (1, heap_packet_size);
+                assert (heap_packet != NULL);
+
+                memcpy (heap_packet, &packet, sizeof (packet));
+                memcpy (heap_packet->buf, stmp, stmp_len);
+
+                free (stmp);
+                stmp = NULL;
+                stmp_len = 0;
+                printf ("%s\n", heap_packet->buf);
+
+            }
+            else
+            {
+                packet.v_data32 = nsaectl_lookup_set_keyword (ARG_POP ());
             }
 
-            stmp = ARG_POP ();
-            if (0 == strcmp (stmp, "false") ||
-                0 == strcmp (stmp, "disable") ||
-                0 == strcmp (stmp, "off") ||
-                0 == strcmp (stmp, "debug"))
+            if (heap_packet == NULL) 
             {
-                packet.v_data32 = 0;
+                send_packet (&packet, sizeof (packet), socket_addr);
             }
-            else if (0 == strcmp (stmp, "true") ||
-                     0 == strcmp (stmp, "enable") ||
-                     0 == strcmp (stmp, "on") ||
-                     0 == strcmp (stmp, "verbose"))
+            else
             {
-                packet.v_data32 = 1;
+                send_packet (heap_packet, heap_packet_size, socket_addr);
+                free (heap_packet);
             }
-            else if (0 == strcmp (stmp, "info") ||
-                     0 == strcmp (stmp, "terse"))
-            {
-                packet.v_data32 = 2;
-            }
-            else if (0 == strcmp (stmp, "warning"))
-            {
-                packet.v_data32 = 3;
-            }
-            else if (0 == strcmp (stmp, "error"))
-            {
-                packet.v_data32 = 4;
-            }
-            else if (0 == strcmp (stmp, "fatal"))
-            {
-                packet.v_data32 = 5;
-            }
-            else if (0 == strcmp (stmp, "silent"))
-            {
-                packet.v_data32 = 6;
-            }
-            else if (*stmp == '#')
-            {
-                packet.v_data32 = strtol (stmp+1, NULL, 16);
-            }
-            else 
-            {
-                packet.v_data32 = strtol (stmp, NULL, 0);
-            }
-
-            send_packet (&packet, sizeof (packet), socket_addr);
             break;
         }
 
@@ -857,7 +895,7 @@ send (int argc, char **argv, char *socket_addr)
             iter = stmp;
             for (; *iter; iter++)
             {
-                packet.v_data32 = *stmp;
+                packet.v_data32 = *iter & 0xff;
                 send_packet (&packet, sizeof (packet), socket_addr);
             }
             free (stmp);

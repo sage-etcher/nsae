@@ -562,7 +562,7 @@ server_handle_ipc (nsae_t *self)
 
         case VAR_LOG_OUTPUT_FILE:
             log_verbose ("log.outputfile %s\n", file);
-            fclose (g_log_file_stream);
+            if (g_log_file_stream != NULL) fclose (g_log_file_stream);
             g_log_file_stream = fopen (file, "a+");
             if (g_log_file_stream == NULL)
             {
