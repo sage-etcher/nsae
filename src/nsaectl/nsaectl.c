@@ -272,7 +272,7 @@ main (int argc, char **argv)
 {
     int rc = 1;
     int opt = 0;
-    char *socket_addr = "tcp://localhost:5555";
+    char *socket_addr = "tcp://*:5555";
 
     log_init (LC_COUNT);
 
