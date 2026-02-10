@@ -16,3 +16,4 @@ subprojects/stb/
 /install-**
 /install
 /win32
+install_external_dlls.sh
