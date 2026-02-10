@@ -1,12 +1,11 @@
-Usage: nsaectl [-f fifo] [-htvV] <mode> [modearg [modearg...]]
+Usage: nsaectl [-f socket] [-htvV] <mode> [modearg [modearg...]]
 
 options:
-  -f fifo  specify an alternate fifo for sending data to the server.
-  -F fifo  specify an alternate fifo for recieving data from the server.
-  -t       log only essential information (the default)
-  -v       log more information
-  -V       show version page
-  -h       show this page
+  -f socket custom zmq_socket for communicating with the server.
+  -t        log only essential information (the default)
+  -v        log more information
+  -V        show version page
+  -h        show this page
 
 modes:
   quit

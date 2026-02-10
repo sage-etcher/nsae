@@ -9,6 +9,7 @@
 #include <sc_map.h>
 
 #include <assert.h>
+#include <ctype.h>  /* NOLINT */
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -323,7 +324,11 @@ deref_filepath (const char *src, size_t *ret_len)
     src_len = strlen (src);
 
     /* check if absolute path */
-    if (*src == '/') 
+#ifdef _WIN32
+    if ((*src == '/') || (*src == '\\') || (isalpha (src[0]) && src[1] == ':'))
+#else
+    if (*src == '/')
+#endif
     {
         *ret_len = src_len;
         return strdup (src);
