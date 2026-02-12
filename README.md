@@ -30,5 +30,5 @@ Tested support for AlmaLinux 9, FreeBSD 13, and Windows 11.
 
 # Licensing
 
-Copyright (c) 2025 Sage I. Hendricks
+Copyright (c) 2025 Sage I. Hendricks  
 MIT License
