@@ -1,4 +1,5 @@
 
+subdir('darray')
 subdir('log')
 subdir('libnsaeipc')
 subdir('libnsaecmd')

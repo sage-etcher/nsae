@@ -43,7 +43,6 @@ nsae_bin = executable('nsae', [
     'breakpoints.c',
     'cpu.c',
     'crt.c',
-    'darray.c',
     'fdc.c',
     'io.c',
     'kb.c',
@@ -68,6 +67,7 @@ nsae_bin = executable('nsae', [
     z80emu_inc,
   ],
   dependencies : [
+    darray_dep,
     glew_dep,
     glfw_dep,
     glu_dep,
