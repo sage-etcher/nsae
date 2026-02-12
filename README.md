@@ -5,6 +5,8 @@ NOTE: this is verry much a WIP
 
 Tested support for AlmaLinux 9, FreeBSD 13, and Windows 11.
 
+![Example of CP/M running in the Emulator](/readme-resources/example-2026-02-12.png)
+
 ## Runtime Dependencies
 
 - GLEW
