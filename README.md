@@ -5,7 +5,11 @@ NOTE: this is verry much a WIP
 
 Tested support for AlmaLinux 9, FreeBSD 13, and Windows 11.
 
+## Examples
+
 ![Example of CP/M running in the Emulator](/readme-resources/example-2026-02-12.png)
+
+Scripting NSAE to load and run CP/M on Windows: <https://www.youtube.com/watch?v=-CBy6uQ1ej8>
 
 ## Runtime Dependencies
 
