@@ -182,6 +182,10 @@ typedef enum {
     VAR_LOG_OUTPUT_FILE,
 } nsae_var_t;
 
+typedef struct {
+    uint32_t code;
+    char buf[];
+} nsae_response_t;
 
 #endif /* NSAECMD_H */
 /* end of buf  */

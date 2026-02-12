@@ -3,6 +3,9 @@ log_inc = include_directories('.')
 log_lib = library('log', [
     'log.c',
   ],
+  dependencies : [
+    darray_dep,
+  ],
   install : true,
 )
 

@@ -30,11 +30,18 @@ server_handle_ipc (nsae_t *self)
     size_t file_len = 0;
     uint32_t abs_address = 0;
 
+    char *logstack_msg = NULL;
+    size_t logstack_len = 0;
+    size_t response_size = 0;
+    nsae_response_t *response = NULL;
+
     /* poll packet_size */
     rc = nsae_ipc_recieve (ZMQ_DONTWAIT, (void **)&packet, &packet_size);
 
     if (rc) return 0; /* non blocking */
     if (packet_size == 0) return 0; /* non blocking */
+
+    log_string_set_state (1);
 
     log_debug ("server_handle_ipc.nsae_ipc_recieve.rc = %d\n", rc);
 
@@ -43,9 +50,7 @@ server_handle_ipc (nsae_t *self)
     {
         log_error ("nsae: server: packet_size cannot be less than %zu, but got %zu\n", 
                 sizeof (nsae_packet_t), packet_size);
-        rc = 1;
-        nsae_ipc_send (0, &rc, sizeof (rc));
-        return rc;
+        goto send_response;
     }
 
     if (packet_size > sizeof (nsae_packet_t))
@@ -57,6 +62,7 @@ server_handle_ipc (nsae_t *self)
     }
 
     /* execute logic */
+    /* {{{ */
     switch (packet->cmd)
     {
     /* emulator */
@@ -662,12 +668,35 @@ server_handle_ipc (nsae_t *self)
         }
         break;
     }
+    /* }}} */
 
-    rc = 0;
-    nsae_ipc_send (0, &rc, sizeof (rc));
+send_response:
+    /* get a copy of the message */
+    logstack_msg = log_string_get ();
+
+    /* destroy the source message */
+    log_string_set_state (0);
+    log_string_destroy ();
+
+    /* process the mesage into a response */
+    if (logstack_msg == NULL)
+    {
+        logstack_msg = "";
+    }
+    logstack_len = strlen (logstack_msg);
+
+    response_size = sizeof (nsae_response_t) + logstack_len + 1;
+    response = malloc (response_size);
+    assert (response != NULL);
+    response->code = rc;
+    memcpy (response->buf, logstack_msg, logstack_len + 1);
+
+    /* send the response */
+    nsae_ipc_send (0, response, response_size);
 
     free (packet);
-    return 0;
+    return rc;
 }
 
-/* end of file */
+/* vim: fdm=marker
+ * end of file */

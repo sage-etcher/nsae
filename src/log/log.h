@@ -27,6 +27,11 @@ void log_set (uint8_t minimum_severity);
 void log_set_cat (uint8_t category, uint8_t minimum_severity);
 void log_fn (uint8_t category, uint8_t severity, const char *fmt, ...);
 
+void log_string_set_state (int state);
+void log_string_append (char *msg);
+void log_string_destroy (void);
+char *log_string_get (void);
+
 
 #if !defined(LOG_CATEGORY) && !defined(LOG_NOWARN)
 #   warning "log: LOG_CATEGORY macro undefined, cannot provide logging macros"

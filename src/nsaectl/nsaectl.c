@@ -246,8 +246,10 @@ static void
 send_packet (nsae_packet_t *packet, size_t n, char *socket_addr)
 {
     int rc = 0;
-    size_t response_size = 0;
-    int *response = NULL;
+    void *response = NULL;
+    size_t response_size = 0; 
+    nsae_response_t *message = { 0 };
+    size_t buf_size = 0;
 
     log_verbose ("nsaectl: openning connection to server\n");
     rc = nsae_ipc_init_client (socket_addr);
@@ -260,9 +262,35 @@ send_packet (nsae_packet_t *packet, size_t n, char *socket_addr)
     nsae_ipc_send (0, (void *)packet, n);
 
     nsae_ipc_recieve (0, (void **)&response, &response_size);
-    (void)response_size;
 
-    log_verbose ("nsaectl: server responded %d\n", *response);
+    log_debug ("nsaectl: server's response was %zu bytes\n", response_size);
+    if (response_size <= sizeof (nsae_response_t))
+    {
+        log_error ("nsaectl: minimum response size is too small: %zu\n",
+                response_size);
+        exit (EXIT_FAILURE);
+    }
+    message = response;
+    buf_size = response_size - sizeof (nsae_response_t) - 1;
+
+    log_verbose ("nsaectl: server responded with code: %d\n", message->code);
+    log_info ("%.*s", buf_size, message->buf);
+
+    if (buf_size == 0)
+    {
+        log_verbose ("nsaectl: server response is empty\n");
+    }
+
+    if (buf_size != 0 && message->buf[buf_size-1] != '\n')
+    {
+        log_debug ("nsaectl: server response message missing newline\n");
+        putchar ('\n');
+    }
+
+    if (message->code != 0)
+    {
+        log_error ("nsaectl: command failed with error %d\n", message->code);
+    }
 
     log_verbose ("nsaectl: closing connection to server\n");
     nsae_ipc_quit ();
@@ -723,7 +751,6 @@ send (int argc, char **argv, char *socket_addr)
                 free (stmp);
                 stmp = NULL;
                 stmp_len = 0;
-                printf ("%s\n", heap_packet->buf);
 
             }
             else
