@@ -3,11 +3,11 @@
 #include "nsae.h"
 
 #include "adv.h"
+#include "communicator.h"
 #include "crt.h"
 #include "glinit.h"
 #include "kb.h"
 #include "kb_decode.h"
-#include "nsaeipc.h"
 #include "nslog.h"
 #include "server.h"
 

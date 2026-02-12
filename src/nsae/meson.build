@@ -67,6 +67,7 @@ nsae_bin = executable('nsae', [
     z80emu_inc,
   ],
   dependencies : [
+    communicator_dep,
     darray_dep,
     glew_dep,
     glfw_dep,
@@ -74,8 +75,7 @@ nsae_bin = executable('nsae', [
     log_dep,
     portaudio_dep,
     m_dep,
-    nsaecmd_dep,
-    nsaeipc_dep,
+    nsae_commands_dep,
     sc_map_dep,
     sc_time_dep,
   ],

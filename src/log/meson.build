@@ -1,6 +1,6 @@
 
 log_inc = include_directories('.')
-log_lib = library('log', [
+log_lib = library('nsae_log', [
     'log.c',
   ],
   dependencies : [

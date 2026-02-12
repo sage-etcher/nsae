@@ -1,8 +1,8 @@
 
 subdir('darray')
 subdir('log')
-subdir('libnsaeipc')
-subdir('libnsaecmd')
+subdir('communicator')
+subdir('nsae_commands')
 subdir('nsae')
 subdir('nsaectl')
 

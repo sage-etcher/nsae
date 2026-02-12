@@ -1,9 +1,9 @@
 
 #define LOG_CATEGORY LC_GENERAL
-#include "nsaecmd.h"
+#include "communicator.h"
+#include "nsae_commands.h"
 #include "nsaectl_help.h"
 #include "nsaectl_version.h"
-#include "nsaeipc.h"
 #include "nslog.h"
 
 #include <sc_map.h>

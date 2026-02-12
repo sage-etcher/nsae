@@ -2,6 +2,7 @@
 #ifndef NSAECMD_H
 #define NSAECMD_H
 
+#include <stddef.h>
 #include <stdint.h>
 
 /*  virtual "union" sketch

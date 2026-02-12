@@ -1,6 +1,6 @@
 
-#include "nsaecmd.h"
-#include "nsaeipc.h"
+#include "communicator.h"
+#include "nsae_commands.h"
 
 #include <stdio.h>
 #include <stdint.h>

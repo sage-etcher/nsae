@@ -3,11 +3,11 @@
 #include "server.h"
 
 #include "adv.h"
+#include "communicator.h"
 #include "fdc.h"
 #include "mmu.h"
 #include "nsae.h"
-#include "nsaecmd.h"
-#include "nsaeipc.h"
+#include "nsae_commands.h"
 #include "nslog.h"
 #include "ram.h"
 
