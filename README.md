@@ -105,6 +105,16 @@ follows
     nsaectl press <asciilist> string    # type a list of keys from ascii
     nsaectl press <keycode>             # type a key from keycode
 
+# Related Projects
+
+- [JackStrangio/advantage_emulator](https://jackstrangio.au/advantage_emulator)
+  Jack's GTK ADE Emulator, Floppy Disk Images, Manuals, and Documentation.
+- [JackStrangio/north_star_tools](https://github.com/sage-etcher/north_star_tools)
+  (unofficial mirror) Tools for Interacting with NSDOS and Hard Disk image
+  filesystems: `mkfs.ns`, `u2nsfd`, `nsfd2u`, `nshdls`, ...
+- [Golgli/NorthstarAdvantageUtilities-](https://github.com/Holgli/NorthstarAdvantageUtilities-)
+  Serial Archival and Transfer Utilities.
+
 # Licensing
 
 Copyright (c) 2025 Sage I. Hendricks  

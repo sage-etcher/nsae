@@ -53,6 +53,7 @@ init_file() {
 
     case $disk_format in
         cpm|CPM) mkfs.cpm -f nsfd -- "$disk_file" || die 'cannot mkfs.cpm' ;;
+        nsdos|NSDOS) mkfs.ns "$disk_file" || die 'cannot mkfs.ns' ;;
         *) die "unimplemented format -- $disk_format" usage ;;
     esac
 }

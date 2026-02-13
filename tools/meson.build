@@ -8,8 +8,8 @@ find_program('echo',     required : false)
 find_program('sh',       required : false)
 
 # obscure requirements
-find_program('mkfs.cpm',   required : false)  # cpmtools
-#find_program('mkfs.nsdos', required : false)
+find_program('mkfs.cpm', required : false)  # cpmtools
+find_program('mkfs.ns',  required : false)  # github.com/sage-etcher/north_star_tools
 
 
 nsae_tools = [
