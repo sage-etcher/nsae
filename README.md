@@ -37,8 +37,8 @@ Scripting NSAE to load and run CP/M on Windows: <https://www.youtube.com/watch?v
 Provided is a non-exclusive list of common commands and use cases, for a full 
 list of abilities please view the tooling's help menus
 
-    nsae -h
-    nsaectl -h
+    nsae -h         # emulator
+    nsaectl -h      # emulator controller, sends commands to the emulator
 
 ### Floppy Disks
 
