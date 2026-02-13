@@ -65,8 +65,8 @@ note: each of the following use MMU virtual addresses
 
     nsaectl read <addr> <n>                 # read _n_ bytes from _addr_
     nsaectl write <addr> <byte0> [byten...] # write _n_ bytes of data to _addr_
-    nsaectl load <addr> <file>              # load a file into memory at _addr_
-    nsaectl save <addr> <file> <n>          # save _n_ bytes into _file_
+    nsaectl load mmu <addr> <file>          # load a file into memory at _addr_
+    nsaectl save mmu <addr> <file> <n>      # save _n_ bytes into _file_
 
 ### Speaker
 
