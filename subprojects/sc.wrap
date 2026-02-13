@@ -2,4 +2,4 @@
 url = https://github.com/tezc/sc.git
 revision = v1.0.4
 depth = 1
-
+patch_directory = sc

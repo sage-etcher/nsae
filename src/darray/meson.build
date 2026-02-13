@@ -6,4 +6,6 @@ darray_dep = declare_dependency(
   include_directories : darray_inc,
 )
 
+install_headers('darray.h', subdir : 'nsae')
+
 # end of file

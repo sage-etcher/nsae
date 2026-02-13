@@ -22,4 +22,6 @@ communicator_dep = declare_dependency(
   ],
 )
 
+install_headers('communicator.h', subdir : 'nsae')
+
 # end of file

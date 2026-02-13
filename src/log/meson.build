@@ -14,4 +14,6 @@ log_dep = declare_dependency(
   include_directories : log_inc,
 )
 
+install_headers('log.h', subdir : 'nsae')
+
 # end of file
