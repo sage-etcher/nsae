@@ -100,7 +100,7 @@ nsae_start (nsae_t *self, nsae_config_t *config)
     }
 
     rc |= nsae_ipc_init_server (config->socket_addr);
-    rc |= adv_init (&self->adv);
+    rc |= adv_init (&self->adv, self);
 
     if (config->init_speaker)
     {

@@ -27,6 +27,8 @@ extern "c" {
 #define FD_STEP_IN  0
 
 typedef struct {
+    void *parent;
+
     char *filename[FD_CNT];
 
     uint8_t data[FD_CNT][FD_MAX_SIZE];
@@ -61,7 +63,7 @@ typedef struct {
 } fdc_t;
 
 
-int fdc_init (fdc_t *self);
+int fdc_init (fdc_t *self, void *parrent);
 int fdc_load_disk (fdc_t *self, bool disk, char *filename);
 int fdc_save_disk (fdc_t *self, bool disk, char *filename);
 int fdc_eject (fdc_t *self, bool disk);

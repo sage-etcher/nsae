@@ -23,13 +23,15 @@
 #define trap() assert(1==0)
 
 int
-adv_init (adv_t *self)
+adv_init (adv_t *self, void *parent)
 {
     assert (self != NULL);
 
+    self->parent = parent;
+
     int rc = 0;
     rc |= cpu_init (&self->cpu);
-    rc |= fdc_init (&self->fdc);
+    rc |= fdc_init (&self->fdc, parent);
     //rc |= io_init (&self->io);
     rc |= kb_init (&self->kb);
 

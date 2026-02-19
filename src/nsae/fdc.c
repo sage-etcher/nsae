@@ -3,6 +3,9 @@
 #include "fdc.h"
 
 #include "nslog.h"
+#include "server.h"
+
+#include <sc_time.h>
 
 #include <assert.h>
 #include <stdbool.h>
@@ -11,14 +14,18 @@
 #include <stdio.h>
 #include <string.h>
 
+static void wait_for_disk_loaded (fdc_t *self);
+
 int
-fdc_init (fdc_t *self)
+fdc_init (fdc_t *self, void *parent)
 {
     assert (self != NULL);
 
     memset (self, 0, sizeof (*self));
     self->powered = true;
     self->sector_prn = 0xf;
+
+    self->parent = parent;
 
     return 0;
 }
@@ -114,6 +121,22 @@ fdc_eject (fdc_t *self, bool disk)
 
     return 0;
 }
+
+static void
+wait_for_disk_loaded (fdc_t *self)
+{
+    const uint64_t sleep_ms = 1000/100;
+
+    if (self->disk_loaded[self->disk]) return;
+
+    log_error ("nsae: fdc: trying to read from ejected drive\n");
+
+    do {
+        (void)server_handle_ipc (self->parent);
+        sc_time_sleep (sleep_ms);
+    } while (!self->disk_loaded[self->disk]);
+}
+
 
 void
 fdc_reset (fdc_t *self)
@@ -301,6 +324,8 @@ fdc_read_sync1 (fdc_t *self)
 {
     assert (self != NULL);
 
+    wait_for_disk_loaded (self);
+
     log_debug ("nsae: fdc: reading from D %d S %d T %02d S %d\n", 
             self->disk,
             self->side,
@@ -439,7 +464,9 @@ uint8_t
 fdc_read (fdc_t *self)
 {
     assert (self != NULL);
-    
+
+    wait_for_disk_loaded (self);
+
     if (!self->read_mode) return 0x00;
 
     if (self->sector[self->disk] >= FD_SECTORS)
@@ -490,6 +517,8 @@ void
 fdc_write (fdc_t *self, uint8_t data)
 {
     assert (self != NULL);
+
+    wait_for_disk_loaded (self);
 
     if (!self->write_mode) return;
 

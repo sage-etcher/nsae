@@ -19,6 +19,8 @@ extern "c" {
 
 
 typedef struct {
+    void *parent;
+
     cpu_t cpu;
     crt_t crt;
     fdc_t fdc;
@@ -40,7 +42,7 @@ typedef struct {
     uint8_t stat2_reg;
 } adv_t;
 
-int adv_init (adv_t *self);
+int adv_init (adv_t *self, void *parent);
 
 int adv_run (adv_t *self, int cycles, void *cb_data);
 
