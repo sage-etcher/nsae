@@ -17,3 +17,4 @@ subprojects/stb/
 /install
 /win32
 install_external_dlls.sh
+/destdir*/
