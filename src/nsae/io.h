@@ -13,10 +13,11 @@ extern "c" {
 #include <stdint.h>
 
 enum {
-    IO_NONE,
-    IO_SIO,
-    IO_PIO,
-    IO_HDC,
+    IO_NONE = 0xff, /* no board or board w/o ID (video board) */
+    IO_FPB  = 0x7f, /* (unreleased) floating point board */
+    IO_SIO  = 0xf7, /* serial board */
+    IO_PIO  = 0xdb, /* parallel board */
+    IO_HDC  = 0xbe, /* harddisk controller board */
 };
 
 #define IO_SLOT_CNT 6
@@ -31,7 +32,9 @@ typedef struct {
 
 int io_init (io_t *self);
 
-int io_attach_card (io_t *self, uint8_t slot, uint8_t card);
+int io_check_interupt (io_t *self);
+
+int io_attach_card (io_t *self, uint8_t slot, uint8_t card, const void *data);
 int io_dettach_card (io_t *self, uint8_t slot);
 
 

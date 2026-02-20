@@ -32,7 +32,7 @@ adv_init (adv_t *self, void *parent)
     int rc = 0;
     rc |= cpu_init (&self->cpu);
     rc |= fdc_init (&self->fdc, parent);
-    //rc |= io_init (&self->io);
+    rc |= io_init (&self->io);
     rc |= kb_init (&self->kb);
 
     /* initialize ram */
@@ -106,6 +106,7 @@ adv_update_status (adv_t *self)
     crt_t *crt = &self->crt;
     fdc_t *fdc = &self->fdc;
     kb_t *kb = &self->kb;
+    io_t *io = &self->io;
 
     /* this is not mentioned in the technical manual, however both NSCPM and
      * DEMODIAG expect it to read sectors */
@@ -139,6 +140,8 @@ adv_update_status (adv_t *self)
     *stat1 |= (self->crt_mi & crt->vrefresh) << 2;
 
     /* bit1 io interrupt */
+    *stat1 |= (io_check_interupt (io) & 1) << 1;
+
     /* bit0 command output (externally managed) */
 
     /* status register 2 */
@@ -178,6 +181,9 @@ adv_update_status (adv_t *self)
 uint8_t
 adv_in (adv_t *self, uint8_t port, uint16_t pc)
 {
+    uint8_t a = 0;
+    uint8_t b = 0;
+
     adv_update_status (self);
     //log_debug ("%04x    in %02x\n", pc, port);
 
@@ -189,7 +195,46 @@ adv_in (adv_t *self, uint8_t port, uint16_t pc)
     case 0x30: /* io board 3 */
     case 0x40: /* io board 2 */
     case 0x50: /* io board 1 */
-        break;
+        /* convert port to io board index 0-5 */
+        a = IO_SLOT_CNT - 1 - ((port & 0x70) >> 4);
+        assert (a < IO_SLOT_CNT);
+
+        /* handle io boards */
+        switch (self->io.slot[a])
+        {
+        case IO_SIO:
+            switch (port & 0x0f)
+            {
+            case 0x00:
+                b = sio_recieve_data (&self->io.m[a].sio);
+                log_fn (LC_SIO, LOG_DEBUG, "nsae: sio #%1d: %04x: recieve data - %02x\n",
+                        a+1, pc, b);
+                return b;
+
+            case 0x01:
+                b = sio_get_status (&self->io.m[a].sio);
+                log_fn (LC_SIO, LOG_DEBUG, "nsae: sio #%1d: %04x: get status - %02x\n",
+                        a+1, pc, b);
+                return b;
+            }
+            break;
+
+        case IO_PIO:
+        case IO_HDC:
+            break; /* unimplimented */
+
+        case IO_NONE:
+            log_fn (LC_IO, LOG_WARNING, "nsae: io #%1d: %04x: empty slot\n",
+                    a+1, pc);
+            break;
+
+        default:
+            log_fn (LC_IO, LOG_ERROR, "nsae: io #%1d: %04x: unknown io board type - %02x\n",
+                    a+1, pc, self->io.slot[a]);
+            break; /* unimplimented */
+        }
+
+        break; /* unimplimented */
 
     case 0x60: /* input main ram parity */
         log_fn (LC_RAM, LOG_DEBUG, "nsae: adv: %04x: ram parity okay\n", pc);
@@ -222,8 +267,13 @@ adv_in (adv_t *self, uint8_t port, uint16_t pc)
     case 0x73:  /* id code for slot 3 */
     case 0x74:  /* id code for slot 2 */
     case 0x75:  /* id code for slot 1 */
-        log_debug ("nsae: mobo: %04x: get slot id code\n", pc);
-        return 0xff;
+        a = IO_SLOT_CNT - 1 - (port & 0x7);
+        assert (a < IO_SLOT_CNT);
+
+        b = self->io.slot[a];
+        log_fn (LC_IO, LOG_DEBUG, "nsae: io #%1d: %04x: get slot id code - %02x\n",
+                a, pc, b);
+        return b;
 
     case 0x76:  /* unsued, returns all 1s */
     case 0x77:
@@ -350,7 +400,61 @@ adv_out (adv_t *self, uint8_t port, uint8_t data, uint16_t pc)
     case 0x30: /* io board 3 */
     case 0x40: /* io board 2 */
     case 0x50: /* io board 1 */
-        break;
+        /* convert port to io board index 0-5 */
+        b = (port & 0x30) >> 4;
+        assert (b < IO_SLOT_CNT);
+        a = IO_SLOT_CNT - b - 1;
+
+        /* handle io boards */
+        switch (self->io.slot[a])
+        {
+        case IO_SIO:
+            switch (port & 0x0f)
+            {
+            case 0x00:
+                log_fn (LC_SIO, LOG_DEBUG, "nsae: sio #%1d: %04x: 0x%02x send data byte\n", 
+                        a+1, pc, data);
+                sio_send_data (&self->io.m[a].sio, data);
+                return;
+
+            case 0x01:
+                log_fn (LC_SIO, LOG_DEBUG, "nsae: sio #%1d: %04x: 0x%02x send control byte\n", 
+                        a+1, pc, data);
+                sio_program (&self->io.m[a].sio, data);
+                return;
+
+            case 0x08:
+            case 0x09:
+                log_fn (LC_SIO, LOG_DEBUG, "nsae: sio #%1d: %04x: 0x%02x set baud rate\n", 
+                        a+1, pc, data);
+                sio_set_baud (&self->io.m[a].sio, data);
+                return;
+
+            case 0x0a:
+            case 0x0b:
+                log_fn (LC_SIO, LOG_DEBUG, "nsae: sio #%1d: %04x: 0x%02x set interupt mask\n", 
+                        a+1, pc, data);
+                sio_set_interupt_mask (&self->io.m[a].sio, data);
+                return;
+            }
+            break;
+
+        case IO_PIO:
+        case IO_HDC:
+            break; /* unimplimented */
+
+        case IO_NONE:
+            log_fn (LC_IO, LOG_WARNING, "nsae: io #%1d: %04x: 0x%02x empty slot\n",
+                    a+1, pc, data);
+            return;
+
+        default:
+            log_fn (LC_IO, LOG_ERROR, "nsae: io #%1d: %04x: 0x%02x unknown io board type - %02x\n",
+                    a+1, pc, data, self->io.slot[a]);
+            break; /* unimplimented */
+        }
+
+        break; /* unimplimented */
 
     case 0x60: /* output main ram parity control bytes */
         log_fn (LC_RAM, LOG_DEBUG, "nsae: ram: %04x: 0x%02x configure parity (does nothing)\n", 
