@@ -125,7 +125,8 @@ fdc_eject (fdc_t *self, bool disk)
 static void
 wait_for_disk_loaded (fdc_t *self)
 {
-    const uint64_t sleep_ms = 1000/100;
+    uint32_t max_retries = 5;
+    const uint64_t sleep_ms = 1000/60;
 
     if (self->disk_loaded[self->disk]) return;
 
@@ -134,7 +135,12 @@ wait_for_disk_loaded (fdc_t *self)
     do {
         (void)server_handle_ipc (self->parent);
         sc_time_sleep (sleep_ms);
-    } while (!self->disk_loaded[self->disk]);
+    } while (max_retries-- && !self->disk_loaded[self->disk]);
+
+    if (max_retries == 0)
+    {
+        log_error ("nsae: fdc: failed to wait\n");
+    }
 }
 
 
