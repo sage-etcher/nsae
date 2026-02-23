@@ -12,6 +12,8 @@ project('NorthStar Advantage Emulator', 'c',
   meson_version : '>= 0.55.0',
 )
 
+cc = meson.get_compiler('c')
+
 #imports
 cmake = import('cmake')
 
@@ -33,6 +35,25 @@ if get_option('debug')
   add_project_arguments(['-D_DEBUG'], language : 'c')
 endif
 
+# only allow enable-serial=True when on system that provides the following
+# serial support is variable but mostly POSIX only (NO WINDOWS SUPPORT)
+if get_option('enable-serial')
+  serial_support_systems = [
+    'linux',
+  ]
+
+  if not serial_support_systems.contains(host_machine.system())
+    warning(
+      'The host_machine does not have tested support for serial emulation.',
+      'If compilation issues occur, you may disable NSAE\'s serial emulation',
+      'using the meson setup flag, \'-Denable-serial=false\'.',
+    )
+  endif
+
+  cc.has_header('fcntl.h',   required : true)
+  cc.has_header('termios.h', required : true)
+  cc.has_header('unistd.h',  required : true)
+endif
 
 #subdirectories
 subdir('resources')

@@ -1,0 +1,8 @@
+
+#ifndef NSAE_CONFIG_H
+#define NSAE_CONFIG_H
+
+#define ENABLE_SERIAL_PORT_EMULATION    @ENABLE_SERIAL@
+
+#endif
+/* end of file */

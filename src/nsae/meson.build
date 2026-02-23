@@ -1,10 +1,19 @@
 
-# version and help files
+# setup configuration
 nsae_conf = configuration_data({
-  'PROJ_NAME'    : 'nsae',
-  'PROJ_VERSION' : meson.project_version(),
+  'PROJ_NAME'     : 'nsae',
+  'PROJ_VERSION'  : meson.project_version(),
+  'ENABLE_SERIAL' : get_option('enable-serial').to_int(),
 })
 
+nsae_config_h = configure_file(
+  output : 'nsae_config.h',
+  input  : 'nsae_config.h.in',
+  configuration : nsae_conf,
+)
+
+# version and help files
+# {{{
 nsae_version = configure_file(
   output : 'nsae_version',
   input  : 'nsae_version.in',
@@ -24,6 +33,7 @@ nsae_help_h = custom_target(
   input   : 'nsae_help',
   command : xxd_command,
 )
+# }}}
 
 # build the binaries
 cc = meson.get_compiler('c')
@@ -59,6 +69,7 @@ nsae_bin = executable('nsae', [
     'watchpoints.c',
     'z80emu/z80emu.c',
     advprom_h,
+    nsae_config_h,
     nsae_help_h,
     nsae_version_h,
   ],
@@ -82,4 +93,5 @@ nsae_bin = executable('nsae', [
   install : true,
 )
 
+# vim: fdm=marker
 # end of file

@@ -5,8 +5,14 @@
 extern "c" {
 #endif
 
+#include "nsae_config.h"
+
 #include <stdbool.h>
 #include <stdint.h>
+
+#ifdef ENABLE_SERIAL_PORT_EMULATION
+#include <termios.h>
+#endif
 
 typedef enum {
     EXPECT_MODE,
@@ -24,6 +30,12 @@ typedef struct {
     uint8_t command;            /* command */
     sio_ctx_t context;          /* stage of operation */
     uint_least16_t data_index;  /* how many peices of data have we sent */
+
+#ifdef ENABLE_SERIAL_PORT_EMULATION
+    const char *dev_path;
+    int serial_port;
+    struct termios tty;
+#endif
 } sio_t;
 
 int sio_init (sio_t *self, const char *host_device);
