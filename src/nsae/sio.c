@@ -5,11 +5,16 @@
 #include "nsae_config.h"
 #include "nslog.h"
 
+#include <sc_time.h>
+
 #include <errno.h>
 #include <fcntl.h>
+#include <sys/ioctl.h>
 #include <string.h>
 #include <termios.h>
 #include <unistd.h>
+
+#define ARRLEN(a) (sizeof (a) / sizeof (*(a)))
 
 /*
  * io reset:
@@ -102,8 +107,6 @@
 #define STAT_SYNDET_BD  0x40    /* (pin) sync detect/async break detect */
 #define STAT_DSR        0x80    /* (pin) data set ready */
 
-#define DATA_BLK_SIZE 0x200     /* block size of data */
-
 int
 sio_init (sio_t *self, const char *host_device)
 {
@@ -133,13 +136,21 @@ sio_init (sio_t *self, const char *host_device)
         return 0;
     }
 
-    serial_port = open (host_device, O_RDWR);
+    serial_port = open (host_device, O_RDWR | O_NOCTTY | O_NDELAY);
     if (serial_port < 0)
     {
         log_error ("nsae: sio: failed to open: %s: %s\n",
                 host_device, strerror (errno));
         return 1;
     }
+
+    if (!isatty (serial_port))
+    {
+        log_error ("nsae: sio: dev not a serial device - %s\n", host_device);
+        close (serial_port);
+        return 1;
+    }
+
 
     if (tcgetattr (serial_port, &tty) != 0)
     {
@@ -189,12 +200,75 @@ sio_board_id (sio_t *self)
 #define FLAG_DISABLE(v,f)   (v) &= ~(f)
 #define FLAG_ENABLE(v,f)    (v) |= (f)
 
+static uint16_t 
+decode_baud_rate (uint8_t multiplier, uint8_t code)
+{
+    /* setup baud rate */
+    switch (multiplier)
+    {
+    case MODE_BA16:
+        switch (code)
+        {
+        case 0x7f: return B19200;
+        case 0x7e: return B9600;
+        case 0x7c: return B4800;
+        case 0x78: return B2400;
+        case 0x70: return B1200;
+        case 0x60: return B600;
+        case 0x40: return B300;
+        case 0x20: return B200;
+        case 0x00: return B150;
+        }
+        break;
+
+    case MODE_BA64:
+        switch (code)
+        {
+        case 0x7f: return B4800;
+        case 0x7e: return B2400;
+        case 0x7c: return B1200;
+        case 0x78: return B600;
+        case 0x70: return B300;
+        case 0x68: return B200;
+        case 0x60: return B150;
+        case 0x54: return B110;
+        case 0x40: return B75;
+        case 0x20: return B50;
+
+        case 0x16: 
+            log_warning ("nsae: sio: using non-POSIX baud rate - 45\n");
+            return 45; 
+        }
+        break;
+
+    case MODE_BA1:
+        log_error ("nsae: sio: unsupported feature baud multiplier 1x\n");
+        break;
+
+    case MODE_BS:
+        log_error ("nsae: sio: unsupported feature syncronous serial\n");
+        break;
+    }
+
+    return 0;
+}
+
 static int
-update_tty (sio_t *self)
+configure_host_mode (sio_t *self)
 {
 #if ENABLE_SERIAL_PORT_EMULATION
+    uint16_t baud_rate = 0;
     struct termios tty = self->tty;
 
+    /* get baud rate */
+    baud_rate = decode_baud_rate (self->mode & MODE_MASK_BAUD, self->baud_code);
+    if (baud_rate == 0)
+    {
+        log_error ("nsae: sio: baud rate cannot be 0\n");
+        return 1;
+    }
+
+    /* configure serial port */
     tty.c_cflag = 0;
     tty.c_iflag = 0;
     tty.c_lflag = 0;
@@ -241,82 +315,23 @@ update_tty (sio_t *self)
 #if defined CRTSCTS
     FLAG_ENABLE (tty.c_cflag, CRTSCTS); /* enable hardware control flow */
 #endif
-    FLAG_ENABLE (tty.c_cflag, CREAD);   /* enable read */
-    FLAG_ENABLE (tty.c_iflag, BRKINT);  /* enable break character */
+    /* enable read
+     * enable parity+framing errors
+     * enable break character */
+    FLAG_ENABLE (tty.c_cflag, CREAD | INPCK | PARMRK | BRKINT);
 
-    tty.c_cc[VMIN]  = 1; /* hang indefinately until byte is ready */
-    tty.c_cc[VTIME] = 0;
+    /* hang max 1s until byte is ready */
+    tty.c_cc[VMIN]  = 1;
+    tty.c_cc[VTIME] = 10;
 
-    /* configure the baud rate */
-    speed_t baud_rate = 0;
-
-    /* setup baud rate */
-    switch (self->mode & MODE_MASK_BAUD)
-    {
-    case MODE_BA16:
-        switch (self->baud_code)
-        {
-            case 0x7f: baud_rate = B19200; break;
-            case 0x7e: baud_rate = B9600; break;
-            case 0x7c: baud_rate = B4800; break;
-            case 0x78: baud_rate = B2400; break;
-            case 0x70: baud_rate = B1200; break;
-            case 0x60: baud_rate = B600; break;
-            case 0x40: baud_rate = B300; break;
-            case 0x20: baud_rate = B200; break;
-            case 0x00: baud_rate = B150; break;
-            default:
-                log_error ("nsae: sio: unsupported 16x baud_code %02x\n", 
-                        self->baud_code);
-                return 1;
-        }
-        break;
-
-    case MODE_BA64:
-        switch (self->baud_code)
-        {
-            case 0x7f: baud_rate = B4800; break;
-            case 0x7e: baud_rate = B2400; break;
-            case 0x7c: baud_rate = B1200; break;
-            case 0x78: baud_rate = B600; break;
-            case 0x70: baud_rate = B300; break;
-            case 0x68: baud_rate = B200; break;
-            case 0x60: baud_rate = B150; break;
-            case 0x54: baud_rate = B110; break;
-            case 0x40: baud_rate = B75; break;
-            case 0x20: baud_rate = B50; break;
-
-            case 0x16: 
-                log_warning ("nsae: sio: using non-POSIX baud rate - 45\n");
-                baud_rate = 45; 
-                break;
-
-            default:
-                log_error ("nsae: sio: unsupported 64x baud_code %02x\n", 
-                        self->baud_code);
-                return 1;
-        }
-        break;
-
-    case MODE_BA1:
-        log_error ("nsae: sio: unsupported feature baud multiplier 1x\n");
-        return 1;
-
-    case MODE_BS:
-        log_error ("nsae: sio: unsupported feature syncronous serial\n");
-        return 1;
-    }
-
-    if (baud_rate == 0)
-    {
-        log_error ("nsae: sio: baud rate cannot be 0\n");
-        return 1;
-    }
+    /* set baud rate */
     cfsetispeed (&tty, baud_rate);
     cfsetospeed (&tty, baud_rate);
 
-    /* apply tty configuration */
+    /* apply changes */
     self->tty = tty;
+    tcflush (self->serial_port, TCIFLUSH);
+    tcsetattr (self->serial_port, TCSANOW, &self->tty);
 
 #else
 
@@ -336,7 +351,7 @@ sio_reset (sio_t *self)
     self->context = EXPECT_MODE;
     self->data_index = 0;
 
-    update_tty (self);
+    configure_host_mode (self);
 }
 
 uint8_t
@@ -353,6 +368,46 @@ sio_recieve_data (sio_t *self)
     {
         log_error ("nsae: sio: failed to read byte from serial port\n");
         return 0x00;
+    }
+
+    if (data == 0xff)
+    {
+        do {
+            n = read (self->serial_port, &data, sizeof (uint8_t)); 
+            sc_time_sleep (10);
+        } while (n == 0);
+
+        if (n < 0)
+        {
+            log_error ("nsae: sio: failed to read byte from serial port\n");
+            return 0x00;
+        }
+
+        switch (data)
+        {
+        case 0x00:
+            do {
+                n = read (self->serial_port, &data, sizeof (uint8_t)); 
+                sc_time_sleep (10);
+            } while (n == 0);
+
+            if (n < 0) 
+            {
+                log_error ("nsae: sio: failed to read byte from serial port\n");
+                return 0x00;
+            }
+
+            self->status |= STAT_FE | STAT_PE;
+            break;
+
+        case 0xff:
+            break;
+
+        default:
+            log_warning ("nsae: sio: unknown escape sequence: 0xff 0x%02x\n", 
+                    data);
+            break;
+        }
     }
 #endif
 
@@ -379,9 +434,92 @@ sio_send_data (sio_t *self, uint8_t data)
 uint8_t
 sio_get_status (sio_t *self)
 {
+    int modem_status = 0;
+
     /* in a,(0X1h) */
     //log_debug ("nsae: sio: read status - %02X\n", self->status);
+
+    /* get modem bits */
+    ioctl (self->serial_port, TIOCMGET, &modem_status);
+
+    /* translate to advantage */
+    self->status = 0x00;
+
+    if (modem_status & TIOCM_LE)
+    {
+        self->status |= STAT_DSR;
+    }
+
+    if (modem_status & TIOCM_ST)
+    {
+        self->status |= STAT_TXRDY;
+    }
+
+    if (modem_status & TIOCM_SR)
+    {
+        self->status |= STAT_RXRDY;
+    }
+
+    /* unsure how to handle STAT_TXE or SYNDET_BD on unix api */
+    /* TODO: overrun error */
+
+    /* parity and framing errors are handled on sio_reieve_data */
+
     return self->status;
+}
+        
+static int 
+decode_command (sio_t *self)
+{
+    const struct { int src; int dst; } MAP[] = {
+        { .src = CMMD_TXEN, .dst = TIOCM_ST },
+        { .src = CMMD_DTR,  .dst = TIOCM_DTR },
+        { .src = CMMD_RXE,  .dst = TIOCM_SR },
+        { .src = CMMD_RTS,  .dst = TIOCM_RTS },
+    };
+    const size_t MAP_LEN = ARRLEN (MAP);
+    size_t i = 0;
+    int modem_status = 0;
+    int bit_mask = 0;
+    int action = 0;
+
+
+    ioctl (self->serial_port, TIOCMGET, &modem_status);
+
+    for (i = 0; i < MAP_LEN; i++)
+    {
+        bit_mask = MAP[i].dst;
+        action = ((self->command & MAP[i].src) ? TIOCMBIS : TIOCMBIC);
+        ioctl (self->serial_port, action, &bit_mask);
+    }
+
+    if (self->command & CMMD_SBRK)
+    {
+        /* send break */
+        tcsendbreak (self->serial_port, 0);
+    }
+
+    if (self->command & CMMD_ER)
+    {
+        /* clears all errors on the serial device */
+        self->status &= ~(STAT_FE | STAT_OE | STAT_PE);
+    }
+
+    if (self->command & CMMD_IR)
+    {
+        /* i dont remember how many times but iirc toggling this 3 times or
+         * smthn resets the serial card specifically */
+    }
+
+    if (self->command & CMMD_EH)
+    {
+        /* enter huntmode */
+        log_error ("nsae: sio: hunt mode is not supported by the emulator\n");
+        return 1;
+    }
+
+
+    return 0;
 }
 
 void
@@ -396,8 +534,8 @@ sio_program (sio_t *self, uint8_t data)
         log_debug ("nsae: sio: program mode - %02x\n", data);
         self->mode = data;
         sync_mode = (self->mode & MODE_MASK_BAUD) == MODE_BS;
-        /* logic */
-        update_tty (self);
+
+        configure_host_mode (self);
 
         self->context = ((sync_mode) ? EXPECT_SYNC1 : EXPECT_DATA);
         break;
@@ -415,6 +553,7 @@ sio_program (sio_t *self, uint8_t data)
     case EXPECT_COMMAND:
         log_debug ("nsae: sio: output command - %02x\n", data);
         self->command = data;
+        decode_command (self);
         self->data_index = 0;
         self->context = EXPECT_DATA;
         break;
@@ -432,7 +571,7 @@ sio_set_baud (sio_t *self, uint8_t data)
     /* out (0X8h),a ;or 0X9h set baud rate */
     //log_debug ("nsae: sio: set baud rate - %02x\n", data);
     self->baud_code = data;
-    update_tty (self);
+    configure_host_mode (self);
 }
 
 void
