@@ -107,6 +107,9 @@
 #define STAT_SYNDET_BD  0x40    /* (pin) sync detect/async break detect */
 #define STAT_DSR        0x80    /* (pin) data set ready */
 
+static int configure_host_mode (sio_t *self);
+
+
 int
 sio_init (sio_t *self, const char *host_device)
 {
@@ -151,7 +154,6 @@ sio_init (sio_t *self, const char *host_device)
         return 1;
     }
 
-
     if (tcgetattr (serial_port, &tty) != 0)
     {
         log_error ("nsae: sio: tcgetattr: %d - %s\n",
@@ -163,6 +165,9 @@ sio_init (sio_t *self, const char *host_device)
     self->dev_path = host_device;
     self->serial_port = serial_port;
     self->tty = tty;
+
+    configure_host_mode (self);
+
 #else
 
     (void)host_device; /* silence unused */
@@ -434,13 +439,20 @@ sio_send_data (sio_t *self, uint8_t data)
 uint8_t
 sio_get_status (sio_t *self)
 {
+    int rc = 0;
     int modem_status = 0;
 
     /* in a,(0X1h) */
     //log_debug ("nsae: sio: read status - %02X\n", self->status);
 
     /* get modem bits */
-    ioctl (self->serial_port, TIOCMGET, &modem_status);
+    rc = ioctl (self->serial_port, TIOCMGET, &modem_status);
+    if (rc == -1)
+    {
+        log_error ("nsae: sio: failed to read status - %s\n", 
+                strerror (errno));
+        return STAT_RXRDY | STAT_TXRDY | STAT_DSR;
+    }
 
     /* translate to advantage */
     self->status = 0x00;
