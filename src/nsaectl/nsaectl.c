@@ -773,7 +773,7 @@ send (int argc, char **argv, char *socket_addr)
         if (i == ARRLEN (SET_LIST))
         {
             /* unknown variable name */
-            log_fatal ("unknown variable name -- %s", stmp);
+            log_fatal ("unknown variable name -- %s\n", stmp);
             return 1;
         }
 
