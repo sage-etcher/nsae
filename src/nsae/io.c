@@ -16,7 +16,7 @@ io_init (io_t *self)
     /* initialize to IO_SLOT to avoid errors from dettach */
     memset (self->slot, IO_NONE, sizeof (self->slot));
 
-    io_attach_card (self, 1, IO_SIO, "/dev/pts/5");
+    io_attach_card (self, 1, IO_SIO, "/dev/tnt0");
     io_attach_card (self, 2, IO_NONE, NULL);
     io_attach_card (self, 3, IO_NONE, NULL);
     io_attach_card (self, 4, IO_NONE, NULL);
