@@ -73,19 +73,17 @@ event_time_cmp (event_time_t x, event_time_t y)
 {
     /* {{{ */
     /* return x - y */
-    event_time_t carry  = event_time_new (0, 0);
     event_time_t result = event_time_new (0, 0);
 
-    /* handle carry */
-    if (x.frame < y.frame)
-    {
-        carry.frame = 1;
-        carry.cycle = -s_cycles_run;
-    }
-
     /* calculate result */
-    result.frame = x.frame - y.frame + carry.frame;
-    result.cycle = x.cycle - y.cycle + carry.cycle;
+    result.frame = x.frame - y.frame;
+    result.cycle = x.cycle - y.cycle;
+
+    while (result.cycle < 0)
+    {
+        result.frame -= 1;
+        result.cycle += s_cycles_run;
+    }
 
     return result;
     /* }}} */
@@ -245,19 +243,19 @@ speaker_toggle (speaker_t *self, event_time_t event_time)
     assert (self != NULL);
 
     if (self->stream == NULL) return 0;
-    
+
     da_pop_front ((da_void_t *)&self->transitions, (int)self->transition_index);
     self->transition_index = 0;
 
     da_resize ((da_void_t *)&self->transitions, 1);
-    
+
     /* search linearly backwards for location to insert at */
     for (i = (int)self->transitions.count; i > 0; i--)
     {
         diff = event_time_cmp (self->transitions.m[i-1], event_time);
 
         if ((diff.frame < 0) || (diff.cycle < 0)) 
-        { 
+        {
             break; 
         }
     }
@@ -303,9 +301,11 @@ speaker_generate_frequency (speaker_t *self, float frequency, int ms_duration)
 static float
 volume_to_amplitude (float volume_level)
 {
+    /* {{{ */
     const float MAX_VOLUME = 100.F;
     const float MAX_AMPLITUDE = 1.F;
     return MAX_AMPLITUDE * (volume_level / MAX_VOLUME);
+    /* }}} */
 }
 
 static int
@@ -329,10 +329,10 @@ speaker_callback (const void *input_buffer, void *output_buffer, /* NOLINT */
     for (i = 0; i < frames_per_buffer; i++)
     {
         /* bind amplitude to -1.0 to 1.0 */
-        amplitude = fminf (1.F, fmaxf (0.F, self->buffer[i]));
+        amplitude = fminf (1.F, fmaxf (-1.F, self->buffer[i]));
 
         /* calculate final value */
-        output = amplitude * UINT8_MAX;
+        output = (amplitude / 2 + 0.5f) * UINT8_MAX;
         *out++ = output;
     }
 

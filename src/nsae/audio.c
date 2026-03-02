@@ -47,9 +47,16 @@ audio_amplify (float buffer[], float scale_amplitude)
 {
     int i = 0; /* NOLINT */
 
+    if (scale_amplitude == 0)
+    {
+        return;
+    }
+
     for (i = 0; i < AUDIO_BUFFER_SIZE; i++)
     {
         buffer[i] /= scale_amplitude;
+        buffer[i] = fminf ( 1.f, buffer[i]);
+        buffer[i] = fmaxf (-1.f, buffer[i]);
     }
 }
 
