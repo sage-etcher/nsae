@@ -226,12 +226,12 @@ adv_in (adv_t *self, uint8_t port, uint16_t pc)
         case IO_NONE:
             log_fn (LC_IO, LOG_WARNING, "nsae: io #%1d (%02x): %04x: empty slot\n",
                     a+1, port, pc);
-            break;
+            return 0x00;
 
         default:
             log_fn (LC_IO, LOG_ERROR, "nsae: io #%1d: %04x: unknown io board type - %02x\n",
                     a+1, pc, self->io.slot[a]);
-            break; /* unimplimented */
+            return 0xff;
         }
 
         break; /* unimplimented */
@@ -451,7 +451,7 @@ adv_out (adv_t *self, uint8_t port, uint8_t data, uint16_t pc)
         default:
             log_fn (LC_IO, LOG_ERROR, "nsae: io #%1d: %04x: 0x%02x unknown io board type - %02x\n",
                     a+1, pc, data, self->io.slot[a]);
-            break; /* unimplimented */
+            return;
         }
 
         break; /* unimplimented */
