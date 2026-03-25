@@ -224,8 +224,8 @@ adv_in (adv_t *self, uint8_t port, uint16_t pc)
             break; /* unimplimented */
 
         case IO_NONE:
-            log_fn (LC_IO, LOG_WARNING, "nsae: io #%1d: %04x: empty slot\n",
-                    a+1, pc);
+            log_fn (LC_IO, LOG_WARNING, "nsae: io #%1d (%02x): %04x: empty slot\n",
+                    a+1, port, pc);
             break;
 
         default:
@@ -401,7 +401,7 @@ adv_out (adv_t *self, uint8_t port, uint8_t data, uint16_t pc)
     case 0x40: /* io board 2 */
     case 0x50: /* io board 1 */
         /* convert port to io board index 0-5 */
-        b = (port & 0x30) >> 4;
+        b = (port & 0x70) >> 4;
         assert (b < IO_SLOT_CNT);
         a = IO_SLOT_CNT - b - 1;
 
@@ -444,8 +444,8 @@ adv_out (adv_t *self, uint8_t port, uint8_t data, uint16_t pc)
             break; /* unimplimented */
 
         case IO_NONE:
-            log_fn (LC_IO, LOG_WARNING, "nsae: io #%1d: %04x: 0x%02x empty slot\n",
-                    a+1, pc, data);
+            log_fn (LC_IO, LOG_WARNING, "nsae: io #%1d (%02x): %04x: 0x%02x empty slot\n",
+                    a+1, port, pc, data);
             return;
 
         default:
