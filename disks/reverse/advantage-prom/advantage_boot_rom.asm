@@ -95,7 +95,8 @@
 806f 3c        inc     a				; sets second video 16k ram to 0400H
 8070 d3a1      out     (0a1h),a
 8072 310002    ld      sp,0200h
-8075 cdbd82    call    82bdh
+8075 cdbd82    call    label_82bdh
+
 8078 d3a3      out     (0a3h),a			; set 16k main ram to the last bank
 807a d390      out     (90h),a
 807c d3b0      out     (0b0h),a
@@ -453,28 +454,44 @@
 82b8 061f      ld      b,1fh
 82ba c26c83    jp      nz,DispChar
 ; some sub routine that gets called before setting memory back A3
+
+            ;blank display
+            label_82bdh:
 82bd d9        exx
 82be af        xor     a
 82bf 264f      ld      h,4fh
+            label_82c1h:    ; clear the display
 82c1 2ef0      ld      l,0f0h
+            label_82c3h:
 82c3 2d        dec     l
 82c4 77        ld      (hl),a
-82c5 20fc      jr      nz,82c3h         ; (-04h)
+82c5 20fc      jr      nz,label_82c3h         ; (-04h)
 82c7 25        dec     h
-82c8 20f7      jr      nz,82c1h         ; (-09h)
+82c8 20f7      jr      nz,label_82c1h         ; (-09h)
+
+                            ; clear the temp display storage
+            label_82cah:    ;00ff-0000 = 0x00
 82ca 77        ld      (hl),a
 82cb 2d        dec     l
-82cc 20fc      jr      nz,82cah         ; (-04h)
-82ce 216185    ld      hl,8561h
+82cc 20fc      jr      nz,label_82cah         ; (-04h)
+
+                            ;set new temp display variables
+82ce 216185    ld      hl,8561h         ;save charset pointer
 82d1 22f200    ld      (00f2h),hl
-82d4 21f002    ld      hl,02f0h
+82d4 21f002    ld      hl,02f0h         ;save cursor template pointer
 82d7 22f800    ld      (00f8h),hl
+
+                                        ;loop 10 times
+                                        ;02f0-02fa = 0xff
 82da 01ff0a    ld      bc,0affh
+            label_82ddh:
 82dd 71        ld      (hl),c
 82de 2c        inc     l
-82df 10fc      djnz    82ddh            ; (-04h)
+82df 10fc      djnz    label_82ddh            ; (-04h)
+
 82e1 d9        exx
 82e2 c9        ret
+
 ; mini monitor data input command 'D'
 82e3 cd9183    call    8391h			; get address in bc from keyboard - ascii to binary
 82e6 ed43fe02  ld      (02feh),bc		; save it to video memory that is off screen?
