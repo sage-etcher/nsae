@@ -34,15 +34,14 @@ br_add (breakpoints_t *self, uint16_t pc)
 }
 
 int
-br_remove (breakpoints_t *self, uint16_t pc)
+br_remove (breakpoints_t *self, size_t index)
 {
     assert (self != NULL);
-    int index = br_lookup (self, pc);
-    if (index == -1) return -1;
+    if (index >= self->cnt) return -1;
     uint16_t addr = self->m[index];
 
-    memcpy (&self->m[index], &self->m[index+1], self->cnt - index - 1);
     self->cnt--;
+    self->m[index] = self->m[self->cnt];
 
     return addr;
 }

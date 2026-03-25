@@ -13,7 +13,7 @@ typedef struct {
 } breakpoints_t;
 
 int br_add (breakpoints_t *self, uint16_t pc);
-int br_remove (breakpoints_t *self, uint16_t pc);
+int br_remove (breakpoints_t *self, size_t index);
 int br_lookup (breakpoints_t *self, uint16_t pc);
 void br_list (breakpoints_t *self);
 
