@@ -133,6 +133,9 @@ sio_init (sio_t *self, const char *host_device)
 #endif
     };
 
+    self->baud_code = 0x7e;
+    self->mode = MODE_BA16 | MODE_L8 | MODE_A_S1;
+
 #if ENABLE_SERIAL_PORT_EMULATION
     if (host_device == NULL) 
     {
@@ -453,14 +456,23 @@ sio_get_status (sio_t *self)
                 strerror (errno));
         return STAT_RXRDY | STAT_TXRDY | STAT_DSR;
     }
+    log_debug ("nsae: sio: modem_status - %x %x\n", 
+            self->serial_port, modem_status);
 
     /* translate to advantage */
     self->status = 0x00;
 
-    if (modem_status & TIOCM_LE)
-    {
-        self->status |= STAT_DSR;
-    }
+    /*
+     * TIOCM_ST     TxRDY
+     * TIOCM_SR     RxRDY
+     *              TxE
+     *              PE          not pins
+     *              OE          not pins
+     *              FE          not pins
+     *              SYNDET/BD
+     * TIOCM_DSR|LE DSR
+     */
+
 
     if (modem_status & TIOCM_ST)
     {
@@ -470,6 +482,11 @@ sio_get_status (sio_t *self)
     if (modem_status & TIOCM_SR)
     {
         self->status |= STAT_RXRDY;
+    }
+
+    if (modem_status & (TIOCM_LE | TIOCM_DSR))
+    {
+        self->status |= STAT_DSR;
     }
 
     /* unsure how to handle STAT_TXE or SYNDET_BD on unix api */
