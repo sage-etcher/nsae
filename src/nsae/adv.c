@@ -46,7 +46,7 @@ adv_init (adv_t *self, void *parent)
     mmu_init_page (&self->mmu, 0x02, 0xffff, RAM_BASE_MAIN_2);
     mmu_init_page (&self->mmu, 0x03, 0xffff, RAM_BASE_MAIN_3);
     mmu_init_page (&self->mmu, 0x08, 0xffff, RAM_BASE_VRAM_8);
-    mmu_init_page (&self->mmu, 0x09, 0x3fff, RAM_BASE_VRAM_9);
+    mmu_init_page (&self->mmu, 0x09, 0x0fff, RAM_BASE_VRAM_9);
     mmu_init_page (&self->mmu, 0x0C, 0x07ff, RAM_BASE_PROM);
     mmu_init_page (&self->mmu, 0x0D, 0x07ff, RAM_BASE_PROM);
     mmu_init_page (&self->mmu, 0x0E, 0x07ff, RAM_BASE_PROM);
