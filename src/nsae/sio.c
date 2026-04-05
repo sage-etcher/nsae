@@ -114,7 +114,7 @@ int
 sio_init (sio_t *self, const char *host_device)
 {
 #if ENABLE_SERIAL_PORT_EMULATION
-    int serial_port = 0;
+    int serial_port = -1;
     struct termios tty = { 0 };
 #endif
 
@@ -128,7 +128,7 @@ sio_init (sio_t *self, const char *host_device)
         .data_index = 0,
 #if ENABLE_SERIAL_PORT_EMULATION
         .dev_path = NULL,
-        .serial_port = 0,
+        .serial_port = -1,
         .tty =  { 0 },
 #endif
     };
@@ -188,7 +188,10 @@ sio_destroy (sio_t *self)
     }
 
 #if ENABLE_SERIAL_PORT_EMULATION
-    close (self->serial_port);
+    if (self->serial_port >= 0)
+    {
+        close (self->serial_port);
+    }
 #endif
 
     memset (self, 0, sizeof (*self));
@@ -338,8 +341,15 @@ configure_host_mode (sio_t *self)
 
     /* apply changes */
     self->tty = tty;
-    tcflush (self->serial_port, TCIFLUSH);
-    tcsetattr (self->serial_port, TCSANOW, &self->tty);
+    if (self->serial_port < 0)
+    {
+        log_warning ("nsae: sio: warning: cannot configure, missing host serial device\n");
+    }
+    else 
+    {
+        tcflush (self->serial_port, TCIFLUSH);
+        tcsetattr (self->serial_port, TCSANOW, &self->tty);
+    }
 
 #else
 
@@ -371,6 +381,13 @@ sio_recieve_data (sio_t *self)
     //        self->data_index, data);
 
 #if ENABLE_SERIAL_PORT_EMULATION
+
+    if (self->serial_port < 0) 
+    {
+        log_warning ("nsae: sio: warning: cannot read, missing host serial device\n");
+        return 0;
+    }
+
     int n = read (self->serial_port, &data, sizeof (uint8_t)); 
     if (n < 0) 
     {
@@ -429,6 +446,11 @@ sio_send_data (sio_t *self, uint8_t data)
     //log_debug ("nsae: sio: send data #-03u - %02X\n", 
     //        self->data_index, data);
 #if ENABLE_SERIAL_PORT_EMULATION
+    if (self->serial_port < 0)
+    {
+        log_warning ("nsae: sio: warning: cannot write, missing host serial device\n");
+        return;
+    }
     int n = write (self->serial_port, &data, sizeof (uint8_t)); 
     if (n < 0) 
     {
@@ -444,6 +466,13 @@ sio_get_status (sio_t *self)
 {
     int rc = 0;
     int modem_status = 0;
+
+    /* guard clause */
+    if (self->serial_port < 0)
+    {
+        log_warning ("nsae: sio: warning: cannot get status, missing host serial device\n");
+        return 0x00;
+    }
 
     /* in a,(0X1h) */
     //log_debug ("nsae: sio: read status - %02X\n", self->status);
@@ -512,6 +541,11 @@ decode_command (sio_t *self)
     int bit_mask = 0;
     int action = 0;
 
+    if (self->serial_port < 0)
+    {
+        log_warning ("nsae: sio: warning: cannot send command, missing host serial device\n");
+        return 0x00;
+    }
 
     ioctl (self->serial_port, TIOCMGET, &modem_status);
 
