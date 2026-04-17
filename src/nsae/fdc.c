@@ -239,6 +239,7 @@ fdc_set_read (fdc_t *self, bool state)
     self->preamble = 0;
     self->sync = 0;
     self->index = 0;
+    self->serial_data = true;
 }
 
 void
