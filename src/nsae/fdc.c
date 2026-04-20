@@ -184,8 +184,8 @@ fdc_secmark_low (fdc_t *self)
     fdc_set_write (self, false);    /* cleared on leading edge */
 
     self->sector_mark = true;
-    self->sector_mark_hold = 10;
-    //self->sector_mark_hold = 25;
+    //self->sector_mark_hold = 10;
+    self->sector_mark_hold = 25;
 
     fdc_next_sector (self);
 
@@ -200,8 +200,12 @@ fdc_secmark_high (fdc_t *self)
 
     self->sector_mark = false;
 
-    self->sector_mark_hold = 100;
+    //self->sector_mark_hold = 100;
+    self->sector_mark_hold = 1000;
     self->serial_data = true;
+
+    self->read_mode = false;
+    self->write_mode = false;
 }
 
 
@@ -223,7 +227,7 @@ fdc_update (fdc_t *self)
         fdc_secmark_low (self);
     }
     else if ((self->powered && self->motor_enabled) &&
-             !(self->read_mode || self->write_mode) &&
+//             !(self->read_mode || self->write_mode) &&
              (self->sector_mark_hold != 0))
     {
         self->sector_mark_hold--;
@@ -239,7 +243,7 @@ fdc_set_read (fdc_t *self, bool state)
     self->preamble = 0;
     self->sync = 0;
     self->index = 0;
-    self->serial_data = true;
+    //self->serial_data = true;
 }
 
 void
