@@ -3,6 +3,8 @@
 
 NOTE: this is verry much a WIP
 
+NOTE: some versions of GLFW don't play nice with GLEW, I would recommend using GLFW 3.3.10 at the newest see <https://github.com/nigels-com/glew/issues/417> for more details.
+
 Tested support for AlmaLinux 9, FreeBSD 13, and Windows 11.
 
 ## Examples
