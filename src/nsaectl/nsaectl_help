@@ -67,12 +67,12 @@ modes:
   info floppy
   set  floppy disk       <byte>
   set  floppy side       <byte>
-  set  floppy track      <byte>
   set  floppy powered    <boolean>
   set  floppy zerotrack  <boolean>
   set  floppy sectormark <boolean>
   set  floppy <drive_index:0,1>:eject  <boolean>
-  set  floppy <drive_index:0,1>:sector <boolean>
+  set  floppy <drive_index:0,1>:track  <byte,0-35>
+  set  floppy <drive_index:0,1>:sector <byte,0-8,f>
   load floppy <drive_index:0,1> <file>
   save floppy <drive_index:0,1> <file>
   read floppy <drive_index:0,1>:<sector> <*count=1>

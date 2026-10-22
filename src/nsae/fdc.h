@@ -40,7 +40,7 @@ typedef struct {
 
     uint8_t sector_prn;
     uint8_t sector[FD_CNT];
-    uint8_t track;
+    uint8_t track[FD_CNT];
 
     bool powered;
     bool motor_enabled;

@@ -284,22 +284,22 @@ fdc_step (fdc_t *self)
     if (self->step_direction == FD_STEP_IN)
     {
         /* protect from underflow */
-        if (self->track > 0) 
+        if (self->track[self->disk] > 0) 
         {
-            self->track--;
+            self->track[self->disk]--;
         }
     }
     else if (self->step_direction == FD_STEP_OUT)
     {
         /* protect from overflow */
-        if (self->track < FD_TRACKS-1)
+        if (self->track[self->disk] < FD_TRACKS-1)
         {
-            self->track++;
+            self->track[self->disk]++;
         }
     }
 
-    self->track_zero = self->track == 0;
-    //log_debug ("trackzero = %d\n", self->track_zero);
+    self->track_zero = self->track[self->disk] == 0;
+    //log_debug ("track[self->disk]zero = %d\n", self->track_zero);
 }
 
 
@@ -340,7 +340,7 @@ fdc_read_sync1 (fdc_t *self)
     log_debug ("nsae: fdc: reading from D %d S %d T %02d S %d\n", 
             self->disk,
             self->side,
-            self->track,
+            self->track[self->disk],
             self->sector[self->disk]);
 
     self->sync = 1;
@@ -393,11 +393,11 @@ fdc_read_sync2 (fdc_t *self)
 
     /*
      * the technical manual lists taking the lower 8bits of
-     * `(track * 16) + sector`, which I stand to claim that according to
+     * `(track[self->disk] * 16) + sector`, which I stand to claim that according to
      * northstar written cpm/nsdos/demodiag bootloaders is incorrect.
      *
-     * here we use: `((track & 0x03) << 6) | (side << 4) | sector`
-     * where track is 0-34 representing the incremental distance from track0
+     * here we use: `((track[self->disk] & 0x03) << 6) | (side << 4) | sector`
+     * where track[self->disk] is 0-34 representing the incremental distance from track[self->disk]0
      * side is 0-1 for top:bottom
      * sector is 0-9 (all ranges inclusive)
      *
@@ -405,18 +405,18 @@ fdc_read_sync2 (fdc_t *self)
      * required for sync2 calculation.
      *
      * side   0  0  0  0  0  0  0  i0
-     * track  0  0  t5 t4 t3 t2 t1 t0
+     * track[self->disk]  0  0  t5 t4 t3 t2 t1 t0
      * sector 0  0  0  0  s3 s2 s1 s0
      *
      * sync2  t1 t0 0  i0 s3 s2 s1 s0
      */
     uint8_t sync2 = calc_sync2_fast (
-            self->track,
+            self->track[self->disk],
             self->sector[self->disk],
             self->side);
 
     log_debug ("nsae: fdc: sync2 %d %d %d -> %02x\n",
-            self->track,
+            self->track[self->disk],
             self->sector[self->disk],
             self->side,
             sync2);
@@ -447,7 +447,7 @@ static uint32_t
 fdc_get_disk_offset (fdc_t *self)
 {
     return fdc_calc_disk_offset (self->side,
-                                 self->track,
+                                 self->track[self->disk],
                                  self->sector[self->disk],
                                  0);
 }
@@ -514,7 +514,7 @@ fdc_read (fdc_t *self)
             data, 
             self->disk,
             self->side,
-            self->track,
+            self->track[self->disk],
             self->sector[self->disk],
             self->index,
             offset);
@@ -546,7 +546,7 @@ fdc_write (fdc_t *self, uint8_t data)
         log_debug ("nsae: fdc: writing preamble for D %d S %d T %02d S %02d\n", 
                 self->disk,
                 self->side,
-                self->track,
+                self->track[self->disk],
                 self->sector[self->disk]);
         log_debug ("nsae: fdc: write preamble %d %d\n", data, self->preamble);
         if (data != 0x00)
@@ -599,7 +599,7 @@ fdc_write (fdc_t *self, uint8_t data)
             data, 
             self->disk,
             self->side,
-            self->track,
+            self->track[self->disk],
             self->sector[self->disk],
             self->index,
             offset);
@@ -617,7 +617,7 @@ fdc_status (fdc_t *self)
             self->motor_enabled,
             self->disk,
             self->side);
-    log_info ("track0:    %1d\tspulse:  %1d\tsmark:   %1d\tsdata: %1d\n",
+    log_info ("track[self->disk]0:    %1d\tspulse:  %1d\tsmark:   %1d\tsdata: %1d\n",
             self->track_zero,
             self->step_pulse,
             self->sector_mark,
@@ -636,7 +636,7 @@ fdc_status (fdc_t *self)
             (!self->disk_loaded[0] ? "    " :
                 (self->disk_type[0] == FD_SSDD ? "SSDD" :
                  self->disk_type[0] == FD_DSDD ? "DSDD" : "????")),
-            self->track,
+            self->track[self->disk],
             self->sector[0],
             self->hard_ro,
             (!self->disk_loaded[0] ? "none" : self->filename[0]));
@@ -644,7 +644,7 @@ fdc_status (fdc_t *self)
             (!self->disk_loaded[1] ? "    " :
                 (self->disk_type[1] == FD_SSDD ? "SSDD" :
                  self->disk_type[1] == FD_DSDD ? "DSDD" : "????")),
-            self->track,
+            self->track[self->disk],
             self->sector[1],
             self->hard_ro,
             (!self->disk_loaded[1] ? "none" : self->filename[1]));

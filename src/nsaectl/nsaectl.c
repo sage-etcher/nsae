@@ -159,14 +159,15 @@ static const struct var_entry SET_LIST[] = {
 
     { MODE_FDC, "disk",       "d",   VAR_FDC_DISK },
     { MODE_FDC, "side",       "si",  VAR_FDC_SIDE },
-    { MODE_FDC, "track",      "t",   VAR_FDC_TRACK },
+    { MODE_FDC, "0:track",    "0t",  VAR_FDC_TRACK_A },
+    { MODE_FDC, "1:track",    "1t",  VAR_FDC_TRACK_B },
     { MODE_FDC, "powered",    "p",   VAR_FDC_POWERED },
     { MODE_FDC, "zerotrack",  "z",   VAR_FDC_TRACKZERO },
     { MODE_FDC, "sectormark", "se",  VAR_FDC_SECTORMARK },
-    { MODE_FDC, "0:eject",    "0:e", VAR_FDC_EJECT_A },
-    { MODE_FDC, "1:eject",    "1:e", VAR_FDC_EJECT_B },
-    { MODE_FDC, "0:sector",   "0:s", VAR_FDC_SECTOR_A },
-    { MODE_FDC, "1:sector",   "1:s", VAR_FDC_SECTOR_B },
+    { MODE_FDC, "0:eject",    "0e",  VAR_FDC_EJECT_A },
+    { MODE_FDC, "1:eject",    "1e",  VAR_FDC_EJECT_B },
+    { MODE_FDC, "0:sector",   "0s",  VAR_FDC_SECTOR_A },
+    { MODE_FDC, "1:sector",   "1s",  VAR_FDC_SECTOR_B },
 
     { MODE_HDC, "eject",      "e", VAR_HDC_EJECT },
 
@@ -549,6 +550,7 @@ get_cmd (const char *input)
     for (i = 0; i < ARRLEN (CMD_LIST); i++)
     {
         iter = &CMD_LIST[i];
+        //printf ("checking cmd %s against %s and %s\n", input, iter->long_name, iter->short_name);
         if (match_name (input, iter->long_name, iter->short_name))
         {
             return iter;
@@ -584,6 +586,7 @@ get_mode (const struct cmd_entry *cmd, const char *input, int *ret_arg_is_mode)
     for (i = 0; i < MODE_LIST_LEN; i++)
     {
         iter = &MODE_LIST[i];
+        //printf ("checking mode %s against %s and %s\n", input, iter->long_name, iter->short_name);
         if (match_name (input, iter->long_name, iter->short_name))
         {
             mode_id = iter->mode_id;

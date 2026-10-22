@@ -396,9 +396,14 @@ server_handle_ipc (nsae_t *self)
             self->adv.fdc.side = packet->v_data32 & 1;
             break;
 
-        case VAR_FDC_TRACK:
-            log_verbose ("fdc.track %02x\n", packet->v_data32);
-            self->adv.fdc.track = packet->v_data32;
+        case VAR_FDC_TRACK_A:
+            log_verbose ("fdc.track.a %02x\n", packet->v_data32);
+            self->adv.fdc.track[0] = packet->v_data32;
+            break;
+
+        case VAR_FDC_TRACK_B:
+            log_verbose ("fdc.track.b %02x\n", packet->v_data32);
+            self->adv.fdc.track[1] = packet->v_data32;
             break;
 
         case VAR_FDC_POWERED:
