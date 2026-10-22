@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 typedef DARRAY_T (char) log_string_t;
 
@@ -88,7 +89,13 @@ log_fn (uint8_t category, uint8_t severity, const char *fmt, ...)
     /* duplicate logs to file aswell */
     if (g_log_file_stream != NULL)
     {
-        fprintf (g_log_file_stream, "%s", buf);
+        time_t tnow = time(NULL);
+        struct tm *tmnow = localtime(&tnow);
+
+        enum { DATE_MAX = sizeof("[YYYY-MM-DD HH:MM:SS]") };
+        char date[DATE_MAX] = { '\0' };
+        (void)strftime (date, DATE_MAX, "[%Y-%m-%d %H:%M:%S]", tmnow);
+        fprintf (g_log_file_stream, "%s %s", date, buf);
     }
 
     /* log to string aswell */
