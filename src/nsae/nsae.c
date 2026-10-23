@@ -139,6 +139,10 @@ nsae_start (nsae_t *self, nsae_config_t *config)
             "/usr/share/icons/hicolor/128x128/apps/nsae.png",
             &icons[0].width, &icons[0].height, 
             NULL, STBI_rgb_alpha);
+    if (icons[0].pixels == NULL)
+    {
+        log_error ("nsae: stbi: cannot load icon image\n");
+    }
 
     /* create glfw window */
     GLFWwindow *win = NULL;
