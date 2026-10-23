@@ -13,6 +13,7 @@
 
 #include <sc_map.h>
 #include <sc_time.h>
+#include <stb_image.h>
 
 #include <assert.h>
 #include <stdint.h>
@@ -132,6 +133,13 @@ nsae_start (nsae_t *self, nsae_config_t *config)
         return 1;
     }
 
+    /* read window icon into memory */
+    GLFWimage icons[1];
+    icons[0].pixels = stbi_load (
+            "/usr/share/icons/hicolor/128x128/nsae.png",
+            &icons[0].width, &icons[0].height, 
+            0, 4);
+
     /* create glfw window */
     GLFWwindow *win = NULL;
     win = glfwCreateWindow (
@@ -144,6 +152,10 @@ nsae_start (nsae_t *self, nsae_config_t *config)
         return 1;
     }
     glfwMakeContextCurrent (win);
+
+    /* assign window icon */
+    glfwSetWindowIcon (win, 1, icons[0].pixels);
+    stbi_image_free (icons[0].pixels);
 
     /* initialize opengl */
     glfwGetWindowSize (win, &self->width, &self->height);

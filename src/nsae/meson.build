@@ -89,6 +89,7 @@ nsae_bin = executable('nsae', [
     portaudio_dep,
     sc_map_dep,
     sc_time_dep,
+    stb_image_dep,
   ],
   install : true,
 )
