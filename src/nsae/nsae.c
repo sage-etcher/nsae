@@ -136,9 +136,9 @@ nsae_start (nsae_t *self, nsae_config_t *config)
     /* read window icon into memory */
     GLFWimage icons[1];
     icons[0].pixels = stbi_load (
-            "/usr/share/icons/hicolor/128x128/nsae.png",
+            "/usr/share/icons/hicolor/128x128/apps/nsae.png",
             &icons[0].width, &icons[0].height, 
-            0, 4);
+            NULL, STBI_rgb_alpha);
 
     /* create glfw window */
     GLFWwindow *win = NULL;
@@ -154,8 +154,7 @@ nsae_start (nsae_t *self, nsae_config_t *config)
     glfwMakeContextCurrent (win);
 
     /* assign window icon */
-    glfwSetWindowIcon (win, 1, icons[0].pixels);
-    stbi_image_free (icons[0].pixels);
+    glfwSetWindowIcon (win, 1, icons);
 
     /* initialize opengl */
     glfwGetWindowSize (win, &self->width, &self->height);
@@ -200,6 +199,7 @@ nsae_start (nsae_t *self, nsae_config_t *config)
     log_quit ();
 
     kbmap_free (&self->kbmap);
+    stbi_image_free (icons[0].pixels);
 
     return 0;
 }

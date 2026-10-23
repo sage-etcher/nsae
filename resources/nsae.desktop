@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Name=NorthStar Advantage Emulator
+Exec=/usr/local/bin/nsae
+Terminal=false
+Type=Application
+GenericName=NorthStar Advantage Emulator
+Icon=/usr/share/icons/hicolor/128x128/apps/nsae.png
+#Icon=nsae
+Categories=Utility;
+Keywords=nsae;emulator;northstar;advantage

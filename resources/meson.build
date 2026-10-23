@@ -11,4 +11,15 @@ advprom_h = custom_target(
   command : xxd_command,
 )
 
+install_data(
+  'nsaetesticon.png', 
+  rename      : 'nsae.png',
+  install_dir : '/usr/share/icons/hicolor/128x128/apps/',
+)
+
+install_data(
+  'nsae.desktop',
+  install_dir : '/usr/share/applications/',
+)
+
 # end of file
