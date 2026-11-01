@@ -143,6 +143,7 @@ nsae_start (nsae_t *self, nsae_config_t *config)
         log_fatal ("nsae: glfw: window creation failed\n");
         return 1;
     }
+    self->win = win;
     glfwMakeContextCurrent (win);
 
     /* initialize opengl */

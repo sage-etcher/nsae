@@ -118,6 +118,9 @@ static const struct var_entry SET_LIST[] = {
     /* {{{ */
     { MODE_BR,  "address",    "a", VAR_BR_APPEND },
 
+    { MODE_NSAE,"winscale",   "w",   VAR_NSAE_SCALE_WIN },
+    { MODE_NSAE,"speedscale", "spe", VAR_NSAE_SCALE_SPEED },
+
     { MODE_ADV, "kbmi",       "kbm", VAR_ADV_KBMI },
     { MODE_ADV, "kbnmi",      "kbn", VAR_ADV_KBNMI },
     { MODE_ADV, "crtmi",      "cr",  VAR_ADV_CRTMI },
@@ -755,6 +758,11 @@ send (int argc, char **argv, char *socket_addr)
                 stmp = NULL;
                 stmp_len = 0;
 
+            }
+            else if (packet.var == VAR_NSAE_SCALE_WIN || 
+                     packet.var == VAR_NSAE_SCALE_SPEED)
+            {
+                packet.v_fdata32 = atof (ARG_POP ());
             }
             else
             {

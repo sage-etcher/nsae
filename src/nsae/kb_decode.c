@@ -88,16 +88,21 @@ kbmap_init (void)
         { .key = GLFW_KEY_KP_DECIMAL,    .value = { true,  false, false, { 0x2e, 0xae, 0x8e, 0x8e, 0x81 } } }, /* .         */
         { .key = GLFW_KEY_KP_0,          .value = { true,  false, true,  { 0x30, 0xb0, 0x90, 0x90, 0xc0 } } }, /* 0         */
         { .key = GLFW_KEY_KP_1,          .value = { true,  false, true,  { 0x31, 0x84, 0xb1, 0x91, 0xfa } } }, /* 1         */
-        { .key = GLFW_KEY_KP_2,          .value = { true,  false, true,  { 0x32, 0x8a, 0xb2, 0x92, 0xfb } } }, /* 2         */
+        { .key = GLFW_KEY_KP_2,          .value = { true,  false, true,  { 0x32, 0x8a, 0xb2, 0x92, 0xfb } } }, /* 2 v       */
         { .key = GLFW_KEY_KP_3,          .value = { true,  false, true,  { 0x33, 0x83, 0xb3, 0x93, 0xfc } } }, /* 3         */
-        { .key = GLFW_KEY_KP_4,          .value = { true,  false, true,  { 0x34, 0x88, 0xb4, 0x94, 0xfd } } }, /* 4         */
+        { .key = GLFW_KEY_KP_4,          .value = { true,  false, true,  { 0x34, 0x88, 0xb4, 0x94, 0xfd } } }, /* 4 <       */
         { .key = GLFW_KEY_KP_5,          .value = { true,  false, true,  { 0x35, 0x85, 0xb5, 0x95, 0xba } } }, /* 5         */
-        { .key = GLFW_KEY_KP_6,          .value = { true,  false, true,  { 0x36, 0x86, 0xb6, 0x96, 0xbb } } }, /* 6         */
+        { .key = GLFW_KEY_KP_6,          .value = { true,  false, true,  { 0x36, 0x86, 0xb6, 0x96, 0xbb } } }, /* 6 >       */
         { .key = GLFW_KEY_KP_7,          .value = { true,  false, true,  { 0x37, 0x87, 0xb7, 0x97, 0xbc } } }, /* 7         */
-        { .key = GLFW_KEY_KP_8,          .value = { true,  false, true,  { 0x38, 0x82, 0xb8, 0x98, 0xbd } } }, /* 8         */
+        { .key = GLFW_KEY_KP_8,          .value = { true,  false, true,  { 0x38, 0x82, 0xb8, 0x98, 0xbd } } }, /* 8 ^       */
         { .key = GLFW_KEY_KP_9,          .value = { true,  false, true,  { 0x39, 0x89, 0xb9, 0x99, 0xbe } } }, /* 9         */
-
+        
         { .key = GLFW_KEY_KP_ENTER,      .value = { true,  false, false, { 0x0d, 0x8d, 0x9a, 0x9a, 0xaa } } }, /* enter     */
+        
+        { .key = GLFW_KEY_DOWN,          .value = { true,  false, true,  { 0x8a, 0x8a, 0xb2, 0x92, 0xfb } } }, /* 2 v       */
+        { .key = GLFW_KEY_LEFT,          .value = { true,  false, true,  { 0x88, 0x88, 0xb4, 0x94, 0xfd } } }, /* 4 <       */
+        { .key = GLFW_KEY_RIGHT,         .value = { true,  false, true,  { 0x86, 0x86, 0xb6, 0x96, 0xbb } } }, /* 6 >       */
+        { .key = GLFW_KEY_UP,            .value = { true,  false, true,  { 0x82, 0x82, 0xb8, 0x98, 0xbd } } }, /* 8 ^       */
     };
 
     sc_map_init_64v (&map, 0, 0);

@@ -207,6 +207,19 @@ server_handle_ipc (nsae_t *self)
             br_add (&self->br, packet->v_data32);
             break;
 
+        case VAR_NSAE_SCALE_WIN:
+            log_verbose ("nsae.scale_window %f\n", packet->v_fdata32);
+            self->scale_multiplier = packet->v_fdata32;
+            self->height = 480 * self->scale_multiplier;
+            self->width  = 640 * self->scale_multiplier;
+            glfwSetWindowSize(self->win, self->width, self->height);
+            break;
+
+        case VAR_NSAE_SCALE_SPEED:
+            log_verbose ("nsae.scale_speed %f\n", packet->v_fdata32);
+            self->cycle_multiplier = packet->v_fdata32;
+            break;
+
         case VAR_ADV_KBMI:
             log_verbose ("advantage.kbmi %1d\n", packet->v_data32);
             self->adv.kb_mi = (packet->v_data32 > 0);

@@ -34,7 +34,9 @@ typedef struct {
         uint16_t u16[2];
         uint8_t u8[4];
     } a; 
-    union { uint32_t u32;
+    union { 
+        float f32;
+        uint32_t u32;
         uint16_t u16[2];
         uint8_t u8[4];
     } b;
@@ -51,6 +53,7 @@ typedef struct {
 #define v_port      a.u8[0]     /* 0       */
 
 #define v_data32    b.u32       /* 4 5 6 7 */
+#define v_fdata32   b.f32       /* 4 5 6 7 */
 #define v_count     b.u32       /* 4 5 6 7 */
 
 #define v_fddrive   c.u8[0]     /* 8       */
@@ -100,6 +103,9 @@ typedef enum {
 typedef enum {
     VAR_NULL = 0x00,
     VAR_BR_APPEND,
+
+    VAR_NSAE_SCALE_WIN,
+    VAR_NSAE_SCALE_SPEED,
 
     VAR_ADV_KBMI,
     VAR_ADV_KBNMI,

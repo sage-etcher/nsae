@@ -25,6 +25,7 @@ typedef struct {
     watchpoints_t wp;
     struct sc_map_64v kbmap;
 
+    GLFWwindow *win;
     int width;
     int height;
     int max_fps;
