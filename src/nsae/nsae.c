@@ -215,9 +215,10 @@ nsae_timeout (nsae_t *self)
     }
 
     /* frame time */
-    uint64_t frame_wait = 1000 / (self->cycle_multiplier * self->max_fps);
+    uint64_t frame_wait = 1000 / self->max_fps;
     uint64_t frame_delta = now - self->frame_time;
 
+    //log_debug ("nsae: frametime: wait %llu, delta %llu\n", frame_wait, frame_delta);
     if (frame_delta < frame_wait)
     {
          uint64_t sleep_time = frame_wait - frame_delta;
@@ -289,7 +290,11 @@ nsae_update (GLFWwindow *win)
     if (self->pause) return;
 
     unsigned long CPU_HZ = 4000000; /* 4MHz */
-    unsigned long cycles = self->cycle_multiplier * (CPU_HZ / self->max_fps);
+    uint64_t cycles = CPU_HZ / self->max_fps;
+    if (self->cycle_multiplier > 0)
+    {
+        cycles *= self->cycle_multiplier;
+    }
     unsigned long i = 0; /* NOLINT */
 
     if (self->step)

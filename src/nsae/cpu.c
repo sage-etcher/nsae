@@ -25,7 +25,7 @@ cpu_reset (cpu_t *self)
 }
 
 int
-cpu_run (cpu_t *self, int cycles, void *cb_data)
+cpu_run (cpu_t *self, uint64_t cycles, void *cb_data)
 {
     log_debug ("nsae: cpu: run %d\n", cycles);
     return Z80Emulate (&self->state, cycles, cb_data);
