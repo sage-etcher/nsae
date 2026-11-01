@@ -90,7 +90,7 @@ static const int OVERFLOW_TABLE[4] = {
 
 static int	emulate (Z80_STATE * state, 
 			int opcode,
-			int elapsed_cycles, int number_cycles,
+			uint64_t elapsed_cycles, uint64_t number_cycles,
 			void *context);
 
 void Z80Reset (Z80_STATE *state)
@@ -243,9 +243,10 @@ int Z80NonMaskableInterrupt (Z80_STATE *state, void *context)
         return elapsed_cycles + 11;
 }
 
-int Z80Emulate (Z80_STATE *state, int number_cycles, void *context)
+int Z80Emulate (Z80_STATE *state, uint64_t number_cycles, void *context)
 {
-        int     elapsed_cycles, pc, opcode;
+        uint64_t elapsed_cycles;
+        int      pc, opcode;
 
         state->status = 0;
 	elapsed_cycles = 0;
@@ -262,7 +263,7 @@ int Z80Emulate (Z80_STATE *state, int number_cycles, void *context)
 
 static int emulate (Z80_STATE * state, 
 	int opcode, 
-	int elapsed_cycles, int number_cycles, 
+	uint64_t elapsed_cycles, uint64_t number_cycles, 
 	void *context)
 {
         int	pc, r;

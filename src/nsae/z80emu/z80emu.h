@@ -14,6 +14,8 @@
 extern "C" {
 #endif
 
+#include <stdint.h>
+
 #include "z80config.h"
 
 /* If Z80_STATE's status is non-zero, the emulation has been stopped for some 
@@ -172,7 +174,7 @@ extern int      Z80NonMaskableInterrupt (Z80_STATE *state, void *context);
  */
 
 extern int      Z80Emulate (Z80_STATE *state, 
-			int number_cycles, 
+			uint64_t number_cycles, 
 			void *context);
 
 #ifdef __cplusplus
