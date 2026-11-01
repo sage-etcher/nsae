@@ -21,6 +21,9 @@ modes:
   info   breakpoint
   set    breakpoint <address>
   delete breakpoint <index>
+  
+  set nsae winscale   <float>
+  set nsae speedscale <float>
 
   info advantage
   set  advantage kbmi     <boolean>
