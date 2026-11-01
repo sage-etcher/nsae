@@ -17,6 +17,7 @@ nsae_tools = [
   'mkfd.nscpm',
   'mkfd.nsdos',
   'nsaecli',
+  'nsaelauncher',
 ]
 
 install_data(
