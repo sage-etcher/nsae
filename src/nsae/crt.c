@@ -55,14 +55,17 @@ crt_draw (crt_t *self)
     //glColor3f (CRT_DRAW_COLOR);  /* see config.h for colour */
 
     /* for each pixel */
+    #pragma GCC unroll 240
     for (int y = 0; y < WIDTH; y++)
     {
+        #pragma GCC unroll 80
         for (int x = 0; x < HEIGHT; x++)
         {
             uint32_t offset = (x * 0x100) + ((y + self->scroll_reg) & 0xff);
             uint32_t abs_addr = self->vram_offset + offset;
             uint8_t data = ram_read (self->p_ram, abs_addr);
 
+            #pragma GCC unroll 8
             for (int b = 0; b < 8; b++) /* for each bit (1bit per pixel) */
             {
                 /* if pixel is on, draw it */

@@ -33,6 +33,8 @@ add_project_arguments([
 
 if get_option('debug')
   add_project_arguments(['-D_DEBUG'], language : 'c')
+else
+  add_project_arguments(['-DNDEBUG'], language : 'c')
 endif
 
 # only allow enable-serial=True when on system that provides the following

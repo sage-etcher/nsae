@@ -37,7 +37,11 @@ char *log_string_get (void);
 #   warning "log: LOG_CATEGORY macro undefined, cannot provide logging macros"
 
 #else
-#define log_debug(...)   log_fn (LOG_CATEGORY, LOG_DEBUG,   __VA_ARGS__)
+#if _DEBUG
+#   define log_debug(...)   log_fn (LOG_CATEGORY, LOG_DEBUG,   __VA_ARGS__)
+#else
+#   define log_debug(...)   do { } while (0)
+#endif
 #define log_verbose(...) log_fn (LOG_CATEGORY, LOG_VERBOSE, __VA_ARGS__)
 #define log_info(...)    log_fn (LOG_CATEGORY, LOG_INFO,    __VA_ARGS__)
 #define log_warning(...) log_fn (LOG_CATEGORY, LOG_WARNING, __VA_ARGS__)
