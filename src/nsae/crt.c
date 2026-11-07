@@ -37,8 +37,8 @@ crt_draw (crt_t *self)
     assert (self != NULL);
     assert (self->p_ram!= NULL);
 
-    const int WIDTH = 240;
-    const int HEIGHT = 80;
+    const int WIDTH  =  80;
+    const int HEIGHT = 240;
 
     /* if blank display, dont update */
     if (self->blank) return;
@@ -55,11 +55,11 @@ crt_draw (crt_t *self)
     //glColor3f (CRT_DRAW_COLOR);  /* see config.h for colour */
 
     /* for each pixel */
-    #pragma GCC unroll 240
-    for (int y = 0; y < WIDTH; y++)
+    //#pragma GCC unroll 240
+    for (int y = 0; y < HEIGHT; y++)
     {
         #pragma GCC unroll 80
-        for (int x = 0; x < HEIGHT; x++)
+        for (int x = 0; x < WIDTH; x++)
         {
             uint32_t offset = (x * 0x100) + ((y + self->scroll_reg) & 0xff);
             uint32_t abs_addr = self->vram_offset + offset;
