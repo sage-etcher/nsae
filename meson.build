@@ -15,8 +15,24 @@ project('NorthStar Advantage Emulator', 'c',
 cc = meson.get_compiler('c')
 
 if get_option('profile')
-  add_project_arguments(['-fprofile-arcs', '-ftest-coverage'], language : 'c')
-  add_global_link_arguments(['-lgcov', '--coverage', '-pg'], language : 'c')
+  add_project_arguments(
+    [
+      '-fprofile-arcs', 
+      '-fcondition-coverage', 
+      '-fprofile-generate', 
+      '-ftest-coverage', 
+      '-pg'
+    ], 
+    language : 'c',
+  )
+  add_global_link_arguments(
+    [
+      '-lgcov', 
+      '--coverage', 
+      '-pg'
+    ], 
+    language : 'c',
+  )
   # -Dc_link_args='-lgcov --coverage -pg' 
   # -Dc_build_args='-fprofile-arcs -ftest-coverage'
 endif
