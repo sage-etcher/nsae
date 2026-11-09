@@ -117,6 +117,21 @@ follows
 - [Golgli/NorthstarAdvantageUtilities-](https://github.com/Holgli/NorthstarAdvantageUtilities-)
   Serial Archival and Transfer Utilities.
 
+# Native macOS display
+
+The macOS build uses Apple's OpenGL framework and a legacy 2.1 context.
+Install GLFW and the other Meson dependencies; Mesa GL/GLU and GLEW are not
+required on macOS. Do not link Mesa's X11 OpenGL libraries with native GLFW.
+Reconfigure existing builds and rebuild:
+
+```sh
+meson setup --reconfigure build
+meson compile -C build
+```
+
+Run with `-v` to report the GL backend and window/framebuffer dimensions.
+The viewport uses framebuffer pixels, including on Retina displays.
+
 # Licensing
 
 Copyright (c) 2025 Sage I. Hendricks  
