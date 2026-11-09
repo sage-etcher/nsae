@@ -33,6 +33,7 @@ static int
 gl_init (GLFWwindow *win, float win_width, float win_height, 
         float emu_width, float emu_height)
 {
+#ifndef __APPLE__
     GLenum glew_error = glewInit ();
     if (glew_error != GLEW_OK)
     {
@@ -41,6 +42,7 @@ gl_init (GLFWwindow *win, float win_width, float win_height,
         return 1;
     }
 
+#endif
     /*
     if (!GLEW_VERSION_1_2)
     {
@@ -132,6 +134,11 @@ nsae_start (nsae_t *self, nsae_config_t *config)
         return 1;
     }
 
+#ifdef __APPLE__
+    /* The fixed-function renderer requires a legacy context. */
+    glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 2);
+    glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 1);
+#endif
     /* create glfw window */
     GLFWwindow *win = NULL;
     win = glfwCreateWindow (
