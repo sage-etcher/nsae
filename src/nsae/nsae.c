@@ -51,7 +51,12 @@ gl_init (GLFWwindow *win, float win_width, float win_height,
     }
     */
 
-    glViewport (0.f, 0.f, win_width, win_height);
+    int framebuffer_width, framebuffer_height;
+    glfwGetFramebufferSize (win, &framebuffer_width, &framebuffer_height);
+    glViewport (0, 0, framebuffer_width, framebuffer_height);
+    log_verbose ("OpenGL vendor=%s renderer=%s version=%s window=%.0fx%.0f framebuffer=%dx%d\n",
+        glGetString (GL_VENDOR), glGetString (GL_RENDERER), glGetString (GL_VERSION),
+        win_width, win_height, framebuffer_width, framebuffer_height);
 
     glMatrixMode (GL_PROJECTION);
     glLoadIdentity ();
@@ -73,6 +78,12 @@ gl_init (GLFWwindow *win, float win_width, float win_height,
     }
 
     return 0;
+}
+
+static void
+nsae_glfw_error (int code, const char *description)
+{
+    log_error ("GLFW error %d: %s\n", code, description);
 }
 
 int
@@ -128,6 +139,7 @@ nsae_start (nsae_t *self, nsae_config_t *config)
     }
 
     /* initialize glfw */
+    glfwSetErrorCallback (nsae_glfw_error);
     if (!glfwInit ())
     {
         log_fatal ("nsae: glfw: initialization failed\n");
@@ -172,16 +184,19 @@ nsae_start (nsae_t *self, nsae_config_t *config)
     while (!glfwWindowShouldClose (win) && !self->exit)
     {
         glfwGetWindowSize (win, &self->width, &self->height);
-        glViewport (0, 0, self->width, self->height);
-        glClear (GL_COLOR_BUFFER_BIT);
+        int framebuffer_width, framebuffer_height;
+        glfwGetFramebufferSize (win, &framebuffer_width, &framebuffer_height);
+        glViewport (0, 0, framebuffer_width, framebuffer_height);
 
         /* process input */
         nsae_update (win);
 
         /* render output */
-        nsae_render (win);
-
-        glfwSwapBuffers (win);
+        if (framebuffer_width > 0 && framebuffer_height > 0)
+        {
+            nsae_render (win);
+            glfwSwapBuffers (win);
+        }
         glfwPollEvents ();
 
         nsae_timeout (self);
