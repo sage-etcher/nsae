@@ -32,7 +32,7 @@ int ram_save_disk (ram_t *self, uint32_t addr, uint32_t n, const char *file);
 int ram_load_disk (ram_t *self, uint32_t addr, const char *file, uint32_t n);
 
 uint8_t ram_read (ram_t *self, uint32_t addr);
-int ram_write (ram_t *self, uint32_t addr, uint8_t data);
+int ram_write (ram_t *self, uint32_t addr, uint8_t data, void *p_crt);
 
 void ram_inspect (ram_t *self, uint32_t addr, uint32_t n);
 

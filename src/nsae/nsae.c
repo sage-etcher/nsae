@@ -91,8 +91,36 @@ nsae_start (nsae_t *self, nsae_config_t *config)
 
     self->kbmap = kbmap_init ();
 
+    /* initialize glfw */
     int rc = 0;
 
+    if (!glfwInit ())
+    {
+        log_fatal ("nsae: glfw: initialization failed\n");
+        return 1;
+    }
+
+    /* create glfw window */
+    GLFWwindow *win = NULL;
+    win = glfwCreateWindow (
+            self->width, self->height,
+            "NorthStar Advantage Emulator",
+             NULL, NULL);
+    if (win == NULL)
+    {
+        log_fatal ("nsae: glfw: window creation failed\n");
+        return 1;
+    }
+    self->win = win;
+    glfwMakeContextCurrent (win);
+
+    /* initialize opengl */
+    glfwGetWindowSize (win, &self->width, &self->height);
+
+    rc = gl_init (win, self->width, self->height, 640, 240);
+    if (rc != 0) { return 1; }
+
+    /* initialize emulator elements */
     log_init (LC_COUNT);
     if (config->verbosity)
     {
@@ -124,33 +152,6 @@ nsae_start (nsae_t *self, nsae_config_t *config)
         log_fatal ("nsae: failed to initialize\n");
         return 1;
     }
-
-    /* initialize glfw */
-    if (!glfwInit ())
-    {
-        log_fatal ("nsae: glfw: initialization failed\n");
-        return 1;
-    }
-
-    /* create glfw window */
-    GLFWwindow *win = NULL;
-    win = glfwCreateWindow (
-            self->width, self->height,
-            "NorthStar Advantage Emulator",
-             NULL, NULL);
-    if (win == NULL)
-    {
-        log_fatal ("nsae: glfw: window creation failed\n");
-        return 1;
-    }
-    self->win = win;
-    glfwMakeContextCurrent (win);
-
-    /* initialize opengl */
-    glfwGetWindowSize (win, &self->width, &self->height);
-
-    rc = gl_init (win, self->width, self->height, 640, 240);
-    if (rc != 0) { return 1; }
 
     /* input mode */
     glfwSetInputMode (win, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
@@ -317,29 +318,8 @@ nsae_render (GLFWwindow *win)
     nsae_t *self = glfwGetWindowUserPointer (win);
     adv_t *adv = &self->adv;
     crt_t *crt = &adv->crt;
- 
-    if (!crt->inverted)
-    {
-        glClearColor (
-                crt->background.x, 
-                crt->background.y, 
-                crt->background.z, 
-                1.f);
-    }
-    else
-    {
-        glClearColor (
-                crt->foreground.x, 
-                crt->foreground.y, 
-                crt->foreground.z, 
-                1.f);
-    }
 
-    glClear (GL_COLOR_BUFFER_BIT);
-
-    glBegin (GL_QUADS);
-        crt_draw (crt);
-    glEnd ();
+    crt_draw (crt);
 
     if (adv->crt_mi)
     {

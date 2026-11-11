@@ -5,12 +5,13 @@
 extern "c" {
 #endif
 
+#include "glinit.h"
 #include "ram.h"
 
 #include <stdbool.h>
 #include <stdint.h>
 
-typedef struct { float x, y, z; } vec3_t;
+typedef GLfloat vec3_t[3];
 
 typedef struct {
     bool blank;
@@ -22,11 +23,16 @@ typedef struct {
 
     vec3_t background;
     vec3_t foreground;
+
+    GLuint tex_normal;
+    GLuint tex_reverse;
 } crt_t;
 
 int crt_init (crt_t *self, ram_t *p_ram, uint32_t vram_offset);
 
 void crt_draw (crt_t *self);
+
+void crt_update (crt_t *self, uint32_t ram_addr, uint8_t data);
 
 void crt_status (crt_t *self);
 

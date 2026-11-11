@@ -8,10 +8,18 @@
 #include <GL/glew.h>
 
 #include <assert.h>
+#include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
+
+
+#define TX_WIDTH  640
+#define TX_HEIGHT 256
+
+#define WIDTH  640
+#define HEIGHT 240
 
 
 int
@@ -23,11 +31,27 @@ crt_init (crt_t *self, ram_t *p_ram, uint32_t vram_offset)
     (void)memset (self, 0, sizeof (*self));
 
     self->inverted = 0;
-    self->p_ram = p_ram;
-    self->vram_offset = vram_offset;
 
-    self->foreground = (vec3_t) { 0.38f, 1.0f, 0.0f };
-    self->background = (vec3_t) { 0.0f,  0.0f, 0.0f };
+    self->foreground[0] = 0.38f; 
+    self->foreground[1] = 1.0f; 
+    self->foreground[2] = 0.0f;
+
+    self->background[0] = 0.0f;  
+    self->background[1] = 0.0f; 
+    self->background[2] = 0.0f;
+    
+    glGenTextures(1, &self->tex_normal);
+    glBindTexture(GL_TEXTURE_2D, self->tex_normal);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, TX_WIDTH, TX_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+    //glGenTextures(1, &self->tex_reverse);
+    //glBindTexture(GL_TEXTURE_2D, self->tex_reverse);
+    //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, TX_WIDTH, TX_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
     return 0;
 }
 
@@ -37,53 +61,151 @@ crt_draw (crt_t *self)
     assert (self != NULL);
     assert (self->p_ram!= NULL);
 
-    const int WIDTH  =  80;
-    const int HEIGHT = 240;
+    if (!self->inverted)
+    {
+        glClearColor (
+                self->background[0], 
+                self->background[1], 
+                self->background[2], 
+                1.f);
+        glBindTexture(GL_TEXTURE_2D, self->tex_normal);
+    }
+    else
+    {
+        glClearColor (
+                self->foreground[0], 
+                self->foreground[1], 
+                self->foreground[2], 
+                1.f);
+        //glBindTexture(GL_TEXTURE_2D, self->tex_reverse);
+    }
+
+    glClear (GL_COLOR_BUFFER_BIT);
 
     /* if blank display, dont update */
     if (self->blank) return;
 
-    if (!self->inverted)
+    glEnable(GL_TEXTURE_2D);
+    glBegin(GL_QUADS);
+
+    // TODO: handle scroll reg clipping and wrapping
+    uint8_t scroll = self->scroll_reg;
+
+    // upper half
+    if (scroll <= 16)
     {
-        glColor3f (self->foreground.x, self->foreground.y, self->foreground.z);
+        glTexCoord2f(0, (GLfloat)scroll/TX_HEIGHT); 
+        glVertex2f(0, 0);
+
+        glTexCoord2f(0, (GLfloat)(HEIGHT+scroll)/TX_HEIGHT); 
+        glVertex2f(0, HEIGHT);
+
+        glTexCoord2f(1, (GLfloat)(HEIGHT+scroll)/TX_HEIGHT); 
+        glVertex2f(WIDTH, HEIGHT);
+
+        glTexCoord2f(1, (GLfloat)scroll/TX_HEIGHT); 
+        glVertex2f(WIDTH, 0);
     }
     else
     {
-        glColor3f (self->background.x, self->background.y, self->background.z);
+        glTexCoord2f(0, (GLfloat)(scroll-16)/TX_HEIGHT); 
+        glVertex2f(0, 0);
+
+        glTexCoord2f(0, 1); 
+        glVertex2f(0, HEIGHT-scroll+16);
+
+        glTexCoord2f(1, 1); 
+        glVertex2f(WIDTH, HEIGHT-scroll+16);
+
+        glTexCoord2f(1, (GLfloat)(scroll-16)/TX_HEIGHT); 
+        glVertex2f(WIDTH, 0);
+    /*
+    0-16  
+    adjust texcord only
+    texcode should move with scroll position
+
+    16+
+    draw 2 quads
+    top quad from scroll-16 to end of end of TX_HEIGHT
+    bottom quad from 0 to scroll-16
+    */
+
+
+        glTexCoord2f(0, 0); 
+        glVertex2f(0, HEIGHT-scroll+16);
+
+        glTexCoord2f(0, (GLfloat)(scroll-16)/TX_HEIGHT); 
+        glVertex2f(0, HEIGHT);
+
+        glTexCoord2f(1, (GLfloat)(scroll-16)/TX_HEIGHT); 
+        glVertex2f(WIDTH, HEIGHT);
+
+        glTexCoord2f(1, 0); 
+        glVertex2f(WIDTH, HEIGHT-scroll+16);
+
     }
+    // lower half
+    //if (scroll > 16)
+    //{
+    //    // lower half
+    //    glTexCoord2f(0, 0); 
+    //    glVertex2f(0, 0);
 
-    //glColor3f (CRT_DRAW_COLOR);  /* see config.h for colour */
+    //    glTexCoord2f(0, 1); 
+    //    glVertex2f(0, scroll);
 
-    /* for each pixel */
-    //#pragma GCC unroll 240
-    for (int y = 0; y < HEIGHT; y++)
-    {
-        #pragma GCC unroll 80
-        for (int x = 0; x < WIDTH; x++)
-        {
-            uint32_t offset = (x * 0x100) + ((y + self->scroll_reg) & 0xff);
-            uint32_t abs_addr = self->vram_offset + offset;
-            uint8_t data = ram_read (self->p_ram, abs_addr);
+    //    glTexCoord2f(1, 1); 
+    //    glVertex2f(WIDTH, scroll);
 
-            #pragma GCC unroll 8
-            for (int b = 0; b < 8; b++) /* for each bit (1bit per pixel) */
-            {
-                /* if pixel is on, draw it */
-                if (data >> b & 1)
-                {
-                    int screen_x = x * 8 + (7 - b);
-                    int screen_y = y;
-                    glVertex2f (screen_x,   screen_y);
-                    glVertex2f (screen_x+1, screen_y);
-                    glVertex2f (screen_x+1, screen_y+1);
-                    glVertex2f (screen_x,   screen_y+1);
-                }
-            }
-        }
-    }
+    //    glTexCoord2f(1, 0); 
+    //    glVertex2f(WIDTH, 0);
+    //}
+
+    glDisable(GL_TEXTURE_2D);
+    glEnd();
 
     /* set display flag */
     self->vrefresh = true;
+}
+
+void
+crt_update (crt_t *self, uint32_t ram_addr, uint8_t data)
+{
+    if (ram_addr < RAM_BASE_VRAM_8 || ram_addr >= RAM_BASE_PROM)
+        return;
+    
+    log_debug("crt_update %p %x %x\n", self, ram_addr, data);
+    
+    uint16_t offset = ram_addr - RAM_BASE_VRAM_8;
+    uint8_t x = offset / 0x100;
+    uint8_t y = offset % 0x100;
+        
+    int screen_x = x * 8;
+    int screen_y = y;
+
+    GLfloat update[8*3];
+    for (int b = 0; b < 8; b++)
+    {
+        GLfloat *pixel = (data >> b & 1) ? self->foreground : self->background;
+        memcpy (update + 3*(7-b), pixel, 3 * sizeof(GLfloat));
+    }
+
+    glBindTexture(GL_TEXTURE_2D, self->tex_normal);
+    glTexSubImage2D(
+        GL_TEXTURE_2D,
+        0,
+        screen_x, screen_y,
+        8, 1,
+        GL_RGB, GL_FLOAT, update);
+
+        //glBindTexture(GL_TEXTURE_2D, self->tex_reverse);
+        //glTexSubImage2D(
+        //    GL_TEXTURE_2D,
+        //    0,
+        //    screen_x, screen_y,
+        //    1, 1,
+        //    GL_RGB, GL_FLOAT, 
+        //    (data >> b & 1) ? self->background : self->foreground);
 }
 
 void

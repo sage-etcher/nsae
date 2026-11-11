@@ -2,6 +2,7 @@
 #define LOG_CATEGORY LC_RAM
 #include "ram.h"
 
+#include "crt.h"
 #include "nslog.h"
 
 #include <assert.h>
@@ -149,7 +150,7 @@ ram_read (ram_t *self, uint32_t addr)
 }
 
 int
-ram_write (ram_t *self, uint32_t addr, uint8_t data)
+ram_write (ram_t *self, uint32_t addr, uint8_t data, void *p_crt)
 {
     assert (self != NULL);
     assert (addr < RAM_SIZE);
@@ -163,6 +164,8 @@ ram_write (ram_t *self, uint32_t addr, uint8_t data)
     }
 
     self->m[addr] = data;
+
+    crt_update (p_crt, addr, data);
 
     return 0;
 }

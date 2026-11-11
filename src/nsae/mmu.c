@@ -89,7 +89,7 @@ mmu_read (mmu_t *self, uint16_t addr)
 }
 
 void
-mmu_write (mmu_t *self, uint16_t addr, uint8_t data)
+mmu_write (mmu_t *self, uint16_t addr, uint8_t data, void *p_crt)
 {
     assert (self != NULL);
     assert (self->p_ram != NULL);
@@ -98,7 +98,7 @@ mmu_write (mmu_t *self, uint16_t addr, uint8_t data)
 
     log_debug ("nsae: mmu: write %04x (%05x) %02x\n", addr, abs_addr, data);
 
-    ram_write (self->p_ram, abs_addr, data);
+    ram_write (self->p_ram, abs_addr, data, p_crt);
 }
 
 void

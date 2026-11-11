@@ -367,16 +367,16 @@ server_handle_ipc (nsae_t *self)
 
         case VAR_CRT_BACKGROUND:
             log_verbose ("crt.background %06x\n", packet->v_data32);
-            self->adv.crt.background.x = (float)(packet->v_data32 & 0x00ff0000 >> 16) / 255;
-            self->adv.crt.background.y = (float)(packet->v_data32 & 0x0000ff00 >> 8) / 255;
-            self->adv.crt.background.z = (float)(packet->v_data32 & 0x000000ff) / 255;
+            self->adv.crt.background[0] = (float)(packet->v_data32 & 0x00ff0000 >> 16) / 255;
+            self->adv.crt.background[1] = (float)(packet->v_data32 & 0x0000ff00 >> 8) / 255;
+            self->adv.crt.background[2] = (float)(packet->v_data32 & 0x000000ff) / 255;
             break;
 
         case VAR_CRT_FOREGROUND:
             log_verbose ("crt.foreground %06x\n", packet->v_data32);
-            self->adv.crt.foreground.x = (float)(packet->v_data32 & 0x00ff0000 >> 16) / 255;
-            self->adv.crt.foreground.y = (float)(packet->v_data32 & 0x0000ff00 >> 8) / 255;
-            self->adv.crt.foreground.z = (float)(packet->v_data32 & 0x000000ff) / 255;
+            self->adv.crt.foreground[0] = (float)(packet->v_data32 & 0x00ff0000 >> 16) / 255;
+            self->adv.crt.foreground[1] = (float)(packet->v_data32 & 0x0000ff00 >> 8) / 255;
+            self->adv.crt.foreground[2] = (float)(packet->v_data32 & 0x000000ff) / 255;
             break;
 
         case VAR_CRT_BLANK:
@@ -676,12 +676,12 @@ server_handle_ipc (nsae_t *self)
         {
         case MODE_RAM:
             log_verbose ("ram %05zu %02u\n", packet->v_addr32, packet->v_data32);
-            ram_write (&self->adv.ram, packet->v_addr32, packet->v_data32);
+            ram_write (&self->adv.ram, packet->v_addr32, packet->v_data32, &self->adv.crt);
             break;
 
         case MODE_MMU:
             log_verbose ("mmu %05zu %02u\n", packet->v_addr32, packet->v_data32);
-            mmu_write (&self->adv.mmu, packet->v_addr32, packet->v_data32);
+            mmu_write (&self->adv.mmu, packet->v_addr32, packet->v_data32, &self->adv.crt);
             break;
         }
         break;
