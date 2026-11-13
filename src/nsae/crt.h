@@ -11,7 +11,9 @@ extern "c" {
 #include <stdbool.h>
 #include <stdint.h>
 
+typedef GLfloat vec2_t[2];
 typedef GLfloat vec3_t[3];
+typedef GLfloat vec4_t[4];
 
 typedef struct {
     bool blank;
