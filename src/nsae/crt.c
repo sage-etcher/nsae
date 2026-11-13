@@ -8,23 +8,19 @@
 #include <GL/glew.h>
 
 #include <assert.h>
-#include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
+#include <stdlib.h>
 
-#define TX_WIDTH  640
-#define TX_HEIGHT 256
-
-#define WIDTH  640
-#define HEIGHT 240
+static inline GLfloat *texture_idx(crt_t *self, GLint x, GLint y);
+static void crt_update_texture(crt_t *self);
 
 int
-crt_init (crt_t *self, ram_t *p_ram, uint32_t vram_offset)
+crt_init (crt_t *self)
 {
     assert (self != NULL);
-    assert (p_ram != NULL);
 
     (void)memset (self, 0, sizeof (*self));
 
@@ -36,6 +32,8 @@ crt_init (crt_t *self, ram_t *p_ram, uint32_t vram_offset)
     self->background[1] = 0.0f; 
     self->background[2] = 0.0f;
 
+    self->texture = malloc (TX_SIZE);
+
     glGenTextures(1, &self->h_texture);
     glBindTexture(GL_TEXTURE_2D, self->h_texture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, TX_WIDTH, TX_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
@@ -46,17 +44,25 @@ crt_init (crt_t *self, ram_t *p_ram, uint32_t vram_offset)
 }
 
 void
+crt_free (crt_t *self)
+{
+    free (self->texture);
+    self->texture = NULL;
+}
+
+void
 crt_draw (crt_t *self)
 {
     assert (self != NULL);
-    assert (self->p_ram!= NULL);
+
+    crt_update_texture (self);
 
     glClearColor (
             self->background[0], 
             self->background[1], 
             self->background[2], 
             1.f);
-    glBindTexture(GL_TEXTURE_2D, self->h_texture);
+    glBindTexture (GL_TEXTURE_2D, self->h_texture);
 
     glClear (GL_COLOR_BUFFER_BIT);
 
@@ -102,6 +108,13 @@ crt_draw (crt_t *self)
     self->vrefresh = true;
 }
 
+
+static inline GLfloat *
+texture_idx(crt_t *self, GLint x, GLint y)
+{
+    return self->texture + ((y * WIDTH) + x) * 3;
+}
+
 void
 crt_update (crt_t *self, uint32_t ram_addr, uint8_t data)
 {
@@ -111,27 +124,74 @@ crt_update (crt_t *self, uint32_t ram_addr, uint8_t data)
     log_debug("crt_update %p %x %x\n", self, ram_addr, data);
     
     uint16_t offset = ram_addr - RAM_BASE_VRAM_8;
-    uint8_t x = offset / 0x100;
-    uint8_t y = offset % 0x100;
-        
-    int screen_x = x * 8;
-    int screen_y = y;
-
-    GLfloat update[8*3];
+    GLint x = (GLint)offset / 0x100 * 8;
+    GLint y = (GLint)offset % 0x100;
 
     for (int b = 0; b < 8; b++)
     {
         GLfloat *pixel  = (data >> b & 1) ? self->foreground : self->background;
-        memcpy (update + 3*(7-b), pixel, 3 * sizeof(GLfloat));
+        memcpy (texture_idx (self, x + (7-b), y), pixel, 3 * sizeof(GLfloat));
     }
 
-    glBindTexture(GL_TEXTURE_2D, self->h_texture);
-    glTexSubImage2D(
-        GL_TEXTURE_2D,
-        0,
-        screen_x, screen_y,
-        8, 1,
-        GL_RGB, GL_FLOAT, update);
+    if (self->tex_sync)
+    {
+        self->sub_start[0] = x;
+        self->sub_start[1] = y;
+        self->sub_end[0] = x+8;
+        self->sub_end[1] = y+1;
+        self->tex_sync = false;
+    }
+    else
+    {
+        if (x < self->sub_start[0])
+            self->sub_start[0] = x;
+        else if (x >= self->sub_end[0])
+            self->sub_end[0] = x+8;
+    
+        if (y < self->sub_start[1])
+            self->sub_start[1] = y;
+        else if (y >= self->sub_end[1])
+            self->sub_end[1] = y+1;
+    }
+}
+
+static void
+crt_update_texture(crt_t *self)
+{
+    if (self->tex_sync)
+        return;
+
+    GLint row    = self->sub_start[1];
+    GLint width  = self->sub_end[0] - self->sub_start[0];
+    GLint height = self->sub_end[1] - self->sub_start[1];
+
+    if (width == TX_WIDTH)
+    {
+        glBindTexture (GL_TEXTURE_2D, self->h_texture);
+        glTexSubImage2D (
+                GL_TEXTURE_2D,
+                0,
+                self->sub_start[0], self->sub_start[1],
+                width, height,
+                GL_RGB, GL_FLOAT, 
+                texture_idx(self, self->sub_start[0], self->sub_start[1]));
+    }
+    else
+    {
+        for (; row < self->sub_end[1]; row++)
+        {
+            glBindTexture (GL_TEXTURE_2D, self->h_texture);
+            glTexSubImage2D (
+                    GL_TEXTURE_2D,
+                    0,
+                    self->sub_start[0], row,
+                    width, 1,
+                    GL_RGB, GL_FLOAT, 
+                    texture_idx(self, self->sub_start[0], row));
+        }
+    }
+
+    self->tex_sync = true;
 }
 
 void
