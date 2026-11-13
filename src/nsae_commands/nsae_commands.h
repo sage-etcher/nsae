@@ -143,7 +143,6 @@ typedef enum {
     VAR_CRT_BACKGROUND,
     VAR_CRT_BLANK,
     VAR_CRT_VSYNC,
-    VAR_CRT_INVERTED,
     VAR_CRT_SCROLL,
 
     VAR_FDC_DISK,

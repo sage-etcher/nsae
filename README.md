@@ -80,11 +80,10 @@ built into the emulator
 ### Display
 
 The display colors are controllable at runtime, you can change the background, 
-foreground, and the emulated inverted flag
+and foreground
 
     nsaectl set display foreground '#hexcolor'
     nsaectl set display background '#hexcolor'
-    nsaectl set display inverted <true/false>
 
 ### Debugging Features
 

@@ -18,7 +18,6 @@ typedef GLfloat vec4_t[4];
 typedef struct {
     bool blank;
     bool vrefresh;
-    bool inverted;
     uint8_t scroll_reg;
     uint32_t vram_offset;
     ram_t *p_ram;
@@ -26,8 +25,7 @@ typedef struct {
     vec3_t background;
     vec3_t foreground;
 
-    GLuint tex_normal;
-    GLuint tex_reverse;
+    GLuint h_texture;
 } crt_t;
 
 int crt_init (crt_t *self, ram_t *p_ram, uint32_t vram_offset);

@@ -389,11 +389,6 @@ server_handle_ipc (nsae_t *self)
             self->adv.crt.vrefresh = (packet->v_data32 > 0);
             break;
 
-        case VAR_CRT_INVERTED:
-            log_verbose ("crt.inverted %02x\n", packet->v_data32);
-            self->adv.crt.inverted = (packet->v_data32 > 0);
-            break;
-
         case VAR_CRT_SCROLL:
             log_verbose ("crt.scroll %02x\n", packet->v_data32);
             self->adv.crt.scroll_reg = packet->v_data32;
