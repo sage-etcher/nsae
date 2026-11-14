@@ -190,6 +190,7 @@ nsae_start (nsae_t *self, nsae_config_t *config)
     log_quit ();
 
     kbmap_free (&self->kbmap);
+    adv_free(&self->adv);
 
     return 0;
 }

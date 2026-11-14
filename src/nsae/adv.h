@@ -44,6 +44,8 @@ typedef struct {
 
 int adv_init (adv_t *self, void *parent);
 
+void adv_free (adv_t *self);
+
 int adv_run (adv_t *self, int cycles, void *cb_data);
 
 uint8_t adv_in (adv_t *self, uint8_t port, uint16_t pc);
