@@ -3,7 +3,9 @@
 
 NOTE: this is verry much a WIP
 
-NOTE: some versions of GLFW don't play nice with GLEW, I would recommend using GLFW 3.3.10 at the newest see <https://github.com/nigels-com/glew/issues/417> for more details.
+NOTE: some versions of GLFW don't play nice with GLEW, I would recommend using 
+GLFW 3.3.10 at the newest see <https://github.com/nigels-com/glew/issues/417> 
+for more details.
 
 Tested support for AlmaLinux 9, FreeBSD 13, and Windows 11.
 
@@ -11,14 +13,15 @@ Tested support for AlmaLinux 9, FreeBSD 13, and Windows 11.
 
 ![Example of CP/M running in the Emulator](/readme-resources/example-2026-02-12.png)
 
-Scripting NSAE to load and run CP/M on Windows: <https://www.youtube.com/watch?v=-CBy6uQ1ej8>
+Scripting NSAE to load and run CP/M on Windows: 
+<https://www.youtube.com/watch?v=-CBy6uQ1ej8>
 
 ## Runtime Dependencies
 
 - GLEW
 - GLFW3
 - GLU
-- OpenGL 1.0
+- OpenGL 2.0
 - PortAudio 2.0
 - ZeroMQ
 
