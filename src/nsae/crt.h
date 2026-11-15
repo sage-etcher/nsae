@@ -6,7 +6,6 @@ extern "c" {
 #endif
 
 #include "glinit.h"
-#include "ram.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -27,11 +26,10 @@ typedef struct { GLint x, y; } ivec2_t;
 #define HEIGHT 240
 
 typedef struct {
+    uint8_t scroll_reg;
     bool blank;
     bool vrefresh;
-    uint8_t scroll_reg;
-    uint32_t vram_offset;
-    ram_t *p_ram;
+    bool tex_sync;
 
     color_t background;
     color_t foreground;
@@ -39,7 +37,6 @@ typedef struct {
     GLfloat *texture;
     GLuint h_texture;
 
-    bool tex_sync;
     ivec2_t sub_start;
     ivec2_t sub_end;
 } crt_t;

@@ -14,8 +14,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-static inline GLfloat *texture_idx(crt_t *self, GLint x, GLint y);
-static void crt_update_texture(crt_t *self);
+static inline GLfloat *texture_idx (crt_t *self, GLint x, GLint y);
+static void crt_update_texture (crt_t *self);
 
 int
 crt_init (crt_t *self)
@@ -29,16 +29,16 @@ crt_init (crt_t *self)
 
     self->texture = malloc (TX_SIZE);
 
-    glGenTextures(1, &self->h_texture);
-    glBindTexture(GL_TEXTURE_2D, self->h_texture);
-    glTexImage2D(
+    glGenTextures (1, &self->h_texture);
+    glBindTexture (GL_TEXTURE_2D, self->h_texture);
+    glTexImage2D (
             GL_TEXTURE_2D, 0, 
             GL_RGB, 
             TX_WIDTH, TX_HEIGHT, 
             0, 
             GL_RGB, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
     return 0;
 }
@@ -69,8 +69,8 @@ crt_draw (crt_t *self)
     /* if blank display, dont update */
     if (self->blank) return;
 
-    glEnable(GL_TEXTURE_2D);
-    glBegin(GL_QUADS);
+    glEnable (GL_TEXTURE_2D);
+    glBegin (GL_QUADS);
 
     const uint16_t WRAP_OFFSET = TX_HEIGHT - HEIGHT;
 
@@ -84,10 +84,10 @@ crt_draw (crt_t *self)
     top_scrn.x = (GLfloat)0;
     top_scrn.y = (GLfloat)HEIGHT-(self->scroll_reg-WRAP_OFFSET);
 
-    glTexCoord2f(0, top_clip.x/TX_HEIGHT); glVertex2f(0,     top_scrn.x);
-    glTexCoord2f(0, top_clip.y/TX_HEIGHT); glVertex2f(0,     top_scrn.y);
-    glTexCoord2f(1, top_clip.y/TX_HEIGHT); glVertex2f(WIDTH, top_scrn.y);
-    glTexCoord2f(1, top_clip.x/TX_HEIGHT); glVertex2f(WIDTH, top_scrn.x);
+    glTexCoord2f (0, top_clip.x/TX_HEIGHT); glVertex2f (0,     top_scrn.x);
+    glTexCoord2f (0, top_clip.y/TX_HEIGHT); glVertex2f (0,     top_scrn.y);
+    glTexCoord2f (1, top_clip.y/TX_HEIGHT); glVertex2f (WIDTH, top_scrn.y);
+    glTexCoord2f (1, top_clip.x/TX_HEIGHT); glVertex2f (WIDTH, top_scrn.x);
 
     // lower half
     btm_clip.x = (GLfloat)0;
@@ -96,13 +96,13 @@ crt_draw (crt_t *self)
     btm_scrn.x = (GLfloat)HEIGHT-(self->scroll_reg-WRAP_OFFSET);
     btm_scrn.y = (GLfloat)HEIGHT;
 
-    glTexCoord2f(0, btm_clip.x/TX_HEIGHT); glVertex2f(0,     btm_scrn.x);
-    glTexCoord2f(0, btm_clip.y/TX_HEIGHT); glVertex2f(0,     btm_scrn.y);
-    glTexCoord2f(1, btm_clip.y/TX_HEIGHT); glVertex2f(WIDTH, btm_scrn.y);
-    glTexCoord2f(1, btm_clip.x/TX_HEIGHT); glVertex2f(WIDTH, btm_scrn.x);
+    glTexCoord2f (0, btm_clip.x/TX_HEIGHT); glVertex2f (0,     btm_scrn.x);
+    glTexCoord2f (0, btm_clip.y/TX_HEIGHT); glVertex2f (0,     btm_scrn.y);
+    glTexCoord2f (1, btm_clip.y/TX_HEIGHT); glVertex2f (WIDTH, btm_scrn.y);
+    glTexCoord2f (1, btm_clip.x/TX_HEIGHT); glVertex2f (WIDTH, btm_scrn.x);
 
-    glDisable(GL_TEXTURE_2D);
-    glEnd();
+    glDisable (GL_TEXTURE_2D);
+    glEnd ();
 
     /* set display flag */
     self->vrefresh = true;
@@ -110,7 +110,7 @@ crt_draw (crt_t *self)
 
 
 static inline GLfloat *
-texture_idx(crt_t *self, GLint x, GLint y)
+texture_idx (crt_t *self, GLint x, GLint y)
 {
     return self->texture + ((y * WIDTH) + x) * 3;
 }
@@ -121,7 +121,7 @@ crt_update (crt_t *self, uint32_t ram_addr, uint8_t data)
     if (ram_addr < RAM_BASE_VRAM_8 || ram_addr >= RAM_BASE_PROM)
         return;
     
-    log_debug("crt_update %p %x %x\n", self, ram_addr, data);
+    log_debug ("crt_update %p %x %x\n", self, ram_addr, data);
     
     uint16_t offset = ram_addr - RAM_BASE_VRAM_8;
     GLint x = (GLint)offset / 0x100 * 8;
@@ -160,7 +160,7 @@ crt_update (crt_t *self, uint32_t ram_addr, uint8_t data)
 }
 
 static void
-crt_update_texture(crt_t *self)
+crt_update_texture (crt_t *self)
 {
     if (self->tex_sync)
         return;
@@ -177,7 +177,7 @@ crt_update_texture(crt_t *self)
                 self->sub_start.x, self->sub_start.y,
                 width, height,
                 GL_RGB, GL_FLOAT, 
-                texture_idx(self, self->sub_start.x, self->sub_start.y));
+                texture_idx (self, self->sub_start.x, self->sub_start.y));
     }
     else
     {
@@ -189,7 +189,7 @@ crt_update_texture(crt_t *self)
                     self->sub_start.x, row,
                     width, 1,
                     GL_RGB, GL_FLOAT, 
-                    texture_idx(self, self->sub_start.x, row));
+                    texture_idx (self, self->sub_start.x, row));
         }
     }
 
