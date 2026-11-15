@@ -27,7 +27,7 @@ void mmu_load_page (mmu_t *self, uint8_t slot, uint8_t page);
 uint32_t mmu_decode (mmu_t *self, uint16_t addr);
 uint8_t *mmu_deref (mmu_t *self, uint16_t addr);
 uint8_t mmu_read (mmu_t *self, uint16_t addr);
-void mmu_write (mmu_t *self, uint16_t addr, uint8_t data);
+void mmu_write (mmu_t *self, uint16_t addr, uint8_t data, void *p_crt);
 
 void mmu_status (mmu_t *self);
 

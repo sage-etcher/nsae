@@ -58,7 +58,7 @@ adv_init (adv_t *self, void *parent)
     mmu_load_page (&self->mmu, 0x03, 0x00);
 
     /* inialize the display */
-    rc |= crt_init (&self->crt, &self->ram, RAM_BASE_VRAM_8);
+    rc |= crt_init (&self->crt);
 
     if (rc != 0)
     {
@@ -80,6 +80,12 @@ adv_init (adv_t *self, void *parent)
     self->stat2_reg = 0;
 
     return 0;
+}
+
+void 
+adv_free (adv_t *self)
+{
+    crt_free (&self->crt);
 }
 
 void

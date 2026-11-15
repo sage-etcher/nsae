@@ -14,6 +14,29 @@ project('NorthStar Advantage Emulator', 'c',
 
 cc = meson.get_compiler('c')
 
+if get_option('profile')
+  add_project_arguments(
+    [
+      '-fprofile-arcs', 
+      '-fcondition-coverage', 
+      '-fprofile-generate', 
+      '-ftest-coverage', 
+      '-pg'
+    ], 
+    language : 'c',
+  )
+  add_global_link_arguments(
+    [
+      '-lgcov', 
+      '--coverage', 
+      '-pg'
+    ], 
+    language : 'c',
+  )
+  # -Dc_link_args='-lgcov --coverage -pg' 
+  # -Dc_build_args='-fprofile-arcs -ftest-coverage'
+endif
+
 #imports
 cmake = import('cmake')
 
@@ -32,8 +55,11 @@ add_project_arguments([
 )
 
 if get_option('debug')
-  add_project_arguments(['-D_DEBUG'], language : 'c')
+  add_project_arguments(['-D_DEBUG', '-ggdb'], language : 'c')
+else
+  add_project_arguments(['-DNDEBUG'], language : 'c')
 endif
+
 
 # only allow enable-serial=True when on system that provides the following
 # serial support is variable but mostly POSIX only (NO WINDOWS SUPPORT)

@@ -157,7 +157,6 @@ static const struct var_entry SET_LIST[] = {
     { MODE_CRT, "foreground", "fg", VAR_CRT_FOREGROUND },
     { MODE_CRT, "blank",      "bl", VAR_CRT_BLANK },
     { MODE_CRT, "vsync",      "v",  VAR_CRT_VSYNC },
-    { MODE_CRT, "inverted",   "i",  VAR_CRT_INVERTED },
     { MODE_CRT, "scroll",     "s",  VAR_CRT_SCROLL },
 
     { MODE_FDC, "disk",       "d",   VAR_FDC_DISK },

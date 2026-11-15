@@ -107,6 +107,7 @@ extern "C" {
 #define ADV_CTX ((adv_t *)&NSAE_CTX->adv)
 #define MMU_CTX ((mmu_t *)&ADV_CTX->mmu)
 #define CPU_CTX ((cpu_t *)&ADV_CTX->cpu)
+#define CRT_CTX ((crt_t *)&ADV_CTX->crt)
 
 #define Z80_READ_BYTE(address, x)                                       \
 {                                                                       \
@@ -135,7 +136,7 @@ extern "C" {
 #define Z80_WRITE_BYTE(address, x)                                      \
 {                                                                       \
         assert (context != NULL);                                       \
-        mmu_write (MMU_CTX, address, x);                                \
+        mmu_write (MMU_CTX, address, x, CRT_CTX);                       \
                                                                         \
         if (wp_lookup (WP_CTX, address, MMU_CTX))                       \
         {                                                               \
@@ -146,8 +147,8 @@ extern "C" {
 #define Z80_WRITE_WORD(address, x)                                      \
 {                                                                       \
         assert (context != NULL);                                       \
-        mmu_write (MMU_CTX, address, x);                                \
-        mmu_write (MMU_CTX, (address) + 1, (x) >> 8);                   \
+        mmu_write (MMU_CTX, address, x, CRT_CTX);                       \
+        mmu_write (MMU_CTX, (address) + 1, (x) >> 8, CRT_CTX);          \
                                                                         \
         if (wp_lookup (WP_CTX, address, MMU_CTX) ||                     \
             wp_lookup (WP_CTX, address+1, MMU_CTX))                     \
@@ -159,14 +160,14 @@ extern "C" {
 #define Z80_READ_WORD_INTERRUPT(address, x)                             \
 {                                                                       \
         assert (context != NULL);                                       \
-        mmu_write (MMU_CTX, address, x);                                \
+        mmu_write (MMU_CTX, address, x, CRT_CTX);                       \
 }
 
 #define Z80_WRITE_WORD_INTERRUPT(address, x)                            \
 {                                                                       \
         assert (context != NULL);                                       \
-        mmu_write (MMU_CTX, address, x);                                \
-        mmu_write (MMU_CTX, (address) + 1, (x) >> 8);                   \
+        mmu_write (MMU_CTX, address, x, CRT_CTX);                       \
+        mmu_write (MMU_CTX, (address) + 1, (x) >> 8, CRT_CTX);          \
 }
 
 #define Z80_INPUT_BYTE(port, x)                                         \

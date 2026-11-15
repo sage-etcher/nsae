@@ -18,3 +18,5 @@ subprojects/stb/
 /win32
 install_external_dlls.sh
 /destdir*/
+gmon.out
+gmon_profile*
