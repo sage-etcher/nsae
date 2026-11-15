@@ -55,7 +55,7 @@ add_project_arguments([
 )
 
 if get_option('debug')
-  add_project_arguments(['-D_DEBUG'], language : 'c')
+  add_project_arguments(['-D_DEBUG', '-ggdb'], language : 'c')
 else
   add_project_arguments(['-DNDEBUG'], language : 'c')
 endif

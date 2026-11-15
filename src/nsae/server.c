@@ -367,16 +367,16 @@ server_handle_ipc (nsae_t *self)
 
         case VAR_CRT_BACKGROUND:
             log_verbose ("crt.background %06x\n", packet->v_data32);
-            self->adv.crt.background[0] = (float)(packet->v_data32 & 0x00ff0000 >> 16) / 255;
-            self->adv.crt.background[1] = (float)(packet->v_data32 & 0x0000ff00 >> 8) / 255;
-            self->adv.crt.background[2] = (float)(packet->v_data32 & 0x000000ff) / 255;
+            self->adv.crt.background.r = (float)(packet->v_data32 & 0x00ff0000 >> 16) / 255;
+            self->adv.crt.background.g = (float)(packet->v_data32 & 0x0000ff00 >> 8) / 255;
+            self->adv.crt.background.b = (float)(packet->v_data32 & 0x000000ff) / 255;
             break;
 
         case VAR_CRT_FOREGROUND:
             log_verbose ("crt.foreground %06x\n", packet->v_data32);
-            self->adv.crt.foreground[0] = (float)(packet->v_data32 & 0x00ff0000 >> 16) / 255;
-            self->adv.crt.foreground[1] = (float)(packet->v_data32 & 0x0000ff00 >> 8) / 255;
-            self->adv.crt.foreground[2] = (float)(packet->v_data32 & 0x000000ff) / 255;
+            self->adv.crt.foreground.r = (float)(packet->v_data32 & 0x00ff0000 >> 16) / 255;
+            self->adv.crt.foreground.g = (float)(packet->v_data32 & 0x0000ff00 >> 8) / 255;
+            self->adv.crt.foreground.b = (float)(packet->v_data32 & 0x000000ff) / 255;
             break;
 
         case VAR_CRT_BLANK:

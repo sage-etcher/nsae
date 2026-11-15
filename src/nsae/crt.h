@@ -11,11 +11,13 @@ extern "c" {
 #include <stdbool.h>
 #include <stdint.h>
 
-typedef GLfloat vec2_t[2];
-typedef GLfloat vec3_t[3];
-typedef GLfloat vec4_t[4];
+typedef struct { GLfloat r, g, b; } color_t;
 
-typedef GLint ivec2_t[2];
+typedef struct { GLfloat x, y; } vec2_t;
+typedef struct { GLfloat x, y, z; } vec3_t;
+typedef struct { GLfloat x, y, z, w; } vec4_t;
+
+typedef struct { GLint x, y; } ivec2_t;
 
 #define TX_WIDTH  640
 #define TX_HEIGHT 256
@@ -31,8 +33,8 @@ typedef struct {
     uint32_t vram_offset;
     ram_t *p_ram;
 
-    vec3_t background;
-    vec3_t foreground;
+    color_t background;
+    color_t foreground;
 
     GLfloat *texture;
     GLuint h_texture;

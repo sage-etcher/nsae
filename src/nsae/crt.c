@@ -24,19 +24,19 @@ crt_init (crt_t *self)
 
     (void)memset (self, 0, sizeof (*self));
 
-    self->foreground[0] = 0.38f; 
-    self->foreground[1] = 1.0f; 
-    self->foreground[2] = 0.0f;
-
-    self->background[0] = 0.0f;  
-    self->background[1] = 0.0f; 
-    self->background[2] = 0.0f;
+    self->foreground = (color_t){ .r = 0.38f, .g = 1.00f, .b = 0.00f }; 
+    self->background = (color_t){ .r = 0.00f, .g = 0.00f, .b = 0.00f }; 
 
     self->texture = malloc (TX_SIZE);
 
     glGenTextures(1, &self->h_texture);
     glBindTexture(GL_TEXTURE_2D, self->h_texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, TX_WIDTH, TX_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
+    glTexImage2D(
+            GL_TEXTURE_2D, 0, 
+            GL_RGB, 
+            TX_WIDTH, TX_HEIGHT, 
+            0, 
+            GL_RGB, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
@@ -58,9 +58,9 @@ crt_draw (crt_t *self)
     crt_update_texture (self);
 
     glClearColor (
-            self->background[0], 
-            self->background[1], 
-            self->background[2], 
+            self->background.r, 
+            self->background.g, 
+            self->background.b, 
             1.f);
     glBindTexture (GL_TEXTURE_2D, self->h_texture);
 
@@ -78,28 +78,28 @@ crt_draw (crt_t *self)
     vec2_t top_scrn, btm_scrn;
 
     // upper half
-    top_clip[0] = (GLfloat)self->scroll_reg;
-    top_clip[1] = (GLfloat)TX_HEIGHT;
+    top_clip.x = (GLfloat)self->scroll_reg;
+    top_clip.y = (GLfloat)TX_HEIGHT;
 
-    top_scrn[0] = (GLfloat)0;
-    top_scrn[1] = (GLfloat)HEIGHT-(self->scroll_reg-WRAP_OFFSET);
+    top_scrn.x = (GLfloat)0;
+    top_scrn.y = (GLfloat)HEIGHT-(self->scroll_reg-WRAP_OFFSET);
 
-    glTexCoord2f(0, top_clip[0]/TX_HEIGHT); glVertex2f(0,     top_scrn[0]);
-    glTexCoord2f(0, top_clip[1]/TX_HEIGHT); glVertex2f(0,     top_scrn[1]);
-    glTexCoord2f(1, top_clip[1]/TX_HEIGHT); glVertex2f(WIDTH, top_scrn[1]);
-    glTexCoord2f(1, top_clip[0]/TX_HEIGHT); glVertex2f(WIDTH, top_scrn[0]);
+    glTexCoord2f(0, top_clip.x/TX_HEIGHT); glVertex2f(0,     top_scrn.x);
+    glTexCoord2f(0, top_clip.y/TX_HEIGHT); glVertex2f(0,     top_scrn.y);
+    glTexCoord2f(1, top_clip.y/TX_HEIGHT); glVertex2f(WIDTH, top_scrn.y);
+    glTexCoord2f(1, top_clip.x/TX_HEIGHT); glVertex2f(WIDTH, top_scrn.x);
 
     // lower half
-    btm_clip[0] = (GLfloat)0;
-    btm_clip[1] = (GLfloat)self->scroll_reg-WRAP_OFFSET;
+    btm_clip.x = (GLfloat)0;
+    btm_clip.y = (GLfloat)self->scroll_reg-WRAP_OFFSET;
 
-    btm_scrn[0] = (GLfloat)HEIGHT-(self->scroll_reg-WRAP_OFFSET);
-    btm_scrn[1] = (GLfloat)HEIGHT;
+    btm_scrn.x = (GLfloat)HEIGHT-(self->scroll_reg-WRAP_OFFSET);
+    btm_scrn.y = (GLfloat)HEIGHT;
 
-    glTexCoord2f(0, btm_clip[0]/TX_HEIGHT); glVertex2f(0,     btm_scrn[0]);
-    glTexCoord2f(0, btm_clip[1]/TX_HEIGHT); glVertex2f(0,     btm_scrn[1]);
-    glTexCoord2f(1, btm_clip[1]/TX_HEIGHT); glVertex2f(WIDTH, btm_scrn[1]);
-    glTexCoord2f(1, btm_clip[0]/TX_HEIGHT); glVertex2f(WIDTH, btm_scrn[0]);
+    glTexCoord2f(0, btm_clip.x/TX_HEIGHT); glVertex2f(0,     btm_scrn.x);
+    glTexCoord2f(0, btm_clip.y/TX_HEIGHT); glVertex2f(0,     btm_scrn.y);
+    glTexCoord2f(1, btm_clip.y/TX_HEIGHT); glVertex2f(WIDTH, btm_scrn.y);
+    glTexCoord2f(1, btm_clip.x/TX_HEIGHT); glVertex2f(WIDTH, btm_scrn.x);
 
     glDisable(GL_TEXTURE_2D);
     glEnd();
@@ -129,30 +129,34 @@ crt_update (crt_t *self, uint32_t ram_addr, uint8_t data)
 
     for (int b = 0; b < 8; b++)
     {
-        GLfloat *pixel  = (data >> b & 1) ? self->foreground : self->background;
-        memcpy (texture_idx (self, x + (7-b), y), pixel, 3 * sizeof(GLfloat));
+        color_t *pixel  = (data >> b & 1) 
+                            ? &self->foreground 
+                            : &self->background;
+        GLfloat *texpx = texture_idx (self, x + (7-b), y);
+
+        *texpx++ = pixel->r;
+        *texpx++ = pixel->g;
+        *texpx++ = pixel->b;
     }
 
     if (self->tex_sync)
     {
-        self->sub_start[0] = x;
-        self->sub_start[1] = y;
-        self->sub_end[0] = x+8;
-        self->sub_end[1] = y+1;
+        self->sub_start.x = x;
+        self->sub_start.y = y;
+        self->sub_end.x = x+8;
+        self->sub_end.y = y+1;
         self->tex_sync = false;
     }
-    else
-    {
-        if (x < self->sub_start[0])
-            self->sub_start[0] = x;
-        else if (x >= self->sub_end[0])
-            self->sub_end[0] = x+8;
-    
-        if (y < self->sub_start[1])
-            self->sub_start[1] = y;
-        else if (y >= self->sub_end[1])
-            self->sub_end[1] = y+1;
-    }
+
+    if (x < self->sub_start.x)
+        self->sub_start.x = x;
+    else if (x >= self->sub_end.x)
+        self->sub_end.x = x+8;
+
+    if (y < self->sub_start.y)
+        self->sub_start.y = y;
+    else if (y >= self->sub_end.y)
+        self->sub_end.y = y+1;
 }
 
 static void
@@ -161,33 +165,31 @@ crt_update_texture(crt_t *self)
     if (self->tex_sync)
         return;
 
-    GLint row    = self->sub_start[1];
-    GLint width  = self->sub_end[0] - self->sub_start[0];
-    GLint height = self->sub_end[1] - self->sub_start[1];
+    GLint row    = self->sub_start.y;
+    GLint width  = self->sub_end.x - self->sub_start.x;
+    GLint height = self->sub_end.y - self->sub_start.y;
 
     if (width == TX_WIDTH)
     {
         glBindTexture (GL_TEXTURE_2D, self->h_texture);
         glTexSubImage2D (
-                GL_TEXTURE_2D,
-                0,
-                self->sub_start[0], self->sub_start[1],
+                GL_TEXTURE_2D, 0,
+                self->sub_start.x, self->sub_start.y,
                 width, height,
                 GL_RGB, GL_FLOAT, 
-                texture_idx(self, self->sub_start[0], self->sub_start[1]));
+                texture_idx(self, self->sub_start.x, self->sub_start.y));
     }
     else
     {
-        for (; row < self->sub_end[1]; row++)
+        for (; row < self->sub_end.y; row++)
         {
             glBindTexture (GL_TEXTURE_2D, self->h_texture);
             glTexSubImage2D (
-                    GL_TEXTURE_2D,
-                    0,
-                    self->sub_start[0], row,
+                    GL_TEXTURE_2D, 0,
+                    self->sub_start.x, row,
                     width, 1,
                     GL_RGB, GL_FLOAT, 
-                    texture_idx(self, self->sub_start[0], row));
+                    texture_idx(self, self->sub_start.x, row));
         }
     }
 
