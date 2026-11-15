@@ -115,6 +115,13 @@ nsae_start (nsae_t *self, nsae_config_t *config)
 
     /* create glfw window */
     GLFWwindow *win = NULL;
+#ifdef __APPLE__
+    /* The fixed-function renderer requires a legacy context. */
+    glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 2);
+    glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 1);
+#endif
+    /* create glfw window */
+    win = NULL;
     win = glfwCreateWindow (
             self->width, self->height,
             "NorthStar Advantage Emulator",
@@ -173,25 +180,6 @@ nsae_start (nsae_t *self, nsae_config_t *config)
         log_fatal ("nsae: glfw: initialization failed\n");
         return 1;
     }
-
-#ifdef __APPLE__
-    /* The fixed-function renderer requires a legacy context. */
-    glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 2);
-    glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 1);
-#endif
-    /* create glfw window */
-    GLFWwindow *win = NULL;
-    win = glfwCreateWindow (
-            self->width, self->height,
-            "NorthStar Advantage Emulator",
-             NULL, NULL);
-    if (win == NULL)
-    {
-        log_fatal ("nsae: glfw: window creation failed\n");
-        return 1;
-    }
-    self->win = win;
-    glfwMakeContextCurrent (win);
 
     /* initialize opengl */
     glfwGetWindowSize (win, &self->width, &self->height);
