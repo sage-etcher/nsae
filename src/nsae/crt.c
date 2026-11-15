@@ -121,7 +121,7 @@ crt_update (crt_t *self, uint32_t ram_addr, uint8_t data)
     if (ram_addr < RAM_BASE_VRAM_8 || ram_addr >= RAM_BASE_PROM)
         return;
     
-    log_debug ("crt_update %p %x %x\n", self, ram_addr, data);
+    //log_debug ("crt_update %p %x %x\n", self, ram_addr, data);
     
     uint16_t offset = ram_addr - RAM_BASE_VRAM_8;
     GLint x = (GLint)offset / 0x100 * 8;

@@ -44,9 +44,9 @@ gl_init (GLFWwindow *win, float win_width, float win_height,
 
 #endif
     /*
-    if (!GLEW_VERSION_1_2)
+    if (!GLEW_VERSION_2_0)
     {
-        log_fatal ("nsae: glew: insuffient OpenGL version, requires >=1.2\n");
+        log_fatal ("nsae: glew: insuffient OpenGL version, requires >=2.0\n");
         return 2;
     }
     */
@@ -104,6 +104,13 @@ nsae_start (nsae_t *self, nsae_config_t *config)
 
     self->kbmap = kbmap_init ();
 
+    /* initialize logger */
+    log_init (LC_COUNT);
+    if (config->verbosity)
+    {
+        memset (g_log_categories, LOG_VERBOSE, LC_COUNT);
+    }
+
     /* initialize glfw */
     int rc = 0;
 
@@ -140,13 +147,7 @@ nsae_start (nsae_t *self, nsae_config_t *config)
     rc = gl_init (win, self->width, self->height, 640, 240);
     if (rc != 0) { return 1; }
 
-    /* initialize emulator elements */
-    log_init (LC_COUNT);
-    if (config->verbosity)
-    {
-        memset (g_log_categories, LOG_VERBOSE, LC_COUNT);
-    }
-
+    /* initialize emulator elelements */
     rc |= nsae_ipc_init_server (config->socket_addr);
     rc |= adv_init (&self->adv, self);
 
@@ -165,7 +166,6 @@ nsae_start (nsae_t *self, nsae_config_t *config)
     {
         fdc_load_disk (&self->adv.fdc, 1, config->disk_b);
     }
-
 
     if (rc != 0)
     {
