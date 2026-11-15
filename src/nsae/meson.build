@@ -38,9 +38,12 @@ nsae_help_h = custom_target(
 # build the binaries
 cc = meson.get_compiler('c')
 
-glew_dep = dependency('glew', required : true)
 glfw_dep = dependency('glfw3', required : true)
-glu_dep  = dependency('glu', required : true)
+if host_machine.system() == 'darwin'
+  graphics_deps = [dependency('appleframeworks', modules : ['OpenGL'])]
+else
+  graphics_deps = [dependency('glew'), dependency('glu')]
+endif
 m_dep = cc.find_library('m', required : false)
 portaudio_dep = dependency('portaudio-2.0', required : true)
 
@@ -80,9 +83,8 @@ nsae_bin = executable('nsae', [
   dependencies : [
     communicator_dep,
     darray_dep,
-    glew_dep,
+    graphics_deps,
     glfw_dep,
-    glu_dep,
     log_dep,
     m_dep,
     nsae_commands_dep,

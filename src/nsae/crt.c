@@ -5,7 +5,7 @@
 #include "nslog.h"
 #include "ram.h"
 
-#include <GL/glew.h>
+#include "glinit.h"
 
 #include <assert.h>
 #include <stdbool.h>
