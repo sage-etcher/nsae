@@ -20,3 +20,4 @@ install_external_dlls.sh
 /destdir*/
 gmon.out
 gmon_profile*
+**.AppImage

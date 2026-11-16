@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+if [ $# -ge 1 ]; then
+    prog=$1
+    shift
+else
+    prog=nsae
+fi
+exec $APPDIR/usr/bin/$prog $@
+
