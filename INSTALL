@@ -1,5 +1,6 @@
 
-build dependencies: meson>=0.51.0, xxd
+# Linux
+build dependencies: meson>=0.51.0, xxd, cmake
 dependencies: glew, glfw3, glu, opengl>=1.0, portaudio>=2.0, zeromq
 
 meson setup build
@@ -8,4 +9,8 @@ ninja
 meson install
 
 
+# Docker
+will dump a `nsae-linux-x86_64.AppImage` in your cwd
+
+docker build -t nsae:01 . --output=.
 
