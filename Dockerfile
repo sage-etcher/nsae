@@ -3,6 +3,8 @@
 #
 # ./nsae.AppImage [nsae|nsaectl|...] [...]
 
+### Linux Build
+### {{{
 FROM almalinux:10 AS linux-build-glfw
 RUN dnf install -y epel-release
 RUN dnf install -y clang cmake pkgconf make wget unzip \
@@ -27,7 +29,10 @@ RUN PKG_CONFIG_PATH=/glfw-root/lib64/pkgconfig \
             meson setup build --wipe --buildtype=release --prefix=/usr && \
     ninja -C build
 RUN meson install -C build --destdir /installdir
+### }}}
 
+### Packaging 
+### {{{
 FROM almalinux:10 AS package-appimage
 RUN dnf install -y wget file
 WORKDIR /appimage 
@@ -44,3 +49,6 @@ RUN ARCH=x86_64 /appimage/squashfs-root/AppRun /AppDir /appimage/nsae-linux-x86_
 
 FROM scratch
 COPY --from=package-appimage /appimage/nsae-linux-x86_64.AppImage .
+### }}}
+
+# vim: fdm=marker
