@@ -1,5 +1,5 @@
 
-stb_dep = dependency('stb', required: true)
+stb_dep = dependency('stb', required: false)
 
 stb_image_lib = static_library(
   'stb_image', 
