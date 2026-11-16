@@ -21,6 +21,8 @@
 #include <stdbool.h>
 #include <unistd.h>
 
+#define ARRLEN(a) (sizeof(a) / sizeof(*(a)))
+
 static int gl_init (GLFWwindow *win, float win_width, float win_height,
                                      float emu_width, float emu_height);
 
@@ -184,36 +186,32 @@ nsae_start (nsae_t *self, nsae_config_t *config)
     }
 
     /* read window icon into memory */
-    GLFWimage icons[5];
-    icons[0].pixels = stbi_load (
-            "/usr/share/icons/hicolor/16x16/apps/nsae.png",
-            &icons[0].width, &icons[0].height, 
-            NULL, STBI_rgb_alpha);
-    icons[1].pixels = stbi_load (
-            "/usr/share/icons/hicolor/32x32/apps/nsae.png",
-            &icons[0].width, &icons[0].height, 
-            NULL, STBI_rgb_alpha);
-    icons[2].pixels = stbi_load (
-            "/usr/share/icons/hicolor/48x48/apps/nsae.png",
-            &icons[0].width, &icons[0].height, 
-            NULL, STBI_rgb_alpha);
-    icons[3].pixels = stbi_load (
-            "/usr/share/icons/hicolor/64x64/apps/nsae.png",
-            &icons[0].width, &icons[0].height, 
-            NULL, STBI_rgb_alpha);
-    icons[4].pixels = stbi_load (
-            "/usr/share/icons/hicolor/128x128/apps/nsae.png",
-            &icons[1].width, &icons[1].height, 
-            NULL, STBI_rgb_alpha);
-    if (icons[0].pixels == NULL || icons[1].pixels == NULL)
+    const char *ICON_FILES[] = {
+        "/usr/share/icons/hicolor/16x16/apps/nsae.png",
+        "/usr/share/icons/hicolor/32x32/apps/nsae.png",
+        "/usr/share/icons/hicolor/48x48/apps/nsae.png",
+        "/usr/share/icons/hicolor/64x64/apps/nsae.png",
+        "/usr/share/icons/hicolor/128x128/apps/nsae.png",
+    };
+    enum { ICON_COUNT = ARRLEN(ICON_FILES) };
+    GLFWimage icons[ICON_COUNT];
+    for (int i = 0; i < ICON_COUNT; i++)
     {
-        log_error ("nsae: stbi: cannot load icon image\n");
+        icons[i].pixels = stbi_load(
+                ICON_FILES[i], &icons[i].width, &icons[i].height, 
+                NULL, STBI_rgb_alpha);
+        if (icons[i].pixels == NULL)
+        {
+            log_error ("nsae: stbi: cannot load icon image -- %s\n", 
+                    ICON_FILES[i]);
+        }
     }
 
-    log_warning ("nsae: stbi: icon 128 %zu %zu\n", icons[0].width, icons[0].height);
-    log_warning ("nsae: stbi: icon 16 %zu %zu\n", icons[1].width, icons[1].height);
+    /* log_warning ("nsae: stbi: icon 128 %zu %zu\n", icons[0].width, icons[0].height);
+     * log_warning ("nsae: stbi: icon 16 %zu %zu\n", icons[1].width, icons[1].height); 
+     * */
     /* assign window icon */
-    glfwSetWindowIcon (win, 5, icons);
+    glfwSetWindowIcon (win, ICON_COUNT, icons);
 
 
     /* input mode */
