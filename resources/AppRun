@@ -6,5 +6,5 @@ else
     echo "Usage: `basename "$APPIMAGE"` [nsaelauncher|nsae|nsaectl|nsaecli|mkfd.ns|mkfd.nscpm|mkfd.nsdos] [ARGS...]" >&2
     exit 1
 fi
-exec $APPDIR/usr/bin/$prog $@
+LD_LIBRARY_PATH=$APPDIR/usr/lib64 exec $APPDIR/usr/bin/$prog $@
 

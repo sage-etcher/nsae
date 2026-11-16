@@ -21,3 +21,4 @@ install_external_dlls.sh
 gmon.out
 gmon_profile*
 **.AppImage
+squashfs-root
