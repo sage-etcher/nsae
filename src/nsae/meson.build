@@ -42,7 +42,12 @@ glfw_dep = dependency('glfw3', required : true)
 if host_machine.system() == 'darwin'
   graphics_deps = [dependency('appleframeworks', modules : ['OpenGL'])]
 else
-  graphics_deps = [dependency('glew'), dependency('glu')]
+  graphics_deps = [ 
+    dependency('glew'),
+    dependency('glu', required: false),
+    cc.find_library('glu', required: false),
+    cc.find_library('glu32', required: false),
+  ]
 endif
 m_dep = cc.find_library('m', required : false)
 dl_dep = cc.find_library('libdl', required : false)
