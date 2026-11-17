@@ -13,6 +13,7 @@
 
 #include <sc_map.h>
 #include <sc_time.h>
+#include <stb_image.h>
 
 #include <assert.h>
 #include <stdint.h>
@@ -111,6 +112,7 @@ nsae_start (nsae_t *self, nsae_config_t *config)
         memset (g_log_categories, LOG_VERBOSE, LC_COUNT);
     }
 
+
     /* initialize glfw */
     int rc = 0;
 
@@ -181,11 +183,38 @@ nsae_start (nsae_t *self, nsae_config_t *config)
         return 1;
     }
 
-    /* initialize opengl */
-    glfwGetWindowSize (win, &self->width, &self->height);
+    /* read window icon into memory */
+    GLFWimage icons[5];
+    icons[0].pixels = stbi_load (
+            "/usr/share/icons/hicolor/16x16/apps/nsae.png",
+            &icons[0].width, &icons[0].height, 
+            NULL, STBI_rgb_alpha);
+    icons[1].pixels = stbi_load (
+            "/usr/share/icons/hicolor/32x32/apps/nsae.png",
+            &icons[0].width, &icons[0].height, 
+            NULL, STBI_rgb_alpha);
+    icons[2].pixels = stbi_load (
+            "/usr/share/icons/hicolor/48x48/apps/nsae.png",
+            &icons[0].width, &icons[0].height, 
+            NULL, STBI_rgb_alpha);
+    icons[3].pixels = stbi_load (
+            "/usr/share/icons/hicolor/64x64/apps/nsae.png",
+            &icons[0].width, &icons[0].height, 
+            NULL, STBI_rgb_alpha);
+    icons[4].pixels = stbi_load (
+            "/usr/share/icons/hicolor/128x128/apps/nsae.png",
+            &icons[1].width, &icons[1].height, 
+            NULL, STBI_rgb_alpha);
+    if (icons[0].pixels == NULL || icons[1].pixels == NULL)
+    {
+        log_error ("nsae: stbi: cannot load icon image\n");
+    }
 
-    rc = gl_init (win, self->width, self->height, 640, 240);
-    if (rc != 0) { return 1; }
+    log_warning ("nsae: stbi: icon 128 %zu %zu\n", icons[0].width, icons[0].height);
+    log_warning ("nsae: stbi: icon 16 %zu %zu\n", icons[1].width, icons[1].height);
+    /* assign window icon */
+    glfwSetWindowIcon (win, 5, icons);
+
 
     /* input mode */
     glfwSetInputMode (win, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
@@ -227,6 +256,7 @@ nsae_start (nsae_t *self, nsae_config_t *config)
     log_quit ();
 
     kbmap_free (&self->kbmap);
+    stbi_image_free (icons[0].pixels);
     adv_free(&self->adv);
 
     return 0;

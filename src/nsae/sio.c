@@ -7,12 +7,15 @@
 
 #include <sc_time.h>
 
+#include <string.h>
+
+#if ENABLE_SERIAL_PORT_EMULATION
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
-#include <string.h>
 #include <termios.h>
 #include <unistd.h>
+#endif
 
 #define ARRLEN(a) (sizeof (a) / sizeof (*(a)))
 
@@ -214,6 +217,7 @@ sio_board_id (sio_t *self)
 static uint16_t 
 decode_baud_rate (uint8_t multiplier, uint8_t code)
 {
+#if ENABLE_SERIAL_PORT_EMULATION
     /* setup baud rate */
     switch (multiplier)
     {
@@ -260,6 +264,7 @@ decode_baud_rate (uint8_t multiplier, uint8_t code)
         log_error ("nsae: sio: unsupported feature syncronous serial\n");
         break;
     }
+#endif
 
     return 0;
 }
@@ -464,6 +469,7 @@ sio_send_data (sio_t *self, uint8_t data)
 uint8_t
 sio_get_status (sio_t *self)
 {
+#if ENABLE_SERIAL_PORT_EMULATION
     int rc = 0;
     int modem_status = 0;
 
@@ -522,6 +528,7 @@ sio_get_status (sio_t *self)
     /* TODO: overrun error */
 
     /* parity and framing errors are handled on sio_reieve_data */
+#endif
 
     return self->status;
 }
@@ -529,6 +536,7 @@ sio_get_status (sio_t *self)
 static int 
 decode_command (sio_t *self)
 {
+#if ENABLE_SERIAL_PORT_EMULATION
     const struct { int src; int dst; } MAP[] = {
         { .src = CMMD_TXEN, .dst = TIOCM_ST },
         { .src = CMMD_DTR,  .dst = TIOCM_DTR },
@@ -580,7 +588,7 @@ decode_command (sio_t *self)
         log_error ("nsae: sio: hunt mode is not supported by the emulator\n");
         return 1;
     }
-
+#endif
 
     return 0;
 }

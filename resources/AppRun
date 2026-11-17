@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+if [ $# -ge 1 ]; then
+    prog=$1
+    shift
+else
+    echo "Usage: `basename "$APPIMAGE"` [nsaelauncher|nsae|nsaectl|nsaecli|mkfd.ns|mkfd.nscpm|mkfd.nsdos] [ARGS...]" >&2
+    exit 1
+fi
+LD_LIBRARY_PATH=$APPDIR/usr/lib64 exec $APPDIR/usr/bin/$prog $@
+

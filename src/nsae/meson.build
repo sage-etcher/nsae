@@ -42,9 +42,15 @@ glfw_dep = dependency('glfw3', required : true)
 if host_machine.system() == 'darwin'
   graphics_deps = [dependency('appleframeworks', modules : ['OpenGL'])]
 else
-  graphics_deps = [dependency('glew'), dependency('glu')]
+  graphics_deps = [ 
+    dependency('glew'),
+    dependency('glu', required: false),
+    cc.find_library('glu', required: false),
+    cc.find_library('glu32', required: false),
+  ]
 endif
 m_dep = cc.find_library('m', required : false)
+dl_dep = cc.find_library('libdl', required : false)
 portaudio_dep = dependency('portaudio-2.0', required : true)
 
 nsae_inc = include_directories('.')
@@ -83,6 +89,7 @@ nsae_bin = executable('nsae', [
   dependencies : [
     communicator_dep,
     darray_dep,
+    dl_dep,
     graphics_deps,
     glfw_dep,
     log_dep,
@@ -91,6 +98,7 @@ nsae_bin = executable('nsae', [
     portaudio_dep,
     sc_map_dep,
     sc_time_dep,
+    stb_image_dep,
   ],
   install : true,
 )

@@ -1,4 +1,5 @@
 
+subdir('stb')
 subdir('darray')
 subdir('log')
 subdir('communicator')
