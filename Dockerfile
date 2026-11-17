@@ -131,17 +131,14 @@ RUN meson install -C build --destdir /installdir
 FROM almalinux:8 AS package-win
 RUN dnf install -y zip
 WORKDIR /archive
-#COPY --from=win-build-glfw /dep-root ./nsae
-COPY --from=win-build-glew /dep-root/lib/glew32.dll ./nsae/
-#COPY --from=win-build-portaudio /dep-root ./nsae
-#COPY --from=win-build-zeromq /dep-root ./nsae
+COPY --from=win-build-glew /dep-root/lib/glew32.dll ./nsae
 COPY --from=win-build-nsae /installdir/bin ./nsae
 RUN zip -r -9 nsae-portable-win32-i686.zip nsae/
 ### }}}
 
 ### Packaging 
 FROM scratch
-#COPY --from=package-appimage /appimage/nsae-linux-x86_64.AppImage .
+COPY --from=package-appimage /appimage/nsae-linux-x86_64.AppImage .
 COPY --from=package-win /archive/nsae-portable-win32-i686.zip .
 
 # vim: fdm=marker
