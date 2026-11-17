@@ -11,6 +11,13 @@ advprom_h = custom_target(
   command : xxd_command,
 )
 
+icon_embed_h = custom_target(
+  'icon_embed.h',
+  output  : 'icon_embed.h',
+  input   : 'icon_128x128.png',
+  command : xxd_command,
+)
+
 install_data(
   'icon_16x16.png', 
   rename      : 'nsae.png',

@@ -6,6 +6,7 @@
 #include "communicator.h"
 #include "crt.h"
 #include "glinit.h"
+#include "icon_embed.h"
 #include "kb.h"
 #include "kb_decode.h"
 #include "nslog.h"
@@ -191,27 +192,46 @@ nsae_start (nsae_t *self, nsae_config_t *config)
         "/usr/share/icons/hicolor/32x32/apps/nsae.png",
         "/usr/share/icons/hicolor/48x48/apps/nsae.png",
         "/usr/share/icons/hicolor/64x64/apps/nsae.png",
-        "/usr/share/icons/hicolor/128x128/apps/nsae.png",
+        /* "/usr/share/icons/hicolor/128x128/apps/nsae.png", */
     };
-    enum { ICON_COUNT = ARRLEN(ICON_FILES) };
-    GLFWimage icons[ICON_COUNT];
-    for (int i = 0; i < ICON_COUNT; i++)
+    enum { ICON_MAX = ARRLEN(ICON_FILES) };
+    GLFWimage icons[ICON_MAX+1];
+    size_t icon_count = 0;
+    for (int i = 0; i < ICON_MAX; i++)
     {
-        icons[i].pixels = stbi_load(
-                ICON_FILES[i], &icons[i].width, &icons[i].height, 
+        icons[icon_count].pixels = stbi_load(
+                ICON_FILES[i], &icons[icon_count].width, &icons[icon_count].height, 
                 NULL, STBI_rgb_alpha);
-        if (icons[i].pixels == NULL)
+        if (icons[icon_count].pixels == NULL)
         {
-            log_error ("nsae: stbi: cannot load icon image -- %s\n", 
+            log_warning ("nsae: stbi: cannot load icon image -- %s\n", 
                     ICON_FILES[i]);
         }
+        else
+        {
+            icon_count++;
+        }
+    }
+
+    icons[icon_count].pixels = stbi_load_from_memory (
+            ___RESOURCES_ICON_128X128_PNG,
+            ___RESOURCES_ICON_128X128_PNG_LEN,
+            &icons[icon_count].width, &icons[icon_count].height, 
+            NULL, STBI_rgb_alpha);
+    if (icons[icon_count].pixels == NULL)
+    {
+        log_error ("nsae: stbi: cannot load embedded icon image\n"); 
+    }
+    else
+    {
+        icon_count++;
     }
 
     /* log_warning ("nsae: stbi: icon 128 %zu %zu\n", icons[0].width, icons[0].height);
      * log_warning ("nsae: stbi: icon 16 %zu %zu\n", icons[1].width, icons[1].height); 
      * */
     /* assign window icon */
-    glfwSetWindowIcon (win, ICON_COUNT, icons);
+    glfwSetWindowIcon (win, icon_count, icons);
 
 
     /* input mode */

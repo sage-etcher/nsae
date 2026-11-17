@@ -72,6 +72,7 @@ nsae_bin = executable('nsae', [
     'watchpoints.c',
     'z80emu/z80emu.c',
     advprom_h,
+    icon_embed_h,
     nsae_config_h,
     nsae_help_h,
     nsae_version_h,
