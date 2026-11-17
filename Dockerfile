@@ -131,6 +131,7 @@ RUN meson install -C build --destdir /installdir
 FROM almalinux:8 AS package-win
 RUN dnf install -y zip
 WORKDIR /archive
+RUN mkdir -p nsae
 COPY --from=win-build-glew /dep-root/lib/glew32.dll ./nsae
 COPY --from=win-build-nsae /installdir/bin ./nsae
 RUN zip -r -9 nsae-portable-win32-i686.zip nsae/
