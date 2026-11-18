@@ -35,6 +35,7 @@ nsaectl = executable('nsaectl', [
     nsae_commands_dep,
     sc_map_dep,
   ],
+  win_subsystem : 'console,5.01',
   install : true,
 )
 

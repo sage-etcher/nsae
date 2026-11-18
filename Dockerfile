@@ -3,8 +3,9 @@
 #
 # ./nsae.AppImage [nsae|nsaectl|...] [...]
 
-### Linux Build
+### Linux amd64 AppImage Build
 ### {{{
+# Dependencies
 FROM almalinux:8 AS linux-build-glfw
 RUN dnf install -y epel-release
 RUN dnf install -y clang cmake git pkgconf make wget unzip \
@@ -18,6 +19,7 @@ RUN cmake -S 'glfw-3.3.10' -B build -DCMAKE_BUILD_TYPE=Release \
     make -C build && \
     make -C build install DESTDIR=/installdir
 
+# BUilding the emulator
 FROM almalinux:8 AS linux-build-nsae
 RUN dnf install -y 'https://pkgs.sysadmins.ws/el8/base/x86_64/raven-release.el8.noarch.rpm'
 RUN dnf install -y epel-release
@@ -33,6 +35,7 @@ RUN rm -rf build && \
     ninja -C build
 RUN meson install -C build --destdir /installdir
 
+# Packaging as AppImage
 FROM almalinux:8 AS package-appimage
 RUN dnf install -y wget file
 WORKDIR /appimage 
@@ -55,14 +58,17 @@ RUN chmod 755 -R /AppDir
 RUN ARCH=x86_64 /appimage/squashfs-root/AppRun /AppDir /appimage/nsae-linux-x86_64.AppImage
 ### }}}
 
-### Windows Build
+### Windows XP i686 zip Build
 ### {{{
+# Dependencies
+# {{{
 FROM almalinux:8 AS win-build-glfw
 RUN dnf config-manager --set-enabled powertools
 RUN dnf install -y cmake wget unzip mingw32-gcc
 WORKDIR /glfw
 RUN wget 'https://github.com/glfw/glfw/releases/download/3.3.10/glfw-3.3.10.zip' && \
-    unzip 'glfw-3.3.10.zip'
+    unzip 'glfw-3.3.10.zip' && \
+    echo 'add_definitions(-D_WIN32_WINNT=0x0501)' >>glfw-3.3.10/CMakeLists.txt
 RUN cmake -S 'glfw-3.3.10' -B build -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=/dep-root -DGLFW_BUILD_WIN32=True \
             -DCMAKE_TOOLCHAIN_FILE=/usr/share/mingw/toolchain-mingw32.cmake
@@ -76,8 +82,8 @@ WORKDIR /glew
 RUN wget 'https://github.com/nigels-com/glew/releases/download/glew-2.3.1/glew-2.3.1.zip' && \
     unzip 'glew-2.3.1.zip' && \
     sed -i 's,$(HOST)/lib,/$(HOST)/sys-root/mingw/lib,' glew-2.3.1/config/Makefile.linux-mingw32
-RUN make -C glew-2.3.1 SYSTEM=linux-mingw32 
-RUN make -C glew-2.3.1 install SYSTEM=linux-mingw32 GLEW_DEST=/dep-root
+RUN CFLAGS=-D_WIN32_WINNT=0x0501 make -C glew-2.3.1 SYSTEM=linux-mingw32 
+RUN CFLAGS=-D_WIN32_WINNT=0x0501 make -C glew-2.3.1 install SYSTEM=linux-mingw32 GLEW_DEST=/dep-root
 RUN sed -i 's/Requires.*//' /dep-root/lib/pkgconfig/glew.pc
 
 FROM almalinux:8 AS win-build-portaudio
@@ -86,7 +92,8 @@ RUN dnf install -y wget tar gzip cmake mingw32-gcc mingw32-crt mingw32-binutils 
         mingw32-gcc-c++
 WORKDIR /portaudio
 RUN wget 'https://files.portaudio.com/archives/pa_stable_v190700_20210406.tgz' && \
-    tar -xf pa_stable_v190700_20210406.tgz
+    tar -xf pa_stable_v190700_20210406.tgz && \
+    echo 'add_definitions(-D_WIN32_WINNT=0x0501)' >>portaudio/CMakeLists.txt
 RUN cmake -S 'portaudio' -B build -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=/dep-root \
             -DCMAKE_TOOLCHAIN_FILE=/usr/share/mingw/toolchain-mingw32.cmake
@@ -99,15 +106,18 @@ RUN dnf install -y wget zip cmake mingw32-gcc mingw32-crt mingw32-binutils \
         mingw32-gcc-c++
 WORKDIR /zeromq
 RUN wget 'https://github.com/zeromq/libzmq/releases/download/v4.3.5/zeromq-4.3.5.zip' && \
-    unzip 'zeromq-4.3.5.zip'
-RUN cmake -S 'zeromq-4.3.5' -B build -DCMAKE_BUILD_TYPE=Release \
+    unzip 'zeromq-4.3.5.zip' && \
+    sed -i 's,\(-D_WIN32_WINNT=\)${ZMQ_WIN32_WINNT},\10x0501,' zeromq-4.3.5/CMakeLists.txt
+RUN cat /usr/share/mingw/toolchain-mingw32.cmake && \
+    cmake -S 'zeromq-4.3.5' -B build -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=/dep-root \
             -DCMAKE_TOOLCHAIN_FILE=/usr/share/mingw/toolchain-mingw32.cmake \
-            -DCMAKE_SYSTEM_NAME=WindowsStore -DCMAKE_SYSTEM_VERSION=10.0 \
             -DENABLE_CURVE=OFF -DZMQ_BUILD_TESTS=OFF
 RUN mingw32-make -C build
 RUN mingw32-make -C build install
+# }}}
 
+# Building the emulator
 FROM almalinux:8 AS win-build-nsae
 RUN dnf install -y 'https://pkgs.sysadmins.ws/el8/base/x86_64/raven-release.el8.noarch.rpm'
 RUN dnf install -y epel-release
@@ -123,22 +133,22 @@ COPY --from=win-build-portaudio /dep-root /dep-root
 RUN cp -R /usr/include/stb/* /usr/i686-w64-mingw32/sys-root/mingw/include/
 RUN rm -rf build && \
     PKG_CONFIG_PATH=/dep-root/lib/pkgconfig:/usr/lib64/pkgconfig \
-    meson setup build --buildtype=release --prefix=/ \
+    meson setup build --buildtype=release --prefix=/ -Denable-tools=false \
             --cross-file /usr/share/mingw/toolchain-mingw32.meson && \
     ninja -C build
 RUN meson install -C build --destdir /installdir
 
+# Packagin in ZIP
 FROM almalinux:8 AS package-win
 RUN dnf config-manager --set-enabled powertools
 RUN dnf install -y zip mingw32-gcc mingw32-gcc-c++
 WORKDIR /archive
 RUN mkdir -p nsae
-COPY --from=win-build-glfw /dep-root ./nsae/devel
-COPY --from=win-build-glew /dep-root ./nsae/devel
-COPY --from=win-build-zeromq /dep-root ./nsae/devel
-COPY --from=win-build-portaudio /dep-root ./nsae/devel
-COPY --from=win-build-nsae /installdir ./nsae/devel
-
+#COPY --from=win-build-glfw /dep-root ./nsae/devel
+#COPY --from=win-build-glew /dep-root ./nsae/devel
+#COPY --from=win-build-zeromq /dep-root ./nsae/devel
+#COPY --from=win-build-portaudio /dep-root ./nsae/devel
+#COPY --from=win-build-nsae /installdir ./nsae/devel
 COPY --from=win-build-glew      /dep-root/lib/glew32.dll ./nsae
 COPY --from=win-build-zeromq    /dep-root/bin/libzmq.dll ./nsae
 COPY --from=win-build-portaudio /dep-root/bin/libportaudio.dll ./nsae
