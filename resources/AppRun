@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
-if [ $# -ge 1 ]; then
-    prog=$1
-    shift
-else
+
+prog=${1:-nsae}
+if [ ! -x "$APPDIR/usr/bin/$prog" ]; then
     echo "Usage: `basename "$APPIMAGE"` [nsaelauncher|nsae|nsaectl|nsaecli|mkfd.ns|mkfd.nscpm|mkfd.nsdos] [ARGS...]" >&2
     exit 1
 fi
