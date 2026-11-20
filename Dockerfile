@@ -67,8 +67,7 @@ RUN dnf config-manager --set-enabled powertools
 RUN dnf install -y cmake wget unzip mingw32-gcc
 WORKDIR /glfw
 RUN wget 'https://github.com/glfw/glfw/releases/download/3.3.10/glfw-3.3.10.zip' && \
-    unzip 'glfw-3.3.10.zip' && \
-    echo 'add_definitions(-D_WIN32_WINNT=0x0501)' >>glfw-3.3.10/CMakeLists.txt
+    unzip 'glfw-3.3.10.zip'
 RUN cmake -S 'glfw-3.3.10' -B build -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=/dep-root -DGLFW_BUILD_WIN32=True \
             -DCMAKE_TOOLCHAIN_FILE=/usr/share/mingw/toolchain-mingw32.cmake
@@ -82,8 +81,8 @@ WORKDIR /glew
 RUN wget 'https://github.com/nigels-com/glew/releases/download/glew-2.3.1/glew-2.3.1.zip' && \
     unzip 'glew-2.3.1.zip' && \
     sed -i 's,$(HOST)/lib,/$(HOST)/sys-root/mingw/lib,' glew-2.3.1/config/Makefile.linux-mingw32
-RUN CFLAGS=-D_WIN32_WINNT=0x0501 make -C glew-2.3.1 SYSTEM=linux-mingw32 
-RUN CFLAGS=-D_WIN32_WINNT=0x0501 make -C glew-2.3.1 install SYSTEM=linux-mingw32 GLEW_DEST=/dep-root
+RUN make -C glew-2.3.1 SYSTEM=linux-mingw32 
+RUN make -C glew-2.3.1 install SYSTEM=linux-mingw32 GLEW_DEST=/dep-root
 RUN sed -i 's/Requires.*//' /dep-root/lib/pkgconfig/glew.pc
 
 FROM almalinux:8 AS win-build-portaudio
@@ -93,7 +92,7 @@ RUN dnf install -y wget tar gzip cmake mingw32-gcc mingw32-crt mingw32-binutils 
 WORKDIR /portaudio
 RUN wget 'https://files.portaudio.com/archives/pa_stable_v190700_20210406.tgz' && \
     tar -xf pa_stable_v190700_20210406.tgz && \
-    echo 'add_definitions(-D_WIN32_WINNT=0x0501)' >>portaudio/CMakeLists.txt
+    echo 'add_definitions(-D_WIN32_WINNT=0x0701)' >>portaudio/CMakeLists.txt
 RUN cmake -S 'portaudio' -B build -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=/dep-root \
             -DCMAKE_TOOLCHAIN_FILE=/usr/share/mingw/toolchain-mingw32.cmake
@@ -107,7 +106,7 @@ RUN dnf install -y wget zip cmake mingw32-gcc mingw32-crt mingw32-binutils \
 WORKDIR /zeromq
 RUN wget 'https://github.com/zeromq/libzmq/releases/download/v4.3.5/zeromq-4.3.5.zip' && \
     unzip 'zeromq-4.3.5.zip' && \
-    sed -i 's,\(-D_WIN32_WINNT=\)${ZMQ_WIN32_WINNT},\10x0501,' zeromq-4.3.5/CMakeLists.txt
+    sed -i 's,\(-D_WIN32_WINNT=\)${ZMQ_WIN32_WINNT},\10x0701,' zeromq-4.3.5/CMakeLists.txt
 RUN cat /usr/share/mingw/toolchain-mingw32.cmake && \
     cmake -S 'zeromq-4.3.5' -B build -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=/dep-root \

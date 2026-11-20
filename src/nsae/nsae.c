@@ -125,6 +125,9 @@ nsae_start (nsae_t *self, nsae_config_t *config)
         return 1;
     }
 
+    /* initialize glfw */
+    glfwSetErrorCallback (nsae_glfw_error);
+
     /* create glfw window */
     GLFWwindow *win = NULL;
 #ifdef __APPLE__
@@ -175,14 +178,6 @@ nsae_start (nsae_t *self, nsae_config_t *config)
     if (rc != 0)
     {
         log_fatal ("nsae: failed to initialize\n");
-        return 1;
-    }
-
-    /* initialize glfw */
-    glfwSetErrorCallback (nsae_glfw_error);
-    if (!glfwInit ())
-    {
-        log_fatal ("nsae: glfw: initialization failed\n");
         return 1;
     }
 

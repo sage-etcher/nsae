@@ -101,7 +101,7 @@ nsae_bin = executable('nsae', [
     sc_time_dep,
     stb_image_dep,
   ],
-  win_subsystem : 'windows,5.01',
+  win_subsystem : 'console,5.01',
   install : true,
 )
 
